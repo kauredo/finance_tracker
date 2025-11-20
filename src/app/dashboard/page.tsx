@@ -3,10 +3,16 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import FileUpload from '@/components/FileUpload'
+import AddAccountModal from '@/components/AddAccountModal'
+import { Button } from '@/components/ui/Button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import Image from 'next/image'
 
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
@@ -30,96 +36,126 @@ export default function DashboardPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-teal-900">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-teal-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white/10 backdrop-blur-lg border-b border-white/20">
+      <header className="bg-surface border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Wallet Joy</h1>
+          <div className="flex items-center gap-3">
+            <Image src="/logo.png" alt="Wallet Joy Logo" width={40} height={40} />
+            <span className="text-lg font-semibold text-foreground">Wallet Joy</span>
+          </div>
           <div className="flex items-center gap-4">
-            <span className="text-white/80">{user.email}</span>
+            <span className="text-muted text-sm hidden sm:block">{user.email}</span>
+            {/* Theme Toggle */}
             <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-background transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? (
+                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
+            </button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all disabled:opacity-50"
+              isLoading={isSigningOut}
             >
               {isSigningOut ? 'Signing out...' : 'Sign Out'}
-            </button>
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Stats Cards */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-            <div className="text-white/70 text-sm font-medium mb-2">Total Expenses</div>
-            <div className="text-3xl font-bold text-white">$0.00</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-            <div className="text-white/70 text-sm font-medium mb-2">This Month</div>
-            <div className="text-3xl font-bold text-white">$0.00</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-            <div className="text-white/70 text-sm font-medium mb-2">Savings</div>
-            <div className="text-3xl font-bold text-white">$0.00</div>
-          </div>
+          <Card>
+            <CardContent>
+              <div className="text-muted text-sm font-medium mb-2">Total Expenses</div>
+              <div className="text-3xl font-bold text-foreground">€0.00</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <div className="text-muted text-sm font-medium mb-2">This Month</div>
+              <div className="text-3xl font-bold text-foreground">€0.00</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <div className="text-muted text-sm font-medium mb-2">Savings</div>
+              <div className="text-3xl font-bold text-success">€0.00</div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-8">
-          <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-          
-          {showUpload ? (
-            <div className="bg-white/5 p-4 rounded-lg mb-4 animate-in fade-in slide-in-from-top-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-medium">Upload Bank Statement</h3>
-                <button 
-                  onClick={() => setShowUpload(false)}
-                  className="text-white/60 hover:text-white"
-                >
-                  ✕
-                </button>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {showUpload ? (
+              <div className="bg-background p-6 rounded-xl border border-border">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-foreground font-medium">Upload Bank Statement</h3>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowUpload(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+                <FileUpload onUploadComplete={() => setShowUpload(false)} />
               </div>
-              <FileUpload onUploadComplete={() => setShowUpload(false)} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button 
-                onClick={() => setShowUpload(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium py-3 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl"
-              >
-                📤 Upload Statement
-              </button>
-              <button className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium py-3 px-4 rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl">
-                ➕ Add Account
-              </button>
-              <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium py-3 px-4 rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl">
-                👥 Invite Partner
-              </button>
-              <button className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium py-3 px-4 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl">
-                📊 View Reports
-              </button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Button onClick={() => setShowUpload(true)}>
+                  Upload Statement
+                </Button>
+                <Button variant="secondary">
+                  Add Account
+                </Button>
+                <Button variant="secondary">
+                  Invite Partner
+                </Button>
+                <Button variant="secondary">
+                  View Reports
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Recent Transactions */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h2 className="text-xl font-bold text-white mb-4">Recent Transactions</h2>
-          <div className="text-center py-12 text-white/70">
-            <div className="text-5xl mb-4">📝</div>
-            <p className="text-lg">No transactions yet</p>
-            <p className="text-sm mt-2">Upload a bank statement to get started</p>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12 text-muted">
+              <p className="text-lg font-medium">No transactions yet</p>
+              <p className="text-sm mt-2">Upload a bank statement to get started</p>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   )

@@ -19,8 +19,8 @@ export default function Home() {
   }, [user, loading, router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-teal-900">
-      <div className="text-white text-xl">Loading...</div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-muted">Loading...</div>
     </div>
   )
 }
