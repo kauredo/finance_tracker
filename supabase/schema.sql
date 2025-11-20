@@ -117,14 +117,25 @@ CREATE POLICY "Users can view their households"
   );
 
 -- Household Members: Users can see members of their households
+-- Helper function to bypass RLS recursion
+CREATE OR REPLACE FUNCTION get_auth_user_household_ids()
+RETURNS SETOF UUID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT household_id
+  FROM household_members
+  WHERE user_id = auth.uid()
+$$;
+
 CREATE POLICY "Users can view household members"
   ON household_members FOR SELECT
   USING (
     user_id = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM household_members hm
-      WHERE hm.household_id = household_members.household_id
-      AND hm.user_id = auth.uid()
+    household_id IN (
+      SELECT get_auth_user_household_ids()
     )
   );
 
@@ -232,3 +243,24 @@ CREATE INDEX idx_transactions_date ON transactions(date);
 CREATE INDEX idx_accounts_owner_id ON accounts(owner_id);
 CREATE INDEX idx_accounts_household_id ON accounts(household_id);
 CREATE INDEX idx_household_members_user_id ON household_members(user_id);
+
+-- Triggers
+-- Function to auto-create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', '')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger that calls the function when a new user is created
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

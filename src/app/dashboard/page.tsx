@@ -6,9 +6,18 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import FileUpload from '@/components/FileUpload'
 import AddAccountModal from '@/components/AddAccountModal'
+import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Image from 'next/image'
+
+import { supabase } from '@/lib/supabase'
+
+interface DashboardStats {
+  totalExpenses: number
+  monthlyExpenses: number
+  savings: number
+}
 
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth()
@@ -16,12 +25,58 @@ export default function DashboardPage() {
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
+  const [showAccountModal, setShowAccountModal] = useState(false)
+  const [stats, setStats] = useState<DashboardStats>({
+    totalExpenses: 0,
+    monthlyExpenses: 0,
+    savings: 0
+  })
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth')
+    } else if (user) {
+      fetchStats()
     }
   }, [user, loading, router])
+
+  const fetchStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('amount, date')
+      
+      if (error) throw error
+
+      const now = new Date()
+      const currentMonth = now.getMonth()
+      const currentYear = now.getFullYear()
+
+      const newStats = (data || []).reduce((acc, curr) => {
+        const amount = curr.amount
+        const date = new Date(curr.date)
+        
+        // Total Expenses (negative amounts)
+        if (amount < 0) {
+          acc.totalExpenses += Math.abs(amount)
+          
+          // Monthly Expenses
+          if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+            acc.monthlyExpenses += Math.abs(amount)
+          }
+        }
+
+        // Savings (Income - Expenses)
+        acc.savings += amount
+
+        return acc
+      }, { totalExpenses: 0, monthlyExpenses: 0, savings: 0 })
+
+      setStats(newStats)
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    }
+  }
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -88,19 +143,25 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <div className="text-muted text-sm font-medium mb-2">Total Expenses</div>
-              <div className="text-3xl font-bold text-foreground">€0.00</div>
+              <div className="text-3xl font-bold text-foreground">
+                €{stats.totalExpenses.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent>
               <div className="text-muted text-sm font-medium mb-2">This Month</div>
-              <div className="text-3xl font-bold text-foreground">€0.00</div>
+              <div className="text-3xl font-bold text-foreground">
+                €{stats.monthlyExpenses.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent>
               <div className="text-muted text-sm font-medium mb-2">Savings</div>
-              <div className="text-3xl font-bold text-success">€0.00</div>
+              <div className={`text-3xl font-bold ${stats.savings >= 0 ? 'text-success' : 'text-red-500'}`}>
+                €{stats.savings.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -130,7 +191,7 @@ export default function DashboardPage() {
                 <Button onClick={() => setShowUpload(true)}>
                   Upload Statement
                 </Button>
-                <Button variant="secondary">
+                <Button variant="secondary" onClick={() => setShowAccountModal(true)}>
                   Add Account
                 </Button>
                 <Button variant="secondary">
@@ -150,13 +211,21 @@ export default function DashboardPage() {
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-12 text-muted">
-              <p className="text-lg font-medium">No transactions yet</p>
-              <p className="text-sm mt-2">Upload a bank statement to get started</p>
-            </div>
+            <TransactionsList />
           </CardContent>
         </Card>
       </main>
+
+      {/* Modals */}
+      {showAccountModal && (
+        <AddAccountModal
+          onClose={() => setShowAccountModal(false)}
+          onSuccess={() => {
+            // Refresh accounts list when implemented
+            console.log('Account created successfully!')
+          }}
+        />
+      )}
     </div>
   )
 }
