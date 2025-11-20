@@ -8,8 +8,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Finance Tracker - Manage Your Finances Together",
+  title: "Wallet Joy - Manage Your Finances Together",
   description: "Track expenses, upload bank statements, and visualize your finances",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

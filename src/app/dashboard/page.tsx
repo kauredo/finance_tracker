@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import FileUpload from '@/components/FileUpload'
 
 export default function DashboardPage() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -39,7 +41,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-lg border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">💰 Finance Tracker</h1>
+          <h1 className="text-2xl font-bold text-white">Wallet Joy</h1>
           <div className="flex items-center gap-4">
             <span className="text-white/80">{user.email}</span>
             <button
@@ -74,20 +76,39 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 mb-8">
           <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium py-3 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl">
-              📤 Upload Statement
-            </button>
-            <button className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium py-3 px-4 rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl">
-              ➕ Add Account
-            </button>
-            <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium py-3 px-4 rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl">
-              👥 Invite Partner
-            </button>
-            <button className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium py-3 px-4 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl">
-              📊 View Reports
-            </button>
-          </div>
+          
+          {showUpload ? (
+            <div className="bg-white/5 p-4 rounded-lg mb-4 animate-in fade-in slide-in-from-top-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white font-medium">Upload Bank Statement</h3>
+                <button 
+                  onClick={() => setShowUpload(false)}
+                  className="text-white/60 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <FileUpload onUploadComplete={() => setShowUpload(false)} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <button 
+                onClick={() => setShowUpload(true)}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium py-3 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl"
+              >
+                📤 Upload Statement
+              </button>
+              <button className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium py-3 px-4 rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl">
+                ➕ Add Account
+              </button>
+              <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium py-3 px-4 rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl">
+                👥 Invite Partner
+              </button>
+              <button className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium py-3 px-4 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg hover:shadow-xl">
+                📊 View Reports
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Recent Transactions */}
