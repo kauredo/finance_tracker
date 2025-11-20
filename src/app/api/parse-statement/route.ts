@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { parseStatementWithAI } from '@/lib/openai'
+import { parseStatementWithVision } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,42 +24,72 @@ export async function POST(req: NextRequest) {
     )
 
     // 3. Get request body
-    const { filePath, fileType, accountId } = await req.json()
+    const { files, accountId } = await req.json()
 
-    if (!filePath || !fileType || !accountId) {
+    if (!files || !Array.isArray(files) || files.length === 0 || !accountId) {
       return NextResponse.json(
-        { error: 'Missing required fields: filePath, fileType, accountId' },
+        { error: 'Missing required fields: files (array), accountId' },
         { status: 400 }
       )
     }
 
-    // 4. Download file from Storage
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('statements')
-      .download(filePath)
-
-    if (downloadError) {
-      console.error('Storage download error:', downloadError)
-      return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+    // Validate all file types (images only)
+    for (const file of files) {
+      if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.fileType)) {
+        return NextResponse.json(
+          { error: 'Only PNG and JPEG images are supported. Please upload an image of your statement.' },
+          { status: 400 }
+        )
+      }
     }
 
-    // 5. Read file content
-    const fileContent = await fileData.text()
+    // 4. Download all files from Storage and convert to base64
+    const base64Images: string[] = []
+    
+    for (const file of files) {
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('statements')
+        .download(file.filePath)
 
-    // 6. Parse with OpenAI
-    const transactions = await parseStatementWithAI(fileContent, fileType)
+      if (downloadError) {
+        console.error('Storage download error:', downloadError)
+        return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+      }
 
-    // 7. Save transactions to database
+      console.log(`Processing image ${file.filePath}, size:`, fileData.size, 'bytes')
+      const arrayBuffer = await fileData.arrayBuffer()
+      const base64Image = Buffer.from(arrayBuffer).toString('base64')
+      base64Images.push(base64Image)
+      console.log(`Image ${file.filePath} converted, base64 length:`, base64Image.length)
+    }
+
+    // 5. Parse with Vision API
+    console.log(`Calling vision API with ${base64Images.length} image(s)...`)
+    const transactions = await parseStatementWithVision(base64Images)
+    console.log('Extracted transactions:', transactions.length)
+
+    // 7. Get categories to map names to IDs
+    const { data: categories } = await supabase
+      .from('categories')
+      .select('id, name')
+
+    const categoryMap = new Map(
+      categories?.map((c) => [c.name.toLowerCase(), c.id]) || []
+    )
+
+    // 8. Save transactions to database
     // We'll map the AI result to our database schema
-    const dbTransactions = transactions.map((t) => ({
-      account_id: accountId,
-      date: t.date,
-      description: t.description,
-      amount: t.amount,
-      category: t.category,
-      // We might want to store the statement_id if we had it, 
-      // but for now we just link to account
-    }))
+    const dbTransactions = transactions.map((t) => {
+      const categoryId = categoryMap.get(t.category.toLowerCase()) || categoryMap.get('other')
+      
+      return {
+        account_id: accountId,
+        date: t.date,
+        description: t.description,
+        amount: t.amount,
+        category_id: categoryId,
+      }
+    })
 
     const { error: insertError } = await supabase
       .from('transactions')

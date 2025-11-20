@@ -60,8 +60,8 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
     setIsDragging(false)
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0]
-      await processFile(file)
+      const files = Array.from(e.dataTransfer.files)
+      await processFiles(files)
     }
   }, [user, selectedAccountId])
 
@@ -69,10 +69,13 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
     if (!e.target.files || e.target.files.length === 0) {
       return
     }
-    await processFile(e.target.files[0])
+    
+    // Convert FileList to array
+    const files = Array.from(e.target.files)
+    await processFiles(files)
   }
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
     if (!user) return
     if (!selectedAccountId) {
       setError('Please select an account first')
@@ -83,22 +86,33 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
     setError(null)
 
     try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase()
-      const fileName = `${user.id}/${Math.random()}.${fileExt}`
+      // Validate all files first
+      const validExtensions = ['png', 'jpg', 'jpeg']
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop()?.toLowerCase()
+        if (!validExtensions.includes(fileExt || '')) {
+          throw new Error(`Invalid file type: ${file.name}. Only PNG and JPEG images are supported.`)
+        }
+      }
+
+      // Upload all files to storage
+      const uploadedFiles: { filePath: string; fileType: string }[] = []
       
-      // Determine file type for API
-      let fileType: 'csv' | 'pdf' | 'text' = 'text'
-      if (fileExt === 'csv') fileType = 'csv'
-      else if (fileExt === 'pdf') fileType = 'pdf'
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop()?.toLowerCase()
+        const fileName = `${user.id}/${Date.now()}-${Math.random()}.${fileExt}`
+        const fileType = file.type || `image/${fileExt}`
 
-      // 1. Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('statements')
-        .upload(fileName, file)
+        const { error: uploadError } = await supabase.storage
+          .from('statements')
+          .upload(fileName, file)
 
-      if (uploadError) throw uploadError
+        if (uploadError) throw uploadError
+        
+        uploadedFiles.push({ filePath: fileName, fileType })
+      }
 
-      // 2. Call API to parse and save transactions
+      // Call API to parse all images together
       const session = await supabase.auth.getSession()
       const token = session.data.session?.access_token
 
@@ -109,8 +123,7 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          filePath: fileName,
-          fileType,
+          files: uploadedFiles, // Send multiple files
           accountId: selectedAccountId,
         }),
       })
@@ -118,17 +131,21 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to process file')
+        throw new Error(result.error || 'Failed to process files')
       }
 
-      alert(`Success! Processed ${result.count} transactions.`)
+      alert(`Success! Processed ${result.count} transactions from ${files.length} image${files.length > 1 ? 's' : ''}.`)
       onUploadComplete()
     } catch (error: any) {
-      console.error('Error uploading/processing file:', error)
+      console.error('Error uploading/processing files:', error)
       setError(error.message)
     } finally {
       setUploading(false)
     }
+  }
+
+  const processFile = async (file: File) => {
+    await processFiles([file])
   }
 
   if (loadingAccounts) {
@@ -198,7 +215,10 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
                   <span className="text-primary">Click to upload</span> or drag and drop
                 </p>
                 <p className="text-xs text-muted">
-                  PDF, CSV, or TXT (max 10MB)
+                  PNG or JPEG images (max 10MB each)
+                </p>
+                <p className="text-xs text-muted mt-1">
+                  💡 Upload multiple images for multi-page statements
                 </p>
               </>
             )}
@@ -206,7 +226,8 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
           <input
             type="file"
             className="hidden"
-            accept=".pdf,.csv,.txt"
+            accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg"
+            multiple
             onChange={handleFileUpload}
             disabled={uploading}
           />
