@@ -9,7 +9,11 @@ interface Transaction {
   date: string
   description: string
   amount: number
-  category: string
+  category: {
+    name: string
+    color: string
+    icon: string
+  } | null
   account: {
     name: string
   }
@@ -35,7 +39,7 @@ export default function TransactionsList() {
           date,
           description,
           amount,
-          category,
+          category:categories(name,color,icon),
           account:accounts(name)
         `)
         .order('date', { ascending: false })
@@ -90,7 +94,7 @@ export default function TransactionsList() {
               <td className="py-4 text-foreground font-medium">{t.description}</td>
               <td className="py-4">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white/80 capitalize">
-                  {t.category}
+                  {t.category?.icon} {t.category?.name || 'Uncategorized'}
                 </span>
               </td>
               <td className="py-4 text-sm text-muted">{t.account?.name || 'Unknown'}</td>
