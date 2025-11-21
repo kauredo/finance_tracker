@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card } from '@/components/ui/Card'
 
@@ -36,6 +36,7 @@ export default function InvitePartnerModal({ onClose }: InvitePartnerModalProps)
     if (!user) return
     
     try {
+      const supabase = createClient()
       const { data, error } = await supabase
         .from('household_members')
         .select('household_id, households(id, name)')

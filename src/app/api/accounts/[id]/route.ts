@@ -1,36 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
-// GET /api/accounts/[id] - Get account details with balance and transactions
+// GET /api/accounts/[id] - Get single account
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Fetch account
-    const { data: account, error: accountError } = await supabase
+    const { data, error } = await supabase
       .from('accounts')
-      .select('id, name, type, balance, created_at')
-      .eq('id', params.id)
+      .select('*')
+      .eq('id', id)
       .single()
 
-    if (accountError) {
-      if (accountError.code === 'PGRST116') {
+    if (error) {
+      if (error.code === 'PGRST116') {
         return NextResponse.json({ error: 'Account not found' }, { status: 404 })
       }
-      throw accountError
+      throw error
     }
 
-    return NextResponse.json({ account })
+    return NextResponse.json({ account: data })
   } catch (error: any) {
     console.error('GET /api/accounts/[id] error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -40,24 +42,28 @@ export async function GET(
 // PATCH /api/accounts/[id] - Update account
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { name, type } = body
+    const { name, type, color, icon } = body
 
     // Build update object
     const updateData: any = {}
     if (name !== undefined) updateData.name = name
     if (type !== undefined) updateData.type = type
+    if (color !== undefined) updateData.color = color
+    if (icon !== undefined) updateData.icon = icon
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
@@ -66,8 +72,8 @@ export async function PATCH(
     const { data, error } = await supabase
       .from('accounts')
       .update(updateData)
-      .eq('id', params.id)
-      .select('id, name, type, balance, created_at')
+      .eq('id', id)
+      .select()
       .single()
 
     if (error) {
@@ -84,32 +90,33 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/accounts/[id] - Delete account (with transaction check)
+// DELETE /api/accounts/[id] - Delete account
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if account has transactions
-    const { data: transactions, error: txError } = await supabase
+    const { count, error: countError } = await supabase
       .from('transactions')
-      .select('id')
-      .eq('account_id', params.id)
-      .limit(1)
+      .select('*', { count: 'exact', head: true })
+      .eq('account_id', id)
 
-    if (txError) throw txError
+    if (countError) throw countError
 
-    if (transactions && transactions.length > 0) {
+    if (count && count > 0) {
       return NextResponse.json({ 
-        error: 'Cannot delete account with existing transactions. Please delete transactions first.' 
+        error: 'Cannot delete account with existing transactions' 
       }, { status: 400 })
     }
 
@@ -117,7 +124,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('accounts')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) throw error
 

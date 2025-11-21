@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
 
 interface Account {
@@ -28,6 +28,7 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
 
   const fetchAccounts = async () => {
     try {
+      const supabase = createClient()
       const { data, error } = await supabase
         .from('accounts')
         .select('id, name, type')
@@ -99,12 +100,14 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
       const uploadedFiles: { filePath: string; fileType: string }[] = []
       
       for (const file of files) {
-        const fileExt = file.name.split('.').pop()?.toLowerCase()
-        const fileName = `${user.id}/${Date.now()}-${Math.random()}.${fileExt}`
+        const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
         const fileType = file.type || `image/${fileExt}`
 
+        const supabase = createClient()
         const { error: uploadError } = await supabase.storage
-          .from('statements')
+        .from('statements')
           .upload(fileName, file)
 
         if (uploadError) throw uploadError

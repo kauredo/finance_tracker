@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 
@@ -32,6 +32,7 @@ export default function JoinPage() {
     if (!householdId) return
 
     try {
+      const supabase = createClient()
       const { data, error } = await supabase
         .from('households')
         .select('*, household_members(user_id, profiles(email, full_name))')
@@ -69,7 +70,7 @@ export default function JoinPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          'Authorization': `Bearer ${(await createClient().auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({ householdId })
       })

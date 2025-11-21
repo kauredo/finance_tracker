@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
 // GET /api/transactions - List transactions with filters
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    console.log('API: Cookies found:', cookieStore.getAll().map(c => c.name))
+    const supabase = createClient(cookieStore)
+    const { searchParams } = new URL(request.url)
     
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    console.log('API: User found:', user?.id)
+    console.log('API: Auth error:', authError)
+    
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Parse query parameters
-    const searchParams = request.nextUrl.searchParams
     const accountId = searchParams.get('account_id')
     const categoryId = searchParams.get('category_id')
     const dateFrom = searchParams.get('date_from')
@@ -76,43 +81,36 @@ export async function GET(request: NextRequest) {
 // POST /api/transactions - Create new transaction
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
     
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { account_id, date, description, amount, category_id } = body
+    const { date, description, amount, category_id, account_id } = body
 
     // Validate required fields
-    if (!account_id || !date || !description || amount === undefined) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: account_id, date, description, amount' 
-      }, { status: 400 })
+    if (!date || !description || !amount || !account_id) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Create transaction
     const { data, error } = await supabase
       .from('transactions')
-      .insert([{
-        account_id,
-        date,
-        description,
-        amount,
-        category_id: category_id || null
-      }])
-      .select(`
-        id,
-        date,
-        description,
-        amount,
-        category:categories(id,name,color,icon),
-        account:accounts(id,name,type),
-        created_at
-      `)
+      .insert([
+        {
+          date,
+          description,
+          amount,
+          category_id: category_id || null,
+          account_id,
+          user_id: user.id // Explicitly set user_id from auth context
+        }
+      ])
+      .select()
       .single()
 
     if (error) throw error

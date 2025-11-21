@@ -12,7 +12,7 @@ import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 
 interface DashboardStats {
   totalExpenses: number
@@ -38,24 +38,26 @@ export default function DashboardPage() {
     if (!loading && !user) {
       router.push('/auth')
     } else if (user) {
-      fetchStats()
+      fetchDashboardData()
     }
   }, [user, loading, router])
 
-  const fetchStats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const { data, error } = await supabase
+      const supabase = createClient()
+      // Fetch transactions
+      const { data: transactionsData, error: transactionsError } = await supabase
         .from('transactions')
         .select('amount, date')
       
       
-      if (error) throw error
+      if (transactionsError) throw transactionsError
 
       const now = new Date()
       const currentMonth = now.getMonth()
       const currentYear = now.getFullYear()
 
-      const newStats = (data || []).reduce((acc, curr) => {
+      const newStats = (transactionsData || []).reduce((acc: any, curr: any) => {
         const amount = curr.amount
         const date = new Date(curr.date)
         

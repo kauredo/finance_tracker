@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card } from '@/components/ui/Card'
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
@@ -46,6 +46,9 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
   const fetchReportsData = async () => {
     try {
       setLoading(true)
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
       
       // Fetch transactions with categories
       const { data: transactions, error } = await supabase

@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
 // GET /api/transactions/[id] - Get single transaction
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -27,7 +29,7 @@ export async function GET(
         account:accounts(id,name,type),
         created_at
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -47,14 +49,16 @@ export async function GET(
 // PATCH /api/transactions/[id] - Update transaction
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -76,7 +80,7 @@ export async function PATCH(
     const { data, error } = await supabase
       .from('transactions')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select(`
         id,
         date,
@@ -105,21 +109,23 @@ export async function PATCH(
 // DELETE /api/transactions/[id] - Delete transaction
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { id } = await params
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { error } = await supabase
       .from('transactions')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) throw error
 

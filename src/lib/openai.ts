@@ -15,19 +15,28 @@ export async function parseStatementWithAI(
   fileContent: string,
   fileType: 'csv' | 'pdf' | 'text'
 ): Promise<Transaction[]> {
-  const prompt = `You are a financial data extraction expert. Parse the following bank statement and extract all transactions.
-  
+  const prompt = `You are a financial data extraction expert. Parse the following Portuguese bank statement and extract all transactions.
+
+IMPORTANT RULES:
+- The document is in Portuguese
+- Transactions marked as "Débito" are money OUT (expenses) - these should have NEGATIVE amounts
+- Transactions marked as "Crédito" are money IN (income) - these should have POSITIVE amounts
+- Transaction descriptions may span multiple lines - combine them into a single description
+- Each row contains a running account balance - ignore this balance column when extracting transactions
+- The LAST row by date contains the final correct account balance (you can note this but focus on transactions)
+
 For each transaction, provide:
 - date (ISO format YYYY-MM-DD)
-- description (merchant/payee name)
-- amount (negative for expenses, positive for income)
+- description (merchant/payee name, combine multiline names into single string)
+- amount (NEGATIVE for "Débito", POSITIVE for "Crédito")
 - category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, income, other)
 
 File type: ${fileType}
 Content (extracted text):
 ${fileContent}
 
-Return ONLY valid JSON array of transactions, no markdown or explanations.`
+Return ONLY valid JSON array of transactions, no markdown or explanations.
+Format: {"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -46,22 +55,32 @@ Return ONLY valid JSON array of transactions, no markdown or explanations.`
 export async function parseStatementWithVision(
   imageBase64Array: string[]
 ): Promise<Transaction[]> {
-  const prompt = `Analyze this bank statement and extract ALL transactions.
+  const prompt = `Analyze this Portuguese bank statement and extract ALL transactions.
+
+IMPORTANT RULES FOR PORTUGUESE BANK STATEMENTS:
+- The document is in Portuguese
+- Look for columns labeled "Débito" and "Crédito":
+  * "Débito" = money OUT (expenses) - use NEGATIVE amounts (e.g., -50.00)
+  * "Crédito" = money IN (income) - use POSITIVE amounts (e.g., +100.00)
+- Transaction descriptions may span multiple lines - combine them into a single description
+- Each row contains a running account balance (often labeled "Saldo") - ignore this when extracting transactions
+- The LAST row by date contains the final correct account balance
 
 Extract each transaction with:
 - date (ISO format YYYY-MM-DD)
-- description (merchant/payee name)
-- amount (negative for expenses, positive for income)
+- description (merchant/payee name, combine any multiline text into single string)
+- amount (NEGATIVE for "Débito", POSITIVE for "Crédito")
 - category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, income, other)
 
 CRITICAL:
 - Extract ALL transactions from ALL pages
-- Pay attention to table columns
-- Debits/expenses should be NEGATIVE amounts
-- Credits/income should be POSITIVE amounts
+- Pay careful attention to which column the amount appears in (Débito vs Crédito)
+- Transactions in "Débito" column should be NEGATIVE amounts
+- Transactions in "Crédito" column should be POSITIVE amounts
+- If a transaction description spans multiple lines, combine them
 
 You MUST respond with valid JSON only, in this EXACT format:
-{"transactions": [{"date": "2024-01-15", "description": "Store", "amount": -45.50, "category": "shopping"}]}`
+{"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`
 
   const content: any[] = [
     { type: 'text', text: prompt }

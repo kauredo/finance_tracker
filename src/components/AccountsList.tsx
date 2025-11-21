@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
+import Link from 'next/link'
 
 interface Account {
   id: string
   name: string
   type: 'personal' | 'joint'
-  created_at: string
+  balance: number | null
 }
 
 export default function AccountsList() {
@@ -24,9 +25,10 @@ export default function AccountsList() {
 
   const fetchAccounts = async () => {
     try {
+      const supabase = createClient()
       const { data, error } = await supabase
         .from('accounts')
-        .select('*')
+        .select('id, name, type, balance')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -42,32 +44,47 @@ export default function AccountsList() {
     return <div className="text-muted">Loading accounts...</div>
   }
 
-  if (accounts.length === 0) {
+  if (!accounts.length) {
     return (
-      <div className="text-center py-8 text-muted">
-        <p>No accounts yet</p>
+      <div className="text-center py-8">
+        <p className="text-muted">No accounts yet</p>
         <p className="text-sm mt-2">Create an account to get started</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid gap-4">
       {accounts.map((account) => (
         <div
           key={account.id}
-          className="px-4 py-3 bg-surface border border-border rounded-lg hover:bg-background transition-colors"
+          className="group bg-surface-alt/50 hover:bg-surface-alt border border-border rounded-lg p-4 transition-all hover:shadow-md cursor-pointer"
         >
-          <div className="flex justify-between items-center">
-            <div>
-              <h4 className="font-medium text-foreground">{account.name}</h4>
-              <p className="text-sm text-muted">
-                {account.type === 'personal' ? '👤 Personal' : '👥 Joint'} Account
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                <span className="text-xl">
+                  {account.type === 'personal' ? '👤' : '👥'}
+                </span>
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {account.name}
+                </h4>
+                <p className="text-sm text-muted capitalize">{account.type} Account</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className={`text-xl font-bold ${
+                account.balance === null ? 'text-muted' :
+                account.balance >= 0 ? 'text-success' : 'text-danger'
+              }`}>
+                {account.balance !== null ? `€${account.balance.toFixed(2)}` : 'N/A'}
+              </div>
+              <p className="text-xs text-muted mt-1">
+                {account.balance !== null ? 'Current Balance' : 'No transactions'}
               </p>
             </div>
-            <button className="text-muted hover:text-foreground text-sm">
-              View →
-            </button>
           </div>
         </div>
       ))}

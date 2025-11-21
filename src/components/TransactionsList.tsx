@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
+import TransactionDetailModal from '@/components/TransactionDetailModal'
 
 interface Transaction {
   id: string
@@ -19,20 +20,38 @@ interface Transaction {
   }
 }
 
-export default function TransactionsList() {
+interface TransactionsListProps {
+  searchQuery?: string
+  accountFilter?: string
+  categoryFilter?: string
+  startDate?: string
+  endDate?: string
+  limit?: number
+}
+
+export default function TransactionsList({ 
+  searchQuery = '',
+  accountFilter = 'all',
+  categoryFilter = 'all',
+  startDate,
+  endDate,
+  limit = 100
+}: TransactionsListProps = {}) {
   const { user } = useAuth()
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) 
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
       fetchTransactions()
     }
-  }, [user])
+  }, [user, searchQuery, accountFilter, categoryFilter, startDate, endDate])
 
   const fetchTransactions = async () => {
     try {
-      const { data, error } = await supabase
+      const supabase = createClient()
+      let query = supabase
         .from('transactions')
         .select(`
           id,
@@ -40,15 +59,39 @@ export default function TransactionsList() {
           description,
           amount,
           category:categories(name,color,icon),
-          account:accounts(name)
+          account:accounts(name,id)
         `)
         .order('date', { ascending: false })
-        .limit(10)
+        .limit(limit)
+
+      // Apply search filter
+      if (searchQuery) {
+        query = query.ilike('description', `%${searchQuery}%`)
+      }
+
+      // Apply account filter
+      if (accountFilter && accountFilter !== 'all') {
+        query = query.eq('account_id', accountFilter)
+      }
+
+      // Apply category filter  
+      if (categoryFilter && categoryFilter !== 'all') {
+        query = query.eq('category_id', categoryFilter)
+      }
+
+      // Apply date range filters
+      if (startDate) {
+        query = query.gte('date', startDate)
+      }
+      if (endDate) {
+        query = query.lte('date', endDate)
+      }
+
+      const { data, error } = await query
 
       if (error) throw error
-      if (error) throw error
       // Supabase might return account as an array if not properly typed, but we know it's a single relation
-      const formattedData = (data || []).map(t => ({
+      const formattedData = (data || []).map((t: any) => ({
         ...t,
         account: Array.isArray(t.account) ? t.account[0] : t.account
       })) as unknown as Transaction[]
@@ -76,6 +119,7 @@ export default function TransactionsList() {
   }
 
   return (
+    <>
     <div className="overflow-x-auto">
       <table className="w-full text-left">
         <thead>
@@ -89,7 +133,11 @@ export default function TransactionsList() {
         </thead>
         <tbody className="divide-y divide-border">
           {transactions.map((t) => (
-            <tr key={t.id} className="group hover:bg-surface-alt transition-colors">
+            <tr 
+              key={t.id} 
+              onClick={() => setSelectedTransactionId(t.id)}
+              className="group hover:bg-white/5 transition-colors cursor-pointer"
+            >
               <td className="py-4 text-sm text-muted">{new Date(t.date).toLocaleDateString()}</td>
               <td className="py-4 text-foreground font-medium">{t.description}</td>
               <td className="py-4">
@@ -106,5 +154,18 @@ export default function TransactionsList() {
         </tbody>
       </table>
     </div>
+
+    {/* Transaction Detail Modal */}
+    {selectedTransactionId && (
+      <TransactionDetailModal
+        transactionId={selectedTransactionId!}
+        onClose={() => setSelectedTransactionId(null)}
+        onUpdate={() => {
+          setSelectedTransactionId(null)
+          fetchTransactions() // Refresh list after edit/delete
+        }}
+      />
+    )}
+  </>
   )
 }

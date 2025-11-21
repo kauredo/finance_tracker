@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { Card } from '@/components/ui/Card'
 
 interface AddAccountModalProps {
@@ -19,13 +19,12 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
-
     setLoading(true)
-    setError(null)
+    setError('')
 
     try {
-      // Get auth session for API call
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         throw new Error('No active session')
