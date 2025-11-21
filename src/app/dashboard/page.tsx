@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
+import NavBar from '@/components/NavBar'
 import FileUpload from '@/components/FileUpload'
 import AddAccountModal from '@/components/AddAccountModal'
 import InvitePartnerModal from '@/components/InvitePartnerModal'
@@ -11,7 +11,6 @@ import ReportsModal from '@/components/ReportsModal'
 import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
-import Image from 'next/image'
 
 import { supabase } from '@/lib/supabase'
 
@@ -22,10 +21,9 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading, signOut } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { user, loading } = useAuth()
   const router = useRouter()
-  const [isSigningOut, setIsSigningOut] = useState(false)
+  const pathname = usePathname()
   const [showUpload, setShowUpload] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -49,6 +47,7 @@ export default function DashboardPage() {
       const { data, error } = await supabase
         .from('transactions')
         .select('amount, date')
+      
       
       if (error) throw error
 
@@ -82,17 +81,6 @@ export default function DashboardPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    setIsSigningOut(true)
-    try {
-      await signOut()
-      router.push('/auth')
-    } catch (error) {
-      console.error('Sign out error:', error)
-      setIsSigningOut(false)
-    }
-  }
-
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -102,43 +90,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-surface border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Wallet Joy Logo" width={40} height={40} />
-            <span className="text-lg font-semibold text-foreground">Wallet Joy</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-muted text-sm hidden sm:block">{user.email}</span>
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-background transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              )}
-            </button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              isLoading={isSigningOut}
-            >
-              {isSigningOut ? 'Signing out...' : 'Sign Out'}
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div key={pathname} className="min-h-screen bg-background">
+      <NavBar />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
