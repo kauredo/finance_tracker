@@ -85,8 +85,20 @@ export default function DashboardPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+      <div className="min-h-screen bg-background">
+        <NavBar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardContent>
+                  <div className="h-4 bg-surface-alt animate-pulse rounded w-24 mb-2" />
+                  <div className="h-8 bg-surface-alt animate-pulse rounded w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </main>
       </div>
     )
   }

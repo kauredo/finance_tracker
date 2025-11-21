@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/utils/supabase/client'
 import TransactionDetailModal from '@/components/TransactionDetailModal'
 import Icon from '@/components/icons/Icon'
+import { SkeletonTable } from '@/components/ui/Skeleton'
+import { Pagination } from '@/components/ui/Pagination'
 
 interface Transaction {
   id: string
@@ -42,16 +44,33 @@ export default function TransactionsList({
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true) 
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+
+  useEffect(() => {
+    if (user) {
+      setCurrentPage(1) // Reset to page 1 when filters change
+      fetchTransactions()
+    }
+  }, [user, searchQuery, accountFilter, categoryFilter, startDate, endDate])
 
   useEffect(() => {
     if (user) {
       fetchTransactions()
     }
-  }, [user, searchQuery, accountFilter, categoryFilter, startDate, endDate])
+  }, [currentPage, itemsPerPage])
 
   const fetchTransactions = async () => {
     try {
       const supabase = createClient()
+      
+      // First, get total count
+      let countQuery = supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+
+      // Build the main query
       let query = supabase
         .from('transactions')
         .select(`
@@ -63,34 +82,48 @@ export default function TransactionsList({
           account:accounts(name,id)
         `)
         .order('date', { ascending: false })
-        .limit(limit)
 
-      // Apply search filter
+      // Apply search filter to both queries
       if (searchQuery) {
         query = query.ilike('description', `%${searchQuery}%`)
+        countQuery = countQuery.ilike('description', `%${searchQuery}%`)
       }
 
       // Apply account filter
       if (accountFilter && accountFilter !== 'all') {
         query = query.eq('account_id', accountFilter)
+        countQuery = countQuery.eq('account_id', accountFilter)
       }
 
       // Apply category filter  
       if (categoryFilter && categoryFilter !== 'all') {
         query = query.eq('category_id', categoryFilter)
+        countQuery = countQuery.eq('category_id', categoryFilter)
       }
 
       // Apply date range filters
       if (startDate) {
         query = query.gte('date', startDate)
+        countQuery = countQuery.gte('date', startDate)
       }
       if (endDate) {
         query = query.lte('date', endDate)
+        countQuery = countQuery.lte('date', endDate)
       }
 
-      const { data, error } = await query
+      // Apply pagination
+      const from = (currentPage - 1) * itemsPerPage
+      const to = from + itemsPerPage - 1
+      query = query.range(from, to)
+
+      // Execute both queries
+      const [{ data, error }, { count }] = await Promise.all([
+        query,
+        countQuery
+      ])
 
       if (error) throw error
+      
       // Supabase might return account as an array if not properly typed, but we know it's a single relation
       const formattedData = (data || []).map((t: any) => ({
         ...t,
@@ -98,6 +131,7 @@ export default function TransactionsList({
       })) as unknown as Transaction[]
       
       setTransactions(formattedData)
+      setTotalCount(count || 0)
     } catch (error) {
       console.error('Error fetching transactions:', error)
     } finally {
@@ -106,7 +140,7 @@ export default function TransactionsList({
   }
 
   if (loading) {
-    return <div className="text-muted text-center py-8">Loading transactions...</div>
+    return <SkeletonTable rows={5} columns={5} />
   }
 
   if (transactions.length === 0) {
@@ -149,12 +183,25 @@ export default function TransactionsList({
               </td>
               <td className="py-4 text-sm text-muted">{t.account?.name || 'Unknown'}</td>
               <td className={`py-4 text-right font-medium ${t.amount > 0 ? 'text-success' : 'text-foreground'}`}>
-                {t.amount > 0 ? '+' : ''}{t.amount.toFixed(2)}
+                {t.amount > 0 ? '+' : ''}€{t.amount.toFixed(2)}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(totalCount / itemsPerPage)}
+        totalItems={totalCount}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(newItemsPerPage) => {
+          setItemsPerPage(newItemsPerPage)
+          setCurrentPage(1) // Reset to first page when changing items per page
+        }}
+      />
     </div>
 
     {/* Transaction Detail Modal */}
