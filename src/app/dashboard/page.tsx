@@ -18,6 +18,8 @@ interface DashboardStats {
   totalExpenses: number
   monthlyExpenses: number
   savings: number
+  totalBudget: number
+  budgetSpent: number
 }
 
 export default function DashboardPage() {
@@ -31,7 +33,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalExpenses: 0,
     monthlyExpenses: 0,
-    savings: 0
+    savings: 0,
+    totalBudget: 0,
+    budgetSpent: 0
   })
 
   useEffect(() => {
@@ -75,7 +79,18 @@ export default function DashboardPage() {
         acc.savings += amount
 
         return acc
-      }, { totalExpenses: 0, monthlyExpenses: 0, savings: 0 })
+      }, { totalExpenses: 0, monthlyExpenses: 0, savings: 0, totalBudget: 0, budgetSpent: 0 })
+
+      // Fetch Budgets
+      const { data: budgets } = await supabase
+        .from('budgets')
+        .select('amount')
+      
+      if (budgets) {
+        newStats.totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0)
+        // We already calculated monthly expenses, which is essentially budget spent
+        newStats.budgetSpent = newStats.monthlyExpenses
+      }
 
       setStats(newStats)
     } catch (error) {
@@ -136,6 +151,32 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Budget Overview */}
+        <Card className="mb-8">
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-end mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">Monthly Budget</h2>
+                <div className="text-3xl font-bold text-foreground mt-1">
+                  €{stats.budgetSpent.toFixed(2)} <span className="text-muted text-lg font-normal">/ €{stats.totalBudget.toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-lg font-bold ${stats.budgetSpent > stats.totalBudget ? 'text-danger' : 'text-success'}`}>
+                  {stats.totalBudget > 0 ? ((stats.budgetSpent / stats.totalBudget) * 100).toFixed(0) : 0}%
+                </div>
+                <div className="text-sm text-muted">Used</div>
+              </div>
+            </div>
+            <div className="h-4 bg-surface-alt rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${stats.budgetSpent > stats.totalBudget ? 'bg-danger' : 'bg-success'}`}
+                style={{ width: `${stats.totalBudget > 0 ? Math.min((stats.budgetSpent / stats.totalBudget) * 100, 100) : 0}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <Card className="mb-8">

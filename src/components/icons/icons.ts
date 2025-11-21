@@ -11,8 +11,15 @@ export const icons = {
   income: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", // Coin/Dollar
   other: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z", // Tag
 
-  // App UI
-  dashboard: "M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z", // Grid
+  // UI Icons
+  edit: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
+  trash: 'M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+  tag: 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z M7 7h.01',
+  chart: 'M18 20V10 M12 20V4 M6 20v-6',
+  download: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
+  
+  // Navigation
+  dashboard: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   transactions: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01", // Clipboard/List
   accounts: "M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M3 21h18M3 21a2 2 0 002 2h14a2 2 0 002-2M5 11V7a2 2 0 012-2h10a2 2 0 012 2v4M9 7v4m6-4v4", // Bank/Building
   reports: "M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z", // Pie chart part 1
@@ -26,8 +33,8 @@ export const icons = {
   
   // Actions/Status
   expense: "M12 19l9 2-9-18-9 18 9-2zm0 0v-8", // Paper airplane / Flying money metaphor
-  edit: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z", // Pencil
-  delete: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16", // Trash
+  // edit key removed (duplicate)
+  delete: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16", // Trash alias
   calendar: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", // Calendar
   check: "M5 13l4 4L19 7", // Checkmark
   cross: "M6 18L18 6M6 6l12 12", // X
@@ -36,8 +43,39 @@ export const icons = {
   tip: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z", // Lightbulb
   
   // Piggy Bank (Special)
-  piggy_bank: "M19 12c.8 0 1.5.3 2 .8l1-1.2s-1-1.6-2.5-1.6c-1 0-1.8.5-2.2 1.2-.3-.1-.7-.2-1.1-.2h-.4c-1.5 0-2.8.8-3.5 2h-1c-1.3 0-2.4 1.1-2.4 2.4v.2c0 1.3 1.1 2.4 2.4 2.4h.2c.4 0 .8-.1 1.2-.2.4.7 1.2 1.2 2.2 1.2 1.5 0 2.5-1.6 2.5-1.6l-1-1.2c-.5.5-1.2.8-2 .8-.8 0-1.5-.7-1.5-1.5V15c0-.8.7-1.5 1.5-1.5h.4c.8 0 1.5.7 1.5 1.5v.5c0 .8.7 1.5 1.5 1.5.8 0 1.5-.7 1.5-1.5v-.5c0-.8-.7-1.5-1.5-1.5z M7 15c0-.8.7-1.5 1.5-1.5h.5c.8 0 1.5.7 1.5 1.5v.5c0 .8-.7 1.5-1.5 1.5-.8 0-1.5-.7-1.5-1.5v-.5z M15 7h.01 M15 5h2 M16 4v2" // Attempt at a piggy bank shape - this is hard to get right with just path data. I'll use a simpler "pig" or "savings" icon.
+  piggy_bank: "M19 12c.8 0 1.5.3 2 .8l1-1.2s-1-1.6-2.5-1.6c-1 0-1.8.5-2.2 1.2-.3-.1-.7-.2-1.1-.2h-.4c-1.5 0-2.8.8-3.5 2h-1c-1.3 0-2.4 1.1-2.4 2.4v.2c0 1.3 1.1 2.4 2.4 2.4h.2c.4 0 .8-.1 1.2-.2.4.7 1.2 1.2 2.2 1.2 1.5 0 2.5-1.6 2.5-1.6l-1-1.2c-.5.5-1.2.8-2 .8-.8 0-1.5-.7-1.5-1.5V15c0-.8.7-1.5 1.5-1.5h.4c.8 0 1.5.7 1.5 1.5v.5c0 .8.7 1.5 1.5 1.5.8 0 1.5-.7 1.5-1.5v-.5c0-.8-.7-1.5-1.5-1.5z M7 15c0-.8.7-1.5 1.5-1.5h.5c.8 0 1.5.7 1.5 1.5v.5c0 .8-.7 1.5-1.5 1.5-.8 0-1.5-.7-1.5-1.5v-.5z M15 7h.01 M15 5h2" // Attempt at a piggy bank shape - this is hard to get right with just path data. I'll use a simpler "pig" or "savings" icon.
 }
+
+export type IconName = 
+  | 'groceries' 
+  | 'dining' 
+  | 'transport' 
+  | 'transport_alt'
+  | 'utilities' 
+  | 'entertainment' 
+  | 'shopping' 
+  | 'healthcare' 
+  | 'income' 
+  | 'other'
+  | 'dashboard'
+  | 'transactions'
+  | 'accounts'
+  | 'reports'
+  | 'settings'
+  | 'plus'
+  | 'close'
+  | 'check'
+  | 'chevron_down'
+  | 'upload'
+  | 'user_plus'
+  | 'search'
+  | 'piggy_bank'
+  | 'edit'
+  | 'trash'
+  | 'delete'
+  | 'tag'
+  | 'chart'
+  | 'download'
 
 // Overwriting piggy_bank with a better "Savings" icon (Piggy bank style)
 // M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z is moon

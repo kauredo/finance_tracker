@@ -20,8 +20,9 @@ export default function NavBar() {
     { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
     { name: 'Transactions', href: '/transactions', icon: 'transactions' },
     { name: 'Accounts', href: '/accounts', icon: 'accounts' },
-    { name: 'Categories', href: '/categories', icon: 'groceries' },
-    { name: 'Export', href: '/export', icon: 'reports' },
+    { name: 'Categories', href: '/categories', icon: 'tag' },
+    { name: 'Budgets', href: '/budgets', icon: 'chart' },
+    { name: 'Export', href: '/export', icon: 'download' },
     { name: 'Reports', href: '/reports', icon: 'reports' },
     { name: 'Settings', href: '/settings', icon: 'settings' },
   ]
