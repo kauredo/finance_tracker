@@ -12,6 +12,7 @@ import DateRangePicker from '@/components/DateRangePicker'
 import { useDateRange } from '@/hooks/useDateRange'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import Icon from '@/components/icons/Icon'
 
 export default function TransactionsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -79,7 +80,8 @@ export default function TransactionsPage() {
               variant="secondary"
               onClick={() => setShowDatePicker(!showDatePicker)}
             >
-              📅 {dateRange.startDate ? 'Custom Range' : 'All Time'}
+              <Icon name="calendar" size={16} className="mr-2" />
+              {dateRange.startDate ? 'Custom Range' : 'All Time'}
             </Button>
             <Button onClick={() => setShowAddModal(true)}>
               + Add Transaction
@@ -133,7 +135,7 @@ export default function TransactionsPage() {
                 <option value="all">All Categories</option>
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                    {category.name}
                   </option>
                 ))}
               </select>

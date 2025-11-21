@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/utils/supabase/client'
 import { cn } from '@/lib/utils'
+import Icon from '@/components/icons/Icon'
 
 interface Account {
   id: string
@@ -87,6 +88,7 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
     setError(null)
 
     try {
+      const supabase = createClient()
       // Validate all files first
       const validExtensions = ['png', 'jpg', 'jpeg', 'csv', 'tsv']
       for (const file of files) {
@@ -105,7 +107,6 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
       const filePath = `${fileName}`
         const fileType = file.type || `image/${fileExt}`
 
-        const supabase = createClient()
         const { error: uploadError } = await supabase.storage
         .from('statements')
           .upload(fileName, file)
@@ -228,7 +229,8 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
                   Images (PNG/JPEG), CSV, or TSV files
                 </p>
                 <p className="text-xs text-muted mt-1">
-                  💡 Upload multiple images for multi-page statements
+                  <Icon name="tip" size={12} className="mr-1 inline-block" />
+                  Upload multiple images for multi-page statements
                 </p>
               </>
             )}

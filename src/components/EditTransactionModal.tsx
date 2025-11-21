@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { Card } from '@/components/ui/Card'
 import { createClient } from '@/utils/supabase/client'
+import Icon from '@/components/icons/Icon'
 
 interface EditTransactionModalProps {
   transactionId: string
@@ -166,7 +167,8 @@ export default function EditTransactionModal({ transactionId, onClose, onSuccess
                     : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
-                💸 Expense
+                <Icon name="expense" size={16} className="mr-2" />
+                Expense
               </button>
               <button
                 type="button"
@@ -177,7 +179,8 @@ export default function EditTransactionModal({ transactionId, onClose, onSuccess
                     : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
-                💰 Income
+                <Icon name="income" size={16} className="mr-2" />
+                Income
               </button>
             </div>
           </div>
@@ -196,7 +199,7 @@ export default function EditTransactionModal({ transactionId, onClose, onSuccess
               <option value="">Select account</option>
               {accounts.map(account => (
                 <option key={account.id} value={account.id}>
-                  {account.type === 'personal' ? '👤' : '👥'} {account.name}
+                  {account.name} ({account.type})
                 </option>
               ))}
             </select>
@@ -259,7 +262,7 @@ export default function EditTransactionModal({ transactionId, onClose, onSuccess
               <option value="">Uncategorized</option>
               {categories.map(category => (
                 <option key={category.id} value={category.id}>
-                  {category.icon} {category.name}
+                  {category.name}
                 </option>
               ))}
             </select>

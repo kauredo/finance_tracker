@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import Icon from '@/components/icons/Icon'
 
 interface Account {
   id: string
@@ -64,7 +65,7 @@ export default function AccountsList() {
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
                 <span className="text-xl">
-                  {account.type === 'personal' ? '👤' : '👥'}
+                  <Icon name={account.type === 'personal' ? 'personal' : 'joint'} size={24} />
                 </span>
               </div>
               <div>

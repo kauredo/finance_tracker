@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { Card } from '@/components/ui/Card'
+import Icon from '@/components/icons/Icon'
 
 interface InvitePartnerModalProps {
   onClose: () => void
@@ -135,7 +136,8 @@ export default function InvitePartnerModal({ onClose }: InvitePartnerModalProps)
                   </button>
                 </div>
                 <p className="text-xs text-muted mt-2">
-                  💡 Share via WhatsApp, email, or any messaging app
+                  <Icon name="tip" size={12} className="mr-1 inline-block" />
+                  Share via WhatsApp, email, or any messaging app
                 </p>
               </div>
             </div>

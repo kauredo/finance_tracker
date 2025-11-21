@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import Icon from '@/components/icons/Icon'
 
-export default function JoinPage() {
+function JoinContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -66,11 +67,12 @@ export default function JoinPage() {
     setError(null)
 
     try {
+      const supabase = createClient()
       const response = await fetch('/api/accept-invite', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await createClient().auth.getSession()).data.session?.access_token}`
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({ householdId })
       })
@@ -104,7 +106,7 @@ export default function JoinPage() {
         <div className="p-8">
           {success ? (
             <div className="text-center">
-              <div className="text-6xl mb-4">✅</div>
+              <Icon name="check" size={64} className="mb-4 mx-auto text-success" />
               <h2 className="text-2xl font-semibold text-foreground mb-2">
                 Welcome to the household!
               </h2>
@@ -114,7 +116,7 @@ export default function JoinPage() {
             </div>
           ) : error ? (
             <div className="text-center">
-              <div className="text-6xl mb-4">❌</div>
+              <Icon name="cross" size={64} className="mb-4 mx-auto text-danger" />
               <h2 className="text-2xl font-semibold text-foreground mb-2">
                 Invitation Error
               </h2>
@@ -126,7 +128,7 @@ export default function JoinPage() {
           ) : household ? (
             <div>
               <div className="text-center mb-6">
-                <div className="text-6xl mb-4">👥</div>
+                <Icon name="joint" size={64} className="mb-4 mx-auto text-primary" />
                 <h2 className="text-2xl font-semibold text-foreground mb-2">
                   Join {household.name}
                 </h2>
@@ -168,5 +170,13 @@ export default function JoinPage() {
         </div>
       </Card>
     </div>
+  )
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="text-muted">Loading...</div></div>}>
+      <JoinContent />
+    </Suspense>
   )
 }

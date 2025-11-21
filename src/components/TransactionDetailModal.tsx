@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { createClient } from '@/utils/supabase/client'
 import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import EditTransactionModal from '@/components/EditTransactionModal'
+import Icon from '@/components/icons/Icon'
 
 interface TransactionDetailModalProps {
   transactionId: string
@@ -138,7 +139,17 @@ export default function TransactionDetailModal({ transactionId, onClose, onUpdat
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                 isExpense ? 'bg-danger/20 text-danger' : 'bg-success/20 text-success'
               }`}>
-                {isExpense ? '💸 Expense' : '💰 Income'}
+                {isExpense ? (
+                  <>
+                    <Icon name="expense" size={16} className="mr-2" />
+                    Expense
+                  </>
+                ) : (
+                  <>
+                    <Icon name="income" size={16} className="mr-2" />
+                    Income
+                  </>
+                )}
               </span>
             </div>
 
@@ -173,7 +184,8 @@ export default function TransactionDetailModal({ transactionId, onClose, onUpdat
               <div className="text-sm text-muted mb-1">Category</div>
               {transaction.category ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-surface-alt text-foreground">
-                  {transaction.category.icon} {transaction.category.name}
+                  <Icon name={transaction.category.icon as any} size={16} className="mr-2" />
+                  {transaction.category.name}
                 </span>
               ) : (
                 <span className="text-muted text-sm">Uncategorized</span>
@@ -184,7 +196,10 @@ export default function TransactionDetailModal({ transactionId, onClose, onUpdat
             <div>
               <div className="text-sm text-muted mb-1">Account</div>
               <div className="text-foreground">
-                {transaction.account.type === 'personal' ? '👤' : '👥'} {transaction.account.name}
+                <div className="flex items-center gap-2">
+                  <Icon name={transaction.account.type === 'personal' ? 'personal' : 'joint'} size={16} />
+                  {transaction.account.name}
+                </div>
               </div>
             </div>
 
@@ -194,13 +209,15 @@ export default function TransactionDetailModal({ transactionId, onClose, onUpdat
                 onClick={() => setShowEditModal(true)}
                 className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground font-medium rounded-lg transition-all border border-border"
               >
-                ✏️ Edit
+                <Icon name="edit" size={18} className="mr-2" />
+                Edit
               </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="flex-1 px-4 py-3 bg-danger/20 hover:bg-danger/30 text-danger font-medium rounded-lg transition-all border border-danger/30"
               >
-                🗑️ Delete
+                <Icon name="delete" size={18} className="mr-2" />
+                Delete
               </button>
             </div>
           </div>

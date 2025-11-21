@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/utils/supabase/client'
 import { Card } from '@/components/ui/Card'
+import Icon from '@/components/icons/Icon'
 
 interface AddAccountModalProps {
   onClose: () => void
@@ -101,7 +102,8 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
                     : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
-                👤 Personal
+                <Icon name="personal" size={20} className="mr-2" />
+                Personal
               </button>
               <button
                 type="button"
@@ -112,7 +114,8 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
                     : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
-                👥 Joint
+                <Icon name="joint" size={20} className="mr-2" />
+                Joint
               </button>
             </div>
             {accountType === 'joint' && (

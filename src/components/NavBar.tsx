@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useState } from 'react'
+import Icon, { IconName } from '@/components/icons/Icon'
 
 export default function NavBar() {
   const pathname = usePathname()
@@ -15,12 +16,12 @@ export default function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-    { name: 'Transactions', href: '/transactions', icon: '💸' },
-    { name: 'Accounts', href: '/accounts', icon: '🏦' },
-    { name: 'Reports', href: '/reports', icon: '📈' },
-    { name: 'Settings', href: '/settings', icon: '⚙️' },
+  const navigation: { name: string; href: string; icon: IconName }[] = [
+    { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+    { name: 'Transactions', href: '/transactions', icon: 'transactions' },
+    { name: 'Accounts', href: '/accounts', icon: 'accounts' },
+    { name: 'Reports', href: '/reports', icon: 'reports' },
+    { name: 'Settings', href: '/settings', icon: 'settings' },
   ]
 
   const handleSignOut = async () => {
@@ -54,13 +55,13 @@ export default function NavBar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${
                     isActive
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted hover:text-foreground hover:bg-surface-alt'
                   }`}
                 >
-                  <span className="mr-2">{item.icon}</span>
+                  <Icon name={item.icon} size={18} className="mr-2" />
                   {item.name}
                 </Link>
               )
@@ -134,7 +135,7 @@ export default function NavBar() {
                         : 'text-muted hover:text-foreground hover:bg-surface-alt'
                     }`}
                   >
-                    <span className="mr-2">{item.icon}</span>
+                    <Icon name={item.icon} size={18} className="mr-2" />
                     {item.name}
                   </Link>
                 )

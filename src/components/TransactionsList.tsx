@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/utils/supabase/client'
 import TransactionDetailModal from '@/components/TransactionDetailModal'
+import Icon from '@/components/icons/Icon'
 
 interface Transaction {
   id: string
@@ -111,7 +112,7 @@ export default function TransactionsList({
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12 text-muted">
-        <div className="text-5xl mb-4">📝</div>
+        <Icon name="memo" size={48} className="mb-4 mx-auto" />
         <p className="text-lg font-medium">No transactions yet</p>
         <p className="text-sm mt-2">Upload a bank statement to get started</p>
       </div>
@@ -142,7 +143,8 @@ export default function TransactionsList({
               <td className="py-4 text-foreground font-medium">{t.description}</td>
               <td className="py-4">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-alt text-foreground capitalize border border-border">
-                  {t.category?.icon} {t.category?.name || 'Uncategorized'}
+                  <Icon name={t.category?.icon as any || 'other'} size={14} className="mr-1.5" />
+                  {t.category?.name || 'Uncategorized'}
                 </span>
               </td>
               <td className="py-4 text-sm text-muted">{t.account?.name || 'Unknown'}</td>

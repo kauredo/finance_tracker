@@ -50,15 +50,15 @@ CREATE TABLE categories (
 
 -- Insert default categories
 INSERT INTO categories (name, color, icon) VALUES
-  ('Groceries', '#10b981', '🛒'),
-  ('Dining', '#f59e0b', '🍽️'),
-  ('Transport', '#3b82f6', '🚗'),
-  ('Utilities', '#8b5cf6', '💡'),
-  ('Entertainment', '#ec4899', '🎬'),
-  ('Shopping', '#f43f5e', '🛍️'),
-  ('Healthcare', '#06b6d4', '🏥'),
-  ('Income', '#22c55e', '💰'),
-  ('Other', '#6b7280', '📌');
+  ('Groceries', '#10b981', 'groceries'),
+  ('Dining', '#f59e0b', 'dining'),
+  ('Transport', '#3b82f6', 'transport'),
+  ('Utilities', '#8b5cf6', 'utilities'),
+  ('Entertainment', '#ec4899', 'entertainment'),
+  ('Shopping', '#f43f5e', 'shopping'),
+  ('Healthcare', '#06b6d4', 'healthcare'),
+  ('Income', '#22c55e', 'income'),
+  ('Other', '#6b7280', 'other');
 
 -- Create transactions table
 CREATE TABLE transactions (
