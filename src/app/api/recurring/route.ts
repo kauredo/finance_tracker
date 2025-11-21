@@ -12,16 +12,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's household
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Get user's household from household_members
+    const { data: member } = await supabase
+      .from('household_members')
       .select('household_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
-    if (!profile?.household_id) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (!member?.household_id) {
+      return NextResponse.json({ error: 'Household not found' }, { status: 404 })
     }
+
+    const household_id = member.household_id
 
     // Fetch recurring transactions
     const { data: recurring, error } = await supabase
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
         category:categories(id, name, icon, color),
         account:accounts(id, name)
       `)
-      .eq('household_id', profile.household_id)
+      .eq('household_id', household_id)
       .order('next_run_date', { ascending: true })
 
     if (error) {
@@ -73,21 +75,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's household
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Get user's household from household_members
+    const { data: member } = await supabase
+      .from('household_members')
       .select('household_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
-    if (!profile?.household_id) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (!member?.household_id) {
+      return NextResponse.json({ error: 'Household not found' }, { status: 404 })
     }
+
+    const household_id = member.household_id
 
     // Create recurring transaction
     const { data: recurring, error } = await supabase
       .from('recurring_transactions')
       .insert({
-        household_id: profile.household_id,
+        household_id: household_id,
         description,
         amount,
         interval,

@@ -17,25 +17,27 @@ export async function GET() {
       )
     }
 
-    // Get user's profile to access household_id
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+    // Get user's household from household_members
+    const { data: member, error: memberError } = await supabase
+      .from('household_members')
       .select('household_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
-    if (profileError || !profile?.household_id) {
+    if (memberError || !member?.household_id) {
       return NextResponse.json(
-        { error: 'Profile not found' },
+        { error: 'Household not found' },
         { status: 404 }
       )
     }
+
+    const household_id = member.household_id
 
     // Fetch accounts for the household
     const { data: accounts, error: accountsError } = await supabase
       .from('accounts')
       .select('id, name, type, balance')
-      .eq('household_id', profile.household_id)
+      .eq('household_id', household_id)
       .order('name')
 
     if (accountsError) {

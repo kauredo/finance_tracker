@@ -12,6 +12,10 @@ export const icons = {
   other: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z", // Tag
 
   // UI Icons
+  moon: "M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z",
+  sun: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z",
+  logout: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
+  
   edit: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
   trash: 'M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
   tag: 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z M7 7h.01',
@@ -38,13 +42,16 @@ export const icons = {
   calendar: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", // Calendar
   check: "M5 13l4 4L19 7", // Checkmark
   cross: "M6 18L18 6M6 6l12 12", // X
-  plus: "M12 4v16m8-8H4", // Plus
+  plus: 'M12 5v14M5 12h14',
+  chevron_down: 'M19 9l-7 7-7-7',
+  user: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 0 0 0-8 4 4 0 0 0 0 8z',
+  lock: 'M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z',
   close: "M6 18L18 6M6 6l12 12", // X (same as cross)
   memo: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", // Document text
   tip: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z", // Lightbulb
   
   // Piggy Bank (Special)
-  piggy_bank: "M19 12c.8 0 1.5.3 2 .8l1-1.2s-1-1.6-2.5-1.6c-1 0-1.8.5-2.2 1.2-.3-.1-.7-.2-1.1-.2h-.4c-1.5 0-2.8.8-3.5 2h-1c-1.3 0-2.4 1.1-2.4 2.4v.2c0 1.3 1.1 2.4 2.4 2.4h.2c.4 0 .8-.1 1.2-.2.4.7 1.2 1.2 2.2 1.2 1.5 0 2.5-1.6 2.5-1.6l-1-1.2c-.5.5-1.2.8-2 .8-.8 0-1.5-.7-1.5-1.5V15c0-.8.7-1.5 1.5-1.5h.4c.8 0 1.5.7 1.5 1.5v.5c0 .8.7 1.5 1.5 1.5.8 0 1.5-.7 1.5-1.5v-.5c0-.8-.7-1.5-1.5-1.5z M7 15c0-.8.7-1.5 1.5-1.5h.5c.8 0 1.5.7 1.5 1.5v.5c0 .8-.7 1.5-1.5 1.5-.8 0-1.5-.7-1.5-1.5v-.5z M15 7h.01 M15 5h2" // Attempt at a piggy bank shape - this is hard to get right with just path data. I'll use a simpler "pig" or "savings" icon.
+  piggy_bank: "M19 14c0 2.21-3.58 4-8 4s-8-1.79-8-4 3.58-4 8-4 8 1.79 8 4z M7 17v3 M15 17v3 M5 12l-2-2 M17 12l2-2 M4 14a1 1 0 100 2 1 1 0 000-2 M11 8h2 M12 5v2" // Attempt at a piggy bank shape - this is hard to get right with just path data. I'll use a simpler "pig" or "savings" icon.
 }
 
 export type IconName = 
@@ -77,6 +84,9 @@ export type IconName =
   | 'tag'
   | 'chart'
   | 'download'
+  | 'moon'
+  | 'sun'
+  | 'logout'
 
 // Overwriting piggy_bank with a better "Savings" icon (Piggy bank style)
 // M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z is moon

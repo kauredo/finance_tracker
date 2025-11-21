@@ -61,8 +61,17 @@ export default function RecurringPage() {
 
   const handleAdd = () => {
     setEditId(undefined)
+    setSuggestionData(undefined)
     setIsModalOpen(true)
   }
+
+  const handleUseSuggestion = (suggestion: any) => {
+    setEditId(undefined)
+    setSuggestionData(suggestion)
+    setIsModalOpen(true)
+  }
+
+  const [suggestionData, setSuggestionData] = useState<any>(undefined)
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
@@ -117,6 +126,9 @@ export default function RecurringPage() {
               Add New
             </Button>
           </div>
+
+          {/* Suggestions Section */}
+          <SuggestionsList onAdd={handleUseSuggestion} />
 
           {loading ? (
             <div className="text-center py-12 text-muted">Loading...</div>
@@ -198,7 +210,54 @@ export default function RecurringPage() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchRecurring}
         editId={editId}
+        initialData={suggestionData}
       />
     </>
+  )
+}
+
+function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/recurring/suggestions')
+      .then(res => res.json())
+      .then(data => {
+        if (data.suggestions) setSuggestions(data.suggestions)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading || suggestions.length === 0) return null
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Icon name="tip" size={20} className="text-primary" />
+        Suggested for you
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {suggestions.map((s, i) => (
+          <Card key={i} variant="glass" className="p-4 border-primary/20 bg-primary/5">
+            <div className="flex justify-between items-start mb-2">
+              <div className="font-medium text-foreground">{s.description}</div>
+              <div className={`font-bold ${s.amount >= 0 ? 'text-success' : 'text-foreground'}`}>
+                {s.amount >= 0 ? '+' : ''}€{Math.abs(s.amount).toFixed(2)}
+              </div>
+            </div>
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-xs text-muted uppercase tracking-wider font-medium">
+                {s.interval} • {s.occurrence_count} times
+              </div>
+              <Button size="sm" variant="secondary" onClick={() => onAdd(s)}>
+                Add
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }

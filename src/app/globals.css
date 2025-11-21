@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 :root {
   /* Primary (Brand) Colors */
@@ -62,8 +63,8 @@
   --color-info-light: var(--info-light);
 
   /* Font families */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: monospace;
 
   /* Shadow utilities */
   --shadow-xs: var(--shadow-xs);

@@ -16,7 +16,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     
     const variantStyles = {
       default: 'shadow-sm',
-      interactive: 'shadow-sm hover:border-primary/30 hover:shadow-md cursor-pointer',
+      interactive: 'shadow-sm hover:border-primary/30 hover:shadow-md hover:-translate-y-1 cursor-pointer duration-300',
       stat: 'bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20',
       glass: '', // styling in baseStyles
     }

@@ -8,6 +8,7 @@ import ToastContainer from "@/components/ui/Toast";
 
 const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased bg-background text-foreground`}>
+      <body className={`${inter.variable} antialiased bg-background text-foreground`}>
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>

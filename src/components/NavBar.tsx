@@ -8,6 +8,8 @@ import { useTheme } from '@/contexts/ThemeContext'
 import { useState } from 'react'
 import Icon, { IconName } from '@/components/icons/Icon'
 
+import UserMenu from '@/components/UserMenu'
+
 export default function NavBar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -19,13 +21,9 @@ export default function NavBar() {
   const navigation: { name: string; href: string; icon: IconName }[] = [
     { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
     { name: 'Transactions', href: '/transactions', icon: 'transactions' },
-    { name: 'Accounts', href: '/accounts', icon: 'accounts' },
-    { name: 'Categories', href: '/categories', icon: 'tag' },
     { name: 'Budgets', href: '/budgets', icon: 'chart' },
     { name: 'Recurring', href: '/recurring', icon: 'calendar' },
-    { name: 'Export', href: '/export', icon: 'download' },
     { name: 'Reports', href: '/reports', icon: 'reports' },
-    { name: 'Settings', href: '/settings', icon: 'settings' },
   ]
 
   const handleSignOut = async () => {
@@ -74,34 +72,10 @@ export default function NavBar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            {/* User email (desktop only) */}
-            <span className="text-muted text-sm hidden lg:block">{user.email}</span>
-            
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-background transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              )}
-            </button>
-
-            {/* Sign out (desktop) */}
-            <button
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="hidden md:block px-4 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50"
-            >
-              {isSigningOut ? 'Signing out...' : 'Sign Out'}
-            </button>
+            {/* Desktop User Menu */}
+            <div className="hidden md:block">
+              <UserMenu />
+            </div>
 
             {/* Mobile menu button */}
             <button
@@ -109,7 +83,9 @@ export default function NavBar() {
               className="md:hidden p-2 rounded-lg hover:bg-background transition-colors"
               aria-label="Toggle menu"
             >
-              {isMobileMenuOpen ? (
+              <Icon name={isMobileMenuOpen ? 'close' : 'dashboard'} size={24} /> 
+              {/* Note: Using 'dashboard' as hamburger/menu icon proxy if 'menu' not avail, or just SVG */}
+               {isMobileMenuOpen ? (
                 <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -124,8 +100,13 @@ export default function NavBar() {
 
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
+          <div className="md:hidden py-4 border-t border-border animate-in slide-in-from-top-5 duration-200">
             <div className="space-y-1">
+              {/* User Info Mobile */}
+              <div className="px-4 py-2 mb-2 border-b border-border/50">
+                <p className="text-sm font-medium text-foreground">{user.email}</p>
+              </div>
+
               {navigation.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
                 return (
@@ -133,7 +114,7 @@ export default function NavBar() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center ${
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted hover:text-foreground hover:bg-surface-alt'
@@ -144,11 +125,22 @@ export default function NavBar() {
                   </Link>
                 )
               })}
+
+              {/* Mobile Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center px-4 py-3 text-sm font-medium text-muted hover:text-foreground hover:bg-surface-alt transition-all rounded-lg"
+              >
+                <Icon name={theme === 'light' ? 'sun' : 'moon'} size={18} className="mr-2" />
+                {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              </button>
+
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="w-full text-left px-4 py-3 text-sm font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50"
+                className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-all rounded-lg disabled:opacity-50"
               >
+                <Icon name="logout" size={18} className="mr-2" />
                 {isSigningOut ? 'Signing out...' : 'Sign Out'}
               </button>
             </div>

@@ -12,16 +12,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's household
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Get user's household from household_members
+    const { data: member } = await supabase
+      .from('household_members')
       .select('household_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
-    if (!profile?.household_id) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (!member?.household_id) {
+      return NextResponse.json({ error: 'Household not found' }, { status: 404 })
     }
+
+    const household_id = member.household_id
 
     // Fetch budgets with category details
     const { data: budgets, error } = await supabase
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
         *,
         category:categories(id, name, icon, color)
       `)
-      .eq('household_id', profile.household_id)
+      .eq('household_id', household_id)
 
     if (error) {
       console.error('Error fetching budgets:', error)
@@ -61,22 +63,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get user's household
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Get user's household from household_members
+    const { data: member } = await supabase
+      .from('household_members')
       .select('household_id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
-    if (!profile?.household_id) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (!member?.household_id) {
+      return NextResponse.json({ error: 'Household not found' }, { status: 404 })
     }
+
+    const household_id = member.household_id
 
     // Upsert budget
     const { data: budget, error } = await supabase
       .from('budgets')
       .upsert({
-        household_id: profile.household_id,
+        household_id: household_id,
         category_id,
         amount,
         period

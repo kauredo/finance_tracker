@@ -11,6 +11,7 @@ interface RecurringTransactionModalProps {
   onClose: () => void
   onSuccess: () => void
   editId?: string
+  initialData?: any
 }
 
 interface Category {
@@ -25,7 +26,7 @@ interface Account {
   name: string
 }
 
-export default function RecurringTransactionModal({ isOpen, onClose, onSuccess, editId }: RecurringTransactionModalProps) {
+export default function RecurringTransactionModal({ isOpen, onClose, onSuccess, editId, initialData }: RecurringTransactionModalProps) {
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [type, setType] = useState<'expense' | 'income'>('expense')
@@ -48,7 +49,7 @@ export default function RecurringTransactionModal({ isOpen, onClose, onSuccess, 
     } else {
       resetForm()
     }
-  }, [isOpen, editId])
+  }, [isOpen, editId, initialData])
 
   const fetchData = async () => {
     setFetching(true)
@@ -79,6 +80,14 @@ export default function RecurringTransactionModal({ isOpen, onClose, onSuccess, 
           setInterval(recurring.interval)
           setNextRunDate(recurring.next_run_date)
         }
+      } else if (initialData) {
+        // Pre-fill from suggestion
+        setDescription(initialData.description)
+        setAmount(Math.abs(initialData.amount).toString())
+        setType(initialData.amount >= 0 ? 'income' : 'expense')
+        setInterval(initialData.interval)
+        // Default to today for next run
+        setNextRunDate(new Date().toISOString().split('T')[0])
       }
     } catch (err) {
       console.error('Error fetching data:', err)
