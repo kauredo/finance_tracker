@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { Card } from '@/components/ui/Card'
 
 interface AddAccountModalProps {
   onClose: () => void
@@ -24,26 +25,30 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
     setError(null)
 
     try {
-      // For personal accounts, we set owner_id
-      // For joint accounts, we'd need household_id (not implemented yet)
-      const accountData: any = {
-        name: accountName,
-        type: accountType,
+      // Get auth session for API call
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('No active session')
       }
 
-      if (accountType === 'personal') {
-        accountData.owner_id = user.id
-      } else {
-        // For now, joint accounts require a household
-        // We'll implement household creation later
-        throw new Error('Joint accounts require a household setup. This feature is coming soon!')
+      // Call server-side API to create account (bypasses RLS issues)
+      const response = await fetch('/api/create-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          accountName,
+          accountType
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create account')
       }
-
-      const { error: insertError } = await supabase
-        .from('accounts')
-        .insert(accountData)
-
-      if (insertError) throw insertError
 
       onSuccess()
       onClose()
@@ -57,7 +62,7 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 w-full max-w-md border border-white/20">
+      <Card variant="glass" className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">Add Account</h2>
           <button
@@ -141,7 +146,7 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   )
 }

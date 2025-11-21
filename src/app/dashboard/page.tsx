@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import FileUpload from '@/components/FileUpload'
 import AddAccountModal from '@/components/AddAccountModal'
+import InvitePartnerModal from '@/components/InvitePartnerModal'
+import ReportsModal from '@/components/ReportsModal'
 import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -26,6 +28,8 @@ export default function DashboardPage() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showReportsModal, setShowReportsModal] = useState(false)
   const [stats, setStats] = useState<DashboardStats>({
     totalExpenses: 0,
     monthlyExpenses: 0,
@@ -194,10 +198,10 @@ export default function DashboardPage() {
                 <Button variant="secondary" onClick={() => setShowAccountModal(true)}>
                   Add Account
                 </Button>
-                <Button variant="secondary">
+                <Button variant="secondary" onClick={() => setShowInviteModal(true)}>
                   Invite Partner
                 </Button>
-                <Button variant="secondary">
+                <Button variant="secondary" onClick={() => setShowReportsModal(true)}>
                   View Reports
                 </Button>
               </div>
@@ -225,6 +229,12 @@ export default function DashboardPage() {
             console.log('Account created successfully!')
           }}
         />
+      )}
+      {showInviteModal && (
+        <InvitePartnerModal onClose={() => setShowInviteModal(false)} />
+      )}
+      {showReportsModal && (
+        <ReportsModal onClose={() => setShowReportsModal(false)} />
       )}
     </div>
   )

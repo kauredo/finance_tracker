@@ -42,3 +42,5 @@ yarn-error.log*
 next-env.d.ts
 
 *.pdf
+
+src/app/api/parse-statement/saldo*.jpg

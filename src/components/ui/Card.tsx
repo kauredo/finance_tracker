@@ -4,18 +4,21 @@ import { HTMLAttributes, forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'interactive' | 'stat'
+  variant?: 'default' | 'interactive' | 'stat' | 'glass'
   hoverable?: boolean
 }
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', hoverable = false, children, ...props }, ref) => {
-    const baseStyles = 'bg-surface rounded-2xl p-6 border border-border transition-all'
+    const baseStyles = variant === 'glass' 
+      ? 'bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 transition-all shadow-2xl'
+      : 'bg-surface rounded-2xl p-6 border border-border transition-all'
     
     const variantStyles = {
       default: 'shadow-sm',
       interactive: 'shadow-sm hover:border-primary/30 hover:shadow-md cursor-pointer',
       stat: 'bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20',
+      glass: '', // styling in baseStyles
     }
     
     const hoverStyles = hoverable ? 'hover:shadow-md' : ''

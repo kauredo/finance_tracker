@@ -87,11 +87,11 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
 
     try {
       // Validate all files first
-      const validExtensions = ['png', 'jpg', 'jpeg']
+      const validExtensions = ['png', 'jpg', 'jpeg', 'csv', 'tsv']
       for (const file of files) {
         const fileExt = file.name.split('.').pop()?.toLowerCase()
         if (!validExtensions.includes(fileExt || '')) {
-          throw new Error(`Invalid file type: ${file.name}. Only PNG and JPEG images are supported.`)
+          throw new Error(`Invalid file type: ${file.name}. Only PNG, JPEG, CSV, and TSV files are supported.`)
         }
       }
 
@@ -134,7 +134,14 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
         throw new Error(result.error || 'Failed to process files')
       }
 
-      alert(`Success! Processed ${result.count} transactions from ${files.length} image${files.length > 1 ? 's' : ''}.`)
+      // Show detailed success message
+      let message = `Success! Processed ${result.total} transaction(s)`
+      if (result.duplicates > 0) {
+        message += ` (${result.new} new, ${result.duplicates} duplicate${result.duplicates > 1 ? 's' : ''} skipped)`
+      }
+      message += ` from ${files.length} file${files.length > 1 ? 's' : ''}.`
+      
+      alert(message)
       onUploadComplete()
     } catch (error: any) {
       console.error('Error uploading/processing files:', error)
@@ -215,7 +222,7 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
                   <span className="text-primary">Click to upload</span> or drag and drop
                 </p>
                 <p className="text-xs text-muted">
-                  PNG or JPEG images (max 10MB each)
+                  Images (PNG/JPEG), CSV, or TSV files
                 </p>
                 <p className="text-xs text-muted mt-1">
                   💡 Upload multiple images for multi-page statements
@@ -226,7 +233,7 @@ export default function FileUpload({ onUploadComplete }: { onUploadComplete: () 
           <input
             type="file"
             className="hidden"
-            accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg"
+            accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg,.csv,.tsv"
             multiple
             onChange={handleFileUpload}
             disabled={uploading}

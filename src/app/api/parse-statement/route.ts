@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { parseStatementWithVision } from '@/lib/openai'
+import { parseStatementWithVision, parseStatementWithAI } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,42 +33,95 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Validate all file types (images only)
+    // Validate all file types
     for (const file of files) {
-      if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.fileType)) {
+      const isImage = ['image/png', 'image/jpeg', 'image/jpg'].includes(file.fileType)
+      const isCsvTsv = file.fileType.includes('csv') || file.fileType.includes('tsv') || 
+                       file.filePath.endsWith('.csv') || file.filePath.endsWith('.tsv')
+      
+      if (!isImage && !isCsvTsv) {
         return NextResponse.json(
-          { error: 'Only PNG and JPEG images are supported. Please upload an image of your statement.' },
+          { error: 'Only PNG, JPEG, CSV, and TSV files are supported.' },
           { status: 400 }
         )
       }
     }
 
-    // 4. Download all files from Storage and convert to base64
-    const base64Images: string[] = []
-    
-    for (const file of files) {
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('statements')
-        .download(file.filePath)
+    // 4. Separate files by type
+    const imageFiles = files.filter(f => 
+      ['image/png', 'image/jpeg', 'image/jpg'].includes(f.fileType)
+    )
+    const textFiles = files.filter(f => 
+      f.fileType.includes('csv') || f.fileType.includes('tsv') ||
+      f.filePath.endsWith('.csv') || f.filePath.endsWith('.tsv')
+    )
 
-      if (downloadError) {
-        console.error('Storage download error:', downloadError)
-        return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+    let transactions: any[] = []
+
+    // 5. Process image files with Vision API
+    if (imageFiles.length > 0) {
+      const base64Images: string[] = []
+      
+      for (const file of imageFiles) {
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('statements')
+          .download(file.filePath)
+
+        if (downloadError) {
+          console.error('Storage download error:', downloadError)
+          return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+        }
+
+        console.log(`Processing image ${file.filePath}, size:`, fileData.size, 'bytes')
+        const arrayBuffer = await fileData.arrayBuffer()
+        const base64Image = Buffer.from(arrayBuffer).toString('base64')
+        base64Images.push(base64Image)
+        console.log(`Image ${file.filePath} converted, base64 length:`, base64Image.length)
       }
 
-      console.log(`Processing image ${file.filePath}, size:`, fileData.size, 'bytes')
-      const arrayBuffer = await fileData.arrayBuffer()
-      const base64Image = Buffer.from(arrayBuffer).toString('base64')
-      base64Images.push(base64Image)
-      console.log(`Image ${file.filePath} converted, base64 length:`, base64Image.length)
+      console.log(`Calling vision API with ${base64Images.length} image(s)...`)
+      const imageTransactions = await parseStatementWithVision(base64Images)
+      console.log('Extracted transactions from images:', imageTransactions.length)
+      transactions.push(...imageTransactions)
     }
 
-    // 5. Parse with Vision API
-    console.log(`Calling vision API with ${base64Images.length} image(s)...`)
-    const transactions = await parseStatementWithVision(base64Images)
-    console.log('Extracted transactions:', transactions.length)
+    // 6. Process CSV/TSV files with text parsing
+    if (textFiles.length > 0) {
+      for (const file of textFiles) {
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from('statements')
+          .download(file.filePath)
 
-    // 7. Get categories to map names to IDs
+        if (downloadError) {
+          console.error('Storage download error:', downloadError)
+          return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+        }
+
+        console.log(`Processing text file ${file.filePath}`)
+        const fileContent = await fileData.text()
+        
+        // Determine file type for AI parsing
+        const fileType = file.filePath.endsWith('.csv') ? 'csv' as const : 'text' as const
+        const textTransactions = await parseStatementWithAI(fileContent, fileType)
+        console.log(`Extracted ${textTransactions.length} transactions from ${file.filePath}`)
+        transactions.push(...textTransactions)
+      }
+    }
+
+    console.log('Total transactions extracted:', transactions.length)
+
+    // 7. Get existing transactions for this account to detect duplicates
+    const { data: existingTransactions, error: fetchError } = await supabase
+      .from('transactions')
+      .select('date, amount, description')
+      .eq('account_id', accountId)
+
+    if (fetchError) {
+      console.error('Error fetching existing transactions:', fetchError)
+      // Continue anyway - better to have duplicates than fail
+    }
+
+    // 8. Get categories to map names to IDs
     const { data: categories } = await supabase
       .from('categories')
       .select('id, name')
@@ -77,8 +130,7 @@ export async function POST(req: NextRequest) {
       categories?.map((c) => [c.name.toLowerCase(), c.id]) || []
     )
 
-    // 8. Save transactions to database
-    // We'll map the AI result to our database schema
+    // 9. Map transactions to database schema and filter duplicates
     const dbTransactions = transactions.map((t) => {
       const categoryId = categoryMap.get(t.category.toLowerCase()) || categoryMap.get('other')
       
@@ -91,16 +143,52 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const { error: insertError } = await supabase
-      .from('transactions')
-      .insert(dbTransactions)
-
-    if (insertError) {
-      console.error('Database insert error:', insertError)
-      return NextResponse.json({ error: 'Failed to save transactions' }, { status: 500 })
+    // Helper function to check if two descriptions are similar
+    const areSimilar = (desc1: string, desc2: string): boolean => {
+      const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ')
+      const d1 = normalize(desc1)
+      const d2 = normalize(desc2)
+      
+      // Exact match
+      if (d1 === d2) return true
+      
+      // One contains the other (handles truncated descriptions)
+      if (d1.includes(d2) || d2.includes(d1)) return true
+      
+      return false
     }
 
-    return NextResponse.json({ success: true, count: transactions.length })
+    // Filter out duplicates
+    const newTransactions = dbTransactions.filter(newTx => {
+      const isDuplicate = existingTransactions?.some(existingTx => 
+        existingTx.date === newTx.date &&
+        Math.abs(parseFloat(existingTx.amount) - newTx.amount) < 0.01 && // Handle floating point comparison
+        areSimilar(existingTx.description, newTx.description)
+      )
+      return !isDuplicate
+    })
+
+    const duplicateCount = dbTransactions.length - newTransactions.length
+    console.log(`Found ${newTransactions.length} new transactions, ${duplicateCount} duplicates skipped`)
+
+    // 10. Insert only new transactions
+    if (newTransactions.length > 0) {
+      const { error: insertError } = await supabase
+        .from('transactions')
+        .insert(newTransactions)
+
+      if (insertError) {
+        console.error('Database insert error:', insertError)
+        return NextResponse.json({ error: 'Failed to save transactions' }, { status: 500 })
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      total: transactions.length,
+      new: newTransactions.length,
+      duplicates: duplicateCount
+    })
   } catch (error: any) {
     console.error('API Error:', error)
     return NextResponse.json(

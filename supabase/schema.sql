@@ -116,6 +116,23 @@ CREATE POLICY "Users can view their households"
     )
   );
 
+-- Allow authenticated users to create households
+CREATE POLICY "Users can create households"
+  ON households FOR INSERT
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Allow household owners to update their households
+CREATE POLICY "Owners can update households"
+  ON households FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM household_members
+      WHERE household_id = households.id
+      AND user_id = auth.uid()
+      AND role = 'owner'
+    )
+  );
+
 -- Household Members: Users can see members of their households
 -- Helper function to bypass RLS recursion
 CREATE OR REPLACE FUNCTION get_auth_user_household_ids()
@@ -136,6 +153,21 @@ CREATE POLICY "Users can view household members"
     user_id = auth.uid() OR
     household_id IN (
       SELECT get_auth_user_household_ids()
+    )
+  );
+
+-- Allow household owners to add members
+CREATE POLICY "Owners can add household members"
+  ON household_members FOR INSERT
+  WITH CHECK (
+    -- Allow if user is adding themselves
+    user_id = auth.uid() OR
+    -- Or if user is an owner of the household
+    EXISTS (
+      SELECT 1 FROM household_members
+      WHERE household_id = household_members.household_id
+      AND user_id = auth.uid()
+      AND role = 'owner'
     )
   );
 
