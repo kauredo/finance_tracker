@@ -112,10 +112,10 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <Card variant="glass" className="w-full max-w-5xl my-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Financial Reports</h2>
+          <h2 className="text-2xl font-bold text-foreground">Financial Reports</h2>
           <button
             onClick={onClose}
-            className="text-white/60 hover:text-white text-2xl"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
           </button>
@@ -123,7 +123,7 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="text-white/70">Loading reports...</div>
+            <div className="text-muted">Loading reports...</div>
           </div>
         ) : (
           <>
@@ -134,7 +134,7 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   view === 'category'
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                    : 'bg-white/10 text-white/70 hover:text-white border border-white/20'
+                    : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
                 Category Breakdown
@@ -144,7 +144,7 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   view === 'monthly'
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                    : 'bg-white/10 text-white/70 hover:text-white border border-white/20'
+                    : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
                 Monthly Trends
@@ -154,8 +154,8 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
             {/* Category Breakdown */}
             {view === 'category' && (
               <div className="space-y-6">
-                <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                  <h3 className="text-lg font-medium text-white mb-4">Spending by Category</h3>
+                <div className="bg-surface-alt/50 p-6 rounded-xl border border-border">
+                  <h3 className="text-lg font-medium text-foreground mb-4">Spending by Category</h3>
                     {categoryData.length > 0 ? (
                       <div className="grid md:grid-cols-2 gap-8">
                         {/* Pie Chart */}
@@ -185,17 +185,17 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                         <div>
                           <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={categoryData}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                              <XAxis dataKey="name" tick={{ fill: '#999', fontSize: 12 }} angle={-45} textAnchor="end" height={100} />
-                              <YAxis tick={{ fill: '#999' }} />
-                              <Tooltip formatter={(value) => `€${value}`} contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} />
+                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 116, 139, 0.2)" />
+                              <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} angle={-45} textAnchor="end" height={100} />
+                              <YAxis tick={{ fill: 'var(--text-secondary)' }} />
+                              <Tooltip formatter={(value) => `€${value}`} contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
                               <Bar dataKey="value" fill="#3b82f6" />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
                       </div>
                   ) : (
-                    <p className="text-white/70 text-center py-8">No transaction data available</p>
+                    <p className="text-muted text-center py-8">No transaction data available</p>
                   )}
                   </div>
                 </div>
@@ -203,15 +203,15 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
 
             {/* Monthly Trends */}
             {view === 'monthly' && (
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-lg font-medium text-white mb-4">Monthly Trends (Last 6 Months)</h3>
+              <div className="bg-surface-alt/50 p-6 rounded-xl border border-border">
+                <h3 className="text-lg font-medium text-foreground mb-4">Monthly Trends (Last 6 Months)</h3>
                   {monthlyData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={400}>
                       <LineChart data={monthlyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                        <XAxis dataKey="month" tick={{ fill: '#999' }} />
-                        <YAxis tick={{ fill: '#999' }} />
-                        <Tooltip formatter={(value) => `€${value}`} contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(100, 116, 139, 0.2)" />
+                        <XAxis dataKey="month" tick={{ fill: 'var(--text-secondary)' }} />
+                        <YAxis tick={{ fill: 'var(--text-secondary)' }} />
+                        <Tooltip formatter={(value) => `€${value}`} contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
                         <Legend />
                         <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} name="Expenses" />
                         <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} name="Income" />

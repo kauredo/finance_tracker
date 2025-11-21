@@ -64,10 +64,10 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card variant="glass" className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Add Account</h2>
+          <h2 className="text-2xl font-bold text-foreground">Add Account</h2>
           <button
             onClick={onClose}
-            className="text-white/60 hover:text-white text-2xl"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
           </button>
@@ -75,21 +75,21 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-white/90 text-sm font-medium mb-2">
+            <label className="block text-foreground text-sm font-medium mb-2">
               Account Name
             </label>
             <input
               type="text"
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent"
               placeholder="e.g., Main Checking, Savings"
               required
             />
           </div>
 
           <div>
-            <label className="block text-white/90 text-sm font-medium mb-2">
+            <label className="block text-foreground text-sm font-medium mb-2">
               Account Type
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -99,7 +99,7 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
                 className={`py-3 px-4 rounded-lg font-medium transition-all ${
                   accountType === 'personal'
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                    : 'bg-white/10 text-white/70 hover:text-white border border-white/20'
+                    : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
                 👤 Personal
@@ -110,14 +110,14 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
                 className={`py-3 px-4 rounded-lg font-medium transition-all ${
                   accountType === 'joint'
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                    : 'bg-white/10 text-white/70 hover:text-white border border-white/20'
+                    : 'bg-surface text-muted hover:text-foreground border border-border'
                 }`}
               >
                 👥 Joint
               </button>
             </div>
             {accountType === 'joint' && (
-              <p className="mt-2 text-xs text-white/60">
+              <p className="mt-2 text-xs text-muted">
                 Note: Joint accounts are shared with your household members
               </p>
             )}
@@ -133,7 +133,7 @@ export default function AddAccountModal({ onClose, onSuccess }: AddAccountModalP
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+              className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground rounded-lg transition-all border border-border"
             >
               Cancel
             </button>

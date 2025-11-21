@@ -70,25 +70,25 @@ export default function InvitePartnerModal({ onClose }: InvitePartnerModalProps)
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card variant="glass" className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Invite Partner</h2>
+          <h2 className="text-2xl font-bold text-foreground">Invite Partner</h2>
           <button
             onClick={onClose}
-            className="text-white/60 hover:text-white text-2xl"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
           </button>
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-white/70">Loading...</div>
+          <div className="text-center py-8 text-muted">Loading...</div>
         ) : households.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-white/70 mb-4">You don't have any joint accounts yet.</p>
-            <p className="text-sm text-white/60">Create a joint account first to invite your partner!</p>
+            <p className="text-muted mb-4">You don't have any joint accounts yet.</p>
+            <p className="text-sm text-text-secondary">Create a joint account first to invite your partner!</p>
           </div>
         ) : (
           <>
-            <p className="text-white/90 text-sm mb-6">
+            <p className="text-foreground text-sm mb-6">
               Share this link with your partner so they can join your household and access joint accounts.
             </p>
 
@@ -96,16 +96,16 @@ export default function InvitePartnerModal({ onClose }: InvitePartnerModalProps)
               {/* Household Selector */}
               {households.length > 1 && (
                 <div>
-                  <label className="block text-white/90 text-sm font-medium mb-2">
+                  <label className="block text-foreground text-sm font-medium mb-2">
                     Household
                   </label>
                   <select
                     value={selectedHousehold}
                     onChange={(e) => setSelectedHousehold(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                   >
                     {households.map(household => (
-                      <option key={household.id} value={household.id} className="bg-gray-800">
+                      <option key={household.id} value={household.id} className="bg-surface">
                         {household.name}
                       </option>
                     ))}
@@ -115,7 +115,7 @@ export default function InvitePartnerModal({ onClose }: InvitePartnerModalProps)
 
               {/* Share Link */}
               <div>
-                <label className="block text-white/90 text-sm font-medium mb-2">
+                <label className="block text-foreground text-sm font-medium mb-2">
                   Invitation Link
                 </label>
                 <div className="flex gap-2">
@@ -123,17 +123,17 @@ export default function InvitePartnerModal({ onClose }: InvitePartnerModalProps)
                     type="text"
                     value={inviteLink}
                     readOnly
-                    className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/50 select-all"
+                    className="flex-1 px-4 py-3 rounded-lg bg-surface border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 select-all"
                     onClick={(e) => e.currentTarget.select()}
                   />
                   <button
                     onClick={handleCopyLink}
-                    className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+                    className="px-4 py-3 bg-surface-alt hover:bg-background text-foreground rounded-lg transition-all border border-border"
                   >
                     {copied ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
-                <p className="text-xs text-white/60 mt-2">
+                <p className="text-xs text-muted mt-2">
                   💡 Share via WhatsApp, email, or any messaging app
                 </p>
               </div>

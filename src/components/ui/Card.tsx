@@ -11,7 +11,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', hoverable = false, children, ...props }, ref) => {
     const baseStyles = variant === 'glass' 
-      ? 'bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 transition-all shadow-2xl'
+      ? 'bg-surface/80 backdrop-blur-lg rounded-2xl p-6 border border-border/50 transition-all shadow-2xl'
       : 'bg-surface rounded-2xl p-6 border border-border transition-all'
     
     const variantStyles = {

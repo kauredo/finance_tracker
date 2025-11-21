@@ -89,16 +89,16 @@ export default function TransactionsList() {
         </thead>
         <tbody className="divide-y divide-border">
           {transactions.map((t) => (
-            <tr key={t.id} className="group hover:bg-white/5 transition-colors">
+            <tr key={t.id} className="group hover:bg-surface-alt transition-colors">
               <td className="py-4 text-sm text-muted">{new Date(t.date).toLocaleDateString()}</td>
               <td className="py-4 text-foreground font-medium">{t.description}</td>
               <td className="py-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white/80 capitalize">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-alt text-foreground capitalize border border-border">
                   {t.category?.icon} {t.category?.name || 'Uncategorized'}
                 </span>
               </td>
               <td className="py-4 text-sm text-muted">{t.account?.name || 'Unknown'}</td>
-              <td className={`py-4 text-right font-medium ${t.amount > 0 ? 'text-green-400' : 'text-white'}`}>
+              <td className={`py-4 text-right font-medium ${t.amount > 0 ? 'text-success' : 'text-foreground'}`}>
                 {t.amount > 0 ? '+' : ''}{t.amount.toFixed(2)}
               </td>
             </tr>
