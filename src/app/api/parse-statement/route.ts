@@ -158,15 +158,33 @@ export async function POST(req: NextRequest) {
       return false
     }
 
-    // Filter out duplicates
-    const newTransactions = dbTransactions.filter(newTx => {
-      const isDuplicate = existingTransactions?.some(existingTx => 
-        existingTx.date === newTx.date &&
-        Math.abs(parseFloat(existingTx.amount) - newTx.amount) < 0.01 && // Handle floating point comparison
-        areSimilar(existingTx.description, newTx.description)
+    // Helper to check date proximity (+/- 3 days)
+    const isDateClose = (date1: string, date2: string): boolean => {
+      const d1 = new Date(date1).getTime()
+      const d2 = new Date(date2).getTime()
+      const diffTime = Math.abs(d2 - d1)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) 
+      return diffDays <= 3
+    }
+
+    // Filter out duplicates and update existing recurring transactions if matched
+    const newTransactions: any[] = []
+    
+    for (const newTx of dbTransactions) {
+      // Find potential match
+      const match = existingTransactions?.find(existingTx => 
+        Math.abs(parseFloat(existingTx.amount) - newTx.amount) < 0.01 && // Same amount
+        isDateClose(existingTx.date, newTx.date) // Similar date
       )
-      return !isDuplicate
-    })
+
+      if (match) {
+        // If matched, we skip insertion (it's a duplicate or the recurring tx already exists)
+        // Optionally we could update the description if it was a recurring placeholder
+        console.log(`Skipping duplicate/match: ${newTx.description} (${newTx.amount}) matches ${match.description}`)
+      } else {
+        newTransactions.push(newTx)
+      }
+    }
 
     const duplicateCount = dbTransactions.length - newTransactions.length
     console.log(`Found ${newTransactions.length} new transactions, ${duplicateCount} duplicates skipped`)

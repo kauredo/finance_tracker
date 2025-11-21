@@ -43,6 +43,15 @@ export default function DashboardPage() {
       router.push('/auth')
     } else if (user) {
       fetchDashboardData()
+      // Trigger recurring transaction processing
+      fetch('/api/recurring/process', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.processed > 0) {
+            fetchDashboardData() // Refresh if new transactions were created
+          }
+        })
+        .catch(err => console.error('Error processing recurring:', err))
     }
   }, [user, loading, router])
 
