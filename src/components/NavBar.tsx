@@ -22,6 +22,7 @@ export default function NavBar() {
     { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
     { name: 'Transactions', href: '/transactions', icon: 'transactions' },
     { name: 'Budgets', href: '/budgets', icon: 'chart' },
+    { name: 'Goals', href: '/goals', icon: 'savings' },
     { name: 'Recurring', href: '/recurring', icon: 'calendar' },
     { name: 'Reports', href: '/reports', icon: 'reports' },
   ]

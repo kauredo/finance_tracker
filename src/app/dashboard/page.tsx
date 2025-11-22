@@ -7,10 +7,10 @@ import NavBar from '@/components/NavBar'
 import FileUpload from '@/components/FileUpload'
 import AddAccountModal from '@/components/AddAccountModal'
 import InvitePartnerModal from '@/components/InvitePartnerModal'
-import ReportsModal from '@/components/ReportsModal'
 import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import GoalsWidget from '@/components/dashboard/GoalsWidget'
 
 import { createClient } from '@/utils/supabase/client'
 
@@ -29,7 +29,6 @@ export default function DashboardPage() {
   const [showUpload, setShowUpload] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [showReportsModal, setShowReportsModal] = useState(false)
   const [stats, setStats] = useState<DashboardStats>({
     totalExpenses: 0,
     monthlyExpenses: 0,
@@ -161,31 +160,36 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Budget Overview */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-end mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Monthly Budget</h2>
-                <div className="text-3xl font-bold text-foreground mt-1">
-                  €{stats.budgetSpent.toFixed(2)} <span className="text-muted text-lg font-normal">/ €{stats.totalBudget.toFixed(2)}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Budget Overview */}
+          <Card className="h-full">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Monthly Budget</h2>
+                  <div className="text-3xl font-bold text-foreground mt-1">
+                    €{stats.budgetSpent.toFixed(2)} <span className="text-muted text-lg font-normal">/ €{stats.totalBudget.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-lg font-bold ${stats.budgetSpent > stats.totalBudget ? 'text-danger' : 'text-success'}`}>
+                    {stats.totalBudget > 0 ? ((stats.budgetSpent / stats.totalBudget) * 100).toFixed(0) : 0}%
+                  </div>
+                  <div className="text-sm text-muted">Used</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className={`text-lg font-bold ${stats.budgetSpent > stats.totalBudget ? 'text-danger' : 'text-success'}`}>
-                  {stats.totalBudget > 0 ? ((stats.budgetSpent / stats.totalBudget) * 100).toFixed(0) : 0}%
-                </div>
-                <div className="text-sm text-muted">Used</div>
+              <div className="h-4 bg-surface-alt rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${stats.budgetSpent > stats.totalBudget ? 'bg-danger' : 'bg-success'}`}
+                  style={{ width: `${stats.totalBudget > 0 ? Math.min((stats.budgetSpent / stats.totalBudget) * 100, 100) : 0}%` }}
+                />
               </div>
-            </div>
-            <div className="h-4 bg-surface-alt rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ${stats.budgetSpent > stats.totalBudget ? 'bg-danger' : 'bg-success'}`}
-                style={{ width: `${stats.totalBudget > 0 ? Math.min((stats.budgetSpent / stats.totalBudget) * 100, 100) : 0}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Goals Widget */}
+          <GoalsWidget />
+        </div>
 
         {/* Quick Actions */}
         <Card className="mb-8">
@@ -218,7 +222,7 @@ export default function DashboardPage() {
                 <Button variant="secondary" onClick={() => setShowInviteModal(true)}>
                   Invite Partner
                 </Button>
-                <Button variant="secondary" onClick={() => setShowReportsModal(true)}>
+                <Button variant="secondary" onClick={() => router.push('/reports')}>
                   View Reports
                 </Button>
               </div>
@@ -249,9 +253,6 @@ export default function DashboardPage() {
       )}
       {showInviteModal && (
         <InvitePartnerModal onClose={() => setShowInviteModal(false)} />
-      )}
-      {showReportsModal && (
-        <ReportsModal onClose={() => setShowReportsModal(false)} />
       )}
     </div>
   )
