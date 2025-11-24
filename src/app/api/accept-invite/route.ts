@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Create Supabase client with user's token
+    // 2. Create Supabase client with user's token to verify identity
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     const token = authHeader.replace('Bearer ', '')
@@ -35,8 +35,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing householdId' }, { status: 400 })
     }
 
-    // 4. Check if household exists
-    const { data: household, error: householdError } = await supabase
+    // 4. Use secret key server-side to bypass RLS for database operations
+    const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+    const supabaseAdmin = createClient(supabaseUrl, supabaseSecretKey)
+
+    // Check if household exists
+    const { data: household, error: householdError } = await supabaseAdmin
       .from('households')
       .select('id')
       .eq('id', householdId)
@@ -47,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Check if user is already a member
-    const { data: existingMember } = await supabase
+    const { data: existingMember } = await supabaseAdmin
       .from('household_members')
       .select('*')
       .eq('household_id', householdId)
@@ -59,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Add user to household
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseAdmin
       .from('household_members')
       .insert({
         household_id: householdId,

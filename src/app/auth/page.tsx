@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent } from '@/components/ui/Card'
+import Icon from '@/components/icons/Icon'
 import Image from 'next/image'
 
 export default function AuthPage() {
@@ -13,6 +14,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
@@ -175,13 +177,22 @@ export default function AuthPage() {
                       Password
                     </label>
                     <Input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       required
                       error={!!error}
                       helperText={error}
+                      endIcon={
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="focus:outline-none hover:text-foreground transition-colors"
+                        >
+                          <Icon name={showPassword ? 'eye_off' : 'eye'} size={20} />
+                        </button>
+                      }
                     />
                   </div>
 

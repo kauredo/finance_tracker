@@ -64,6 +64,10 @@ export const icons = {
   // M20 7h-3a2 2 0 00-2-2h-2a2 2 0 00-2 2H8a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2zm-5 9h-2v-2h2v2zm0-4h-2V9h2v3z
   // Let's stick to simple paths.
   electronics: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", // Monitor
+  
+  // Auth
+  eye: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z",
+  eye_off: "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21",
 }
 
 export type IconName = 
@@ -108,6 +112,8 @@ export type IconName =
   | 'investment'
   | 'gift'
   | 'electronics'
+  | 'eye'
+  | 'eye_off'
 
 // Overwriting piggy_bank with a better "Savings" icon (Piggy bank style)
 // M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z is moon
