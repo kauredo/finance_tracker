@@ -36,7 +36,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Use secret key server-side to bypass RLS for database operations
-    const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+    const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
+    
+    if (!supabaseUrl || !supabaseSecretKey) {
+      console.error('Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY')
+      return NextResponse.json(
+        { error: 'Server configuration error. Please contact the administrator.' },
+        { status: 500 }
+      )
+    }
+    
     const supabaseAdmin = createClient(supabaseUrl, supabaseSecretKey)
 
     // Check if household exists
