@@ -104,7 +104,7 @@
 - [x] Animated transitions between views
 
 ### 3.2 Mobile Optimization
-- [ ] Card-based transaction view for mobile
+- [x] Card-based transaction view for mobile
 - [x] Touch-friendly controls (larger tap targets)
 - [x] Mobile navigation menu (hamburger/bottom nav)
 - [ ] Swipe gestures (delete, edit)
@@ -112,15 +112,15 @@
 - [ ] Test on actual mobile devices
 
 ### 3.3 Onboarding & Help
-- [ ] First-time user onboarding wizard
-  - Welcome screen
-  - Create first account
-  - Upload first statement
-  - Review AI categorization
+- [x] First-time user onboarding wizard
+  - [x] Welcome screen
+  - [x] Create first account
+  - [ ] Upload first statement
+  - [ ] Review AI categorization
 - [ ] Sample data option ("Try with demo data")
 - [ ] Contextual help tooltips
 - [ ] Help/FAQ page
-- [ ] Empty state CTAs with guidance
+- [x] Empty state CTAs with guidance
 
 ### 3.4 Accessibility & Performance
 - [ ] Keyboard shortcuts (e.g., 'n' = new, '/' = search, 'u' = upload)

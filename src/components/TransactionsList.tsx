@@ -155,7 +155,7 @@ export default function TransactionsList({
 
   return (
     <>
-    <div className="overflow-x-auto">
+    <div className="hidden md:block overflow-x-auto">
       <table className="w-full text-left">
         <thead>
           <tr className="border-b border-border text-muted text-sm">
@@ -189,6 +189,37 @@ export default function TransactionsList({
           ))}
         </tbody>
       </table>
+    </div>
+
+    {/* Mobile Card View */}
+    <div className="md:hidden space-y-3">
+      {transactions.map((t) => (
+        <div 
+          key={t.id}
+          onClick={() => setSelectedTransactionId(t.id)}
+          className="bg-surface border border-border rounded-xl p-4 active:scale-[0.98] transition-transform cursor-pointer"
+        >
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-xs text-muted">{new Date(t.date).toLocaleDateString()}</span>
+            <span className={`font-semibold ${t.amount > 0 ? 'text-success' : 'text-foreground'}`}>
+              {t.amount > 0 ? '+' : ''}€{t.amount.toFixed(2)}
+            </span>
+          </div>
+          
+          <h3 className="font-medium text-foreground mb-3">{t.description}</h3>
+          
+          <div className="flex justify-between items-center">
+            <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-surface-alt text-muted-foreground border border-border/50">
+              <Icon name={t.category?.icon as any || 'other'} size={12} className="mr-1.5" />
+              {t.category?.name || 'Uncategorized'}
+            </span>
+            <span className="text-xs text-muted">
+              {t.account?.name || 'Unknown'}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
       
       {/* Pagination */}
       <Pagination
@@ -202,7 +233,7 @@ export default function TransactionsList({
           setCurrentPage(1) // Reset to first page when changing items per page
         }}
       />
-    </div>
+
 
     {/* Transaction Detail Modal */}
     {selectedTransactionId && (
