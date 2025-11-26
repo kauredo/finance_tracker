@@ -21,7 +21,7 @@
   - `/settings` - User preferences & profile
 - [x] Navigation header component with active states
 - [x] Toast notification system (success/error feedback)
-- [ ] Loading skeleton screens (replace "Loading...")
+- [x] Loading skeleton screens (replace "Loading...")
 
 ### 1.2 Transaction Management
 - [x] Manual transaction creation form
@@ -34,10 +34,10 @@
 
 ### 1.3 Account Enhancements
 - [x] Display account balances (calculated from transactions)
-- [ ] Account detail page (filtered transactions per account)
+- [x] Account detail page (filtered transactions per account)
 - [x] Account filtering dropdown in dashboard
-- [ ] Edit account details (name, type)
-- [ ] Delete account (with data warning)
+- [x] Edit account details (name, type)
+- [x] Delete account (with data warning)
 
 ### 1.4 Date Range Controls
 - [x] Date range picker component
@@ -54,11 +54,11 @@
 **Goal**: Add powerful features for budgeting, categories, and data control
 
 ### 2.1 Category Management
-- [ ] View all categories page/section
-- [ ] Create custom categories (name, icon, color)
-- [ ] Edit existing categories
-- [ ] Delete unused categories (with transaction check)
-- [ ] Category picker with visual icons
+- [x] View all categories page/section
+- [x] Create custom categories (name, icon, color)
+- [x] Edit existing categories
+- [x] Delete unused categories (with transaction check)
+- [x] Category picker with visual icons
 
 ### 2.2 Budget & Goals
 - [x] Monthly budget setting per category

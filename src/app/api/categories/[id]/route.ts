@@ -124,6 +124,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
+    // Check for reassignment
+    const { searchParams } = new URL(request.url)
+    const reassignTo = searchParams.get('reassign_to')
+
     // Check if category has transactions
     const { count: transactionCount } = await supabase
       .from('transactions')
@@ -131,13 +135,43 @@ export async function DELETE(
       .eq('category_id', id)
 
     if (transactionCount && transactionCount > 0) {
-      return NextResponse.json(
-        { 
-          error: `Cannot delete category with ${transactionCount} transaction${transactionCount > 1 ? 's' : ''}. Please reassign or delete the transactions first.`,
-          transactionCount 
-        },
-        { status: 400 }
-      )
+      if (!reassignTo) {
+        return NextResponse.json(
+          { 
+            error: `Cannot delete category with ${transactionCount} transaction${transactionCount > 1 ? 's' : ''}. Please reassign or delete the transactions first.`,
+            transactionCount 
+          },
+          { status: 400 }
+        )
+      }
+
+      // Verify target category exists
+      const { data: targetCategory, error: targetError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('id', reassignTo)
+        .single()
+
+      if (targetError || !targetCategory) {
+        return NextResponse.json(
+          { error: 'Target category for reassignment not found' },
+          { status: 400 }
+        )
+      }
+
+      // Reassign transactions
+      const { error: reassignError } = await supabase
+        .from('transactions')
+        .update({ category_id: reassignTo })
+        .eq('category_id', id)
+
+      if (reassignError) {
+        console.error('Error reassigning transactions:', reassignError)
+        return NextResponse.json(
+          { error: 'Failed to reassign transactions' },
+          { status: 500 }
+        )
+      }
     }
 
     // Delete category

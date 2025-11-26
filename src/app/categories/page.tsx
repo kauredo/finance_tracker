@@ -7,7 +7,7 @@ import NavBar from '@/components/NavBar'
 import { Card } from '@/components/ui/Card'
 import Icon, { IconName } from '@/components/icons/Icon'
 import CategoryModal from '@/components/CategoryModal'
-import DeleteConfirmModal from '@/components/DeleteConfirmModal'
+import DeleteCategoryModal from '@/components/DeleteCategoryModal'
 
 interface Category {
   id: string
@@ -26,6 +26,7 @@ export default function CategoriesPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null)
+  const [transactionCount, setTransactionCount] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
@@ -67,29 +68,42 @@ export default function CategoriesPage() {
     setShowModal(true)
   }
 
-  const handleDelete = async () => {
-    if (!deletingCategory) return
-
+  const handleDeleteClick = async (category: Category) => {
+    // First try to delete directly to check for transactions
+    // Or we can just open the modal and let it handle the check?
+    // Actually, the modal needs the transaction count.
+    // Let's fetch the count first or try to delete and catch the error.
+    
+    // Better UX: Open modal, let modal fetch count? 
+    // Or fetch count here.
+    
+    setDeletingCategory(category)
     setIsDeleting(true)
+    
     try {
-      const response = await fetch(`/api/categories/${deletingCategory.id}`, {
+      // Check for transactions first
+      // We can use the delete endpoint which returns 400 with count
+      const response = await fetch(`/api/categories/${category.id}`, {
         method: 'DELETE'
       })
-
+      
       const data = await response.json()
 
-      if (!response.ok) {
+      if (response.ok) {
+        showSuccess('Category deleted successfully')
+        fetchCategories()
+        setDeletingCategory(null)
+      } else if (response.status === 400 && data.transactionCount !== undefined) {
+        // Has transactions, show modal with count
+        setTransactionCount(data.transactionCount)
+        // Keep deletingCategory set, so modal opens (we need to change how we render modal)
+      } else {
         throw new Error(data.error || 'Failed to delete category')
       }
-
-      showSuccess('Category deleted successfully')
-      fetchCategories()
-      setDeletingCategory(null)
     } catch (error) {
-      console.error('Error deleting category:', error)
-      showError(
-        error instanceof Error ? error.message : 'Failed to delete category'
-      )
+      console.error('Error checking category:', error)
+      showError(error instanceof Error ? error.message : 'Failed to delete category')
+      setDeletingCategory(null)
     } finally {
       setIsDeleting(false)
     }
@@ -168,7 +182,7 @@ export default function CategoriesPage() {
                             Edit
                           </button>
                           <button
-                            onClick={() => setDeletingCategory(category)}
+                            onClick={() => handleDeleteClick(category)}
                             className="px-3 py-1 text-sm bg-danger/10 text-danger rounded hover:bg-danger/20 transition-all"
                           >
                             Delete
@@ -244,14 +258,20 @@ export default function CategoriesPage() {
           />
         )}
 
-        {deletingCategory && (
-          <DeleteConfirmModal
-            title="Delete Category"
-            message="Are you sure you want to delete this category?"
-            itemName={deletingCategory.name}
-            onConfirm={handleDelete}
-            onCancel={() => setDeletingCategory(null)}
-            isLoading={isDeleting}
+        {deletingCategory && transactionCount !== null && (
+          <DeleteCategoryModal
+            category={deletingCategory}
+            transactionCount={transactionCount}
+            onClose={() => {
+              setDeletingCategory(null)
+              setTransactionCount(null)
+            }}
+            onSuccess={() => {
+              setDeletingCategory(null)
+              setTransactionCount(null)
+              showSuccess('Category deleted successfully')
+              fetchCategories()
+            }}
           />
         )}
       </div>
