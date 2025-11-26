@@ -10,6 +10,7 @@ import InvitePartnerModal from '@/components/InvitePartnerModal'
 import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Skeleton } from '@/components/ui/Skeleton'
 import GoalsWidget from '@/components/dashboard/GoalsWidget'
 
 import { createClient } from '@/utils/supabase/client'
@@ -115,11 +116,25 @@ export default function DashboardPage() {
             {[1, 2, 3].map((i) => (
               <Card key={i}>
                 <CardContent>
-                  <div className="h-4 bg-surface-alt animate-pulse rounded w-24 mb-2" />
-                  <div className="h-8 bg-surface-alt animate-pulse rounded w-32" />
+                  <Skeleton variant="text" className="w-24 h-4 mb-2" />
+                  <Skeleton variant="text" className="w-32 h-8" />
                 </CardContent>
               </Card>
             ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <Card className="h-full">
+              <CardContent className="pt-6">
+                 <Skeleton variant="text" className="w-32 h-6 mb-4" />
+                 <Skeleton variant="rectangle" className="w-full h-4 rounded-full" />
+              </CardContent>
+            </Card>
+            <Card className="h-full">
+               <CardContent className="pt-6">
+                 <Skeleton variant="text" className="w-32 h-6 mb-4" />
+                 <Skeleton variant="rectangle" className="w-full h-32 rounded-lg" />
+               </CardContent>
+            </Card>
           </div>
         </main>
       </div>

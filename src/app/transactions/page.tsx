@@ -13,6 +13,7 @@ import { useDateRange } from '@/hooks/useDateRange'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Icon from '@/components/icons/Icon'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function TransactionsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -59,8 +60,35 @@ export default function TransactionsPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+      <div className="min-h-screen bg-background">
+        <NavBar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <Skeleton variant="text" className="w-48 h-10 mb-2" />
+              <Skeleton variant="text" className="w-64 h-5" />
+            </div>
+            <div className="flex gap-3">
+              <Skeleton variant="rectangle" className="w-32 h-10 rounded-md" />
+              <Skeleton variant="rectangle" className="w-40 h-10 rounded-md" />
+            </div>
+          </div>
+          <div className="mb-6">
+            <Skeleton variant="rectangle" className="w-full h-24 rounded-lg" />
+          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton variant="text" className="w-40 h-7" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} variant="rectangle" className="w-full h-16 rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </main>
       </div>
     )
   }

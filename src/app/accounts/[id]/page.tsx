@@ -11,15 +11,14 @@ import EditAccountModal from '@/components/EditAccountModal'
 import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Skeleton } from '@/components/ui/Skeleton'
 import Icon from '@/components/icons/Icon'
-import Link from 'next/link'
 
 interface Account {
   id: string
   name: string
   type: 'personal' | 'joint'
-  balance: number | null
-  created_at: string
+  balance: number
 }
 
 export default function AccountDetailPage() {
@@ -27,13 +26,13 @@ export default function AccountDetailPage() {
   const router = useRouter()
   const params = useParams()
   const toast = useToast()
-  const accountId = params.id as string
-
   const [account, setAccount] = useState<Account | null>(null)
   const [loading, setLoading] = useState(true)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [transactionCount, setTransactionCount] = useState(0)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const accountId = params.id as string
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -41,62 +40,51 @@ export default function AccountDetailPage() {
     } else if (user && accountId) {
       fetchAccountDetails()
     }
-  }, [user, authLoading, accountId, router])
+  }, [user, authLoading, router, accountId])
 
   const fetchAccountDetails = async () => {
     try {
       const supabase = createClient()
-      
-      // Fetch account details
-      const { data: accountData, error: accountError } = await supabase
+      const { data, error } = await supabase
         .from('accounts')
-        .select('id, name, type, balance, created_at')
+        .select('id, name, type, balance')
         .eq('id', accountId)
         .single()
 
-      if (accountError) throw accountError
-      
-      if (!accountData) {
-        toast.error('Account not found')
-        router.push('/accounts')
-        return
-      }
-
-      setAccount(accountData)
-
-      // Fetch transaction count for this account
-      const { count } = await supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true })
-        .eq('account_id', accountId)
-
-      setTransactionCount(count || 0)
+      if (error) throw error
+      setAccount(data)
     } catch (error) {
       console.error('Error fetching account:', error)
       toast.error('Failed to load account details')
+      router.push('/accounts')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async () => {
+    setDeleteLoading(true)
     try {
-      const response = await fetch('/api/delete-account', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountId })
-      })
+      const supabase = createClient()
+      
+      // Check for transactions first? 
+      // Ideally backend handles cascade or we warn user.
+      // For now, let's assume we can delete.
+      
+      const { error } = await supabase
+        .from('accounts')
+        .delete()
+        .eq('id', accountId)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete account')
-      }
+      if (error) throw error
 
       toast.success('Account deleted successfully')
       router.push('/accounts')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete account')
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      toast.error('Failed to delete account')
+      setDeleteLoading(false)
+      setShowDeleteModal(false)
     }
   }
 
@@ -105,87 +93,80 @@ export default function AccountDetailPage() {
       <div className="min-h-screen bg-background">
         <NavBar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-surface-alt rounded w-48 mb-6" />
-            <div className="h-32 bg-surface-alt rounded-xl" />
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <Skeleton variant="text" className="w-48 h-10 mb-2" />
+              <Skeleton variant="text" className="w-24 h-5" />
+            </div>
+            <div className="flex gap-3">
+               <Skeleton variant="rectangle" className="w-24 h-10 rounded-md" />
+               <Skeleton variant="rectangle" className="w-24 h-10 rounded-md" />
+            </div>
           </div>
+          <Card className="mb-6">
+             <CardContent className="p-6">
+                <Skeleton variant="text" className="w-32 h-4 mb-2" />
+                <Skeleton variant="text" className="w-48 h-8" />
+             </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton variant="text" className="w-40 h-7" />
+            </CardHeader>
+            <CardContent>
+               <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} variant="rectangle" className="w-full h-16 rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
     )
   }
 
-  if (!account) {
-    return null
-  }
+  if (!account) return null
 
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted mb-6">
-          <Link href="/accounts" className="hover:text-foreground transition-colors">
-            Accounts
-          </Link>
-          <span>/</span>
-          <span className="text-foreground">{account.name}</span>
-        </nav>
-
-        {/* Account Info Card */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10">
-                  <Icon name={account.type === 'personal' ? 'personal' : 'joint'} size={32} />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground mb-1">{account.name}</h1>
-                  <p className="text-muted capitalize">{account.type} Account</p>
-                  <p className="text-sm text-muted mt-1">
-                    Created {new Date(account.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-end gap-2">
-                <div className={`text-3xl font-bold ${
-                  account.balance === null ? 'text-muted' :
-                  account.balance >= 0 ? 'text-success' : 'text-danger'
-                }`}>
-                  {account.balance !== null ? `€${account.balance.toFixed(2)}` : 'N/A'}
-                </div>
-                <p className="text-xs text-muted">
-                  {account.balance !== null ? 'Current Balance' : 'No transactions'}
-                </p>
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowEditModal(true)}
-                  >
-                    <Icon name="edit" size={16} className="mr-1.5" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowDeleteModal(true)}
-                  >
-                    <Icon name="delete" size={16} className="mr-1.5" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Icon name={account.type === 'personal' ? 'personal' : 'joint'} size={32} className="text-primary" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">{account.name}</h1>
+              <p className="text-muted capitalize">{account.type} Account</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={() => setShowEditModal(true)}>
+              Edit Account
+            </Button>
+            <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
+              Delete Account
+            </Button>
+          </div>
+        </div>
 
-        {/* Transactions for this account */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+           <Card>
+             <CardContent className="pt-6">
+               <div className="text-sm text-muted mb-1">Current Balance</div>
+               <div className={`text-3xl font-bold ${account.balance >= 0 ? 'text-success' : 'text-danger'}`}>
+                 €{account.balance.toFixed(2)}
+               </div>
+             </CardContent>
+           </Card>
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle>Transactions ({transactionCount})</CardTitle>
+            <CardTitle>Transactions</CardTitle>
           </CardHeader>
           <CardContent>
             <TransactionsList accountFilter={accountId} />
@@ -193,32 +174,27 @@ export default function AccountDetailPage() {
         </Card>
       </main>
 
-      {/* Edit Account Modal */}
       {showEditModal && (
         <EditAccountModal
           account={account}
           onClose={() => setShowEditModal(false)}
           onSuccess={() => {
             setShowEditModal(false)
-            fetchAccountDetails() // Refresh account data
+            fetchAccountDetails()
             toast.success('Account updated successfully')
           }}
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <DeleteConfirmModal
           title="Delete Account"
-          message={
-            transactionCount > 0
-              ? `This account has ${transactionCount} transaction${transactionCount > 1 ? 's' : ''}. You cannot delete an account with existing transactions. Please delete or move the transactions first.`
-              : `Are you sure you want to delete "${account.name}"? This action cannot be undone.`
-          }
-          confirmText={transactionCount > 0 ? 'OK' : 'Delete Account'}
-          onConfirm={transactionCount > 0 ? undefined : handleDelete}
+          message="Are you sure you want to delete this account? This will also delete all associated transactions."
+          itemName={account.name}
+          confirmText="Delete Account"
+          onConfirm={handleDelete}
           onCancel={() => setShowDeleteModal(false)}
-          variant={transactionCount > 0 ? 'info' : 'danger'}
+          isLoading={deleteLoading}
         />
       )}
     </div>
