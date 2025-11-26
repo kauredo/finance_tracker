@@ -168,7 +168,7 @@ export default function HouseholdPage() {
             onClick={() => router.back()}
             className="text-muted hover:text-foreground transition-colors mb-4 inline-flex items-center gap-2"
           >
-            <Icon name="arrow_back" size={20} />
+            <Icon name="chevron_down" size={20} className="rotate-90" />
             Back
           </button>
           <h1 className="text-3xl font-bold text-foreground">Household</h1>
@@ -262,7 +262,7 @@ export default function HouseholdPage() {
           <Card className="mt-6">
             <CardContent className="py-6">
               <div className="flex items-start gap-3">
-                <Icon name="info" size={20} className="text-muted mt-0.5" />
+                <Icon name="memo" size={20} className="text-muted mt-0.5" />
                 <div>
                   <p className="text-sm text-muted">
                     You are a member of this household. Only the owner can remove members.

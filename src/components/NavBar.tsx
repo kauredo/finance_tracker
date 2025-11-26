@@ -9,6 +9,7 @@ import { useState } from 'react'
 import Icon, { IconName } from '@/components/icons/Icon'
 
 import UserMenu from '@/components/UserMenu'
+import GlobalSearch from '@/components/GlobalSearch'
 
 export default function NavBar() {
   const pathname = usePathname()
@@ -26,7 +27,11 @@ export default function NavBar() {
     { name: 'Goals', href: '/goals', icon: 'savings' },
     { name: 'Recurring', href: '/recurring', icon: 'calendar' },
     { name: 'Reports', href: '/reports', icon: 'reports' },
-    { name: 'Settings', href: '/settings', icon: 'settings' },
+  ]
+
+  const mobileNavigation = [
+    ...navigation,
+    { name: 'Settings', href: '/settings', icon: 'settings' as IconName }
   ]
 
   const handleSignOut = async () => {
@@ -75,6 +80,9 @@ export default function NavBar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
+            {/* Global Search */}
+            <GlobalSearch />
+            
             {/* Desktop User Menu */}
             <div className="hidden md:block">
               <UserMenu />
@@ -102,29 +110,24 @@ export default function NavBar() {
 
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-in slide-in-from-top-5 duration-200">
-            <div className="space-y-1">
-              {/* User Info Mobile */}
-              <div className="px-4 py-2 mb-2 border-b border-border/50">
-                <p className="text-sm font-medium text-foreground">{user.email}</p>
-              </div>
-
-              {navigation.map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center ${
-                      isActive
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted hover:text-foreground hover:bg-surface-alt'
-                    }`}
-                  >
-                    <Icon name={item.icon} size={18} className="mr-2" />
-                    {item.name}
-                  </Link>
+            <div className="md:hidden border-t border-border bg-surface">
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {mobileNavigation.map((item) => {
+                  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted hover:text-foreground hover:bg-surface-alt'
+                      }`}
+                    >
+                      <Icon name={item.icon} size={18} className="mr-2" />
+                      {item.name}
+                    </Link>
                 )
               })}
 

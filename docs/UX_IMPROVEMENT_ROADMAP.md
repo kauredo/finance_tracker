@@ -134,15 +134,15 @@
 
 ---
 
-## 🏠 Phase 4: Household Features & Advanced Settings (Week 7-8)
+## 🏠 Phase 4: Household Features & Advanced Settings (Week 7-8) ✅ COMPLETE
 
 **Goal**: Complete household/multi-user features and comprehensive settings
 
 ### 4.1 Household Management
-- [ ] Household members list page
-- [ ] View member roles (owner, member)
+- [x] Household members list page
+- [x] View member roles (owner, member)
 - [ ] Invite status tracking (pending, accepted)
-- [ ] Remove household members (owner only)
+- [x] Remove household members (owner only)
 - [ ] Leave household option
 - [ ] Household activity feed/log
   - "Partner uploaded statement"
@@ -168,17 +168,18 @@
   - [ ] Budget alert preferences
 
 ### 4.3 Advanced Features
-- [ ] Global search (transactions, accounts, categories)
+- [x] Global search (transactions, accounts, categories)
 - [ ] Transaction attachments (receipt images)
-- [ ] Transaction notes/memos
+- [x] Transaction notes/memos
 - [ ] Account-specific transaction rules
 - [ ] Multi-currency support (optional)
 - [ ] Data backup & restore
 
 ### 4.4 Analytics Enhancements
+- [x] Category breakdown (pie chart)
+- [x] Monthly trends (bar chart)
+- [x] Income vs expenses trends
 - [ ] Year-over-year comparisons
-- [ ] Category trends over time
-- [ ] Income vs expenses trends
 - [ ] Cash flow projection
 - [ ] Custom report builder
 - [ ] Scheduled report emails (optional)
