@@ -82,7 +82,7 @@ export default function HouseholdPage() {
             full_name,
             email
           )
-        `,
+        `
         )
         .eq("household_id", membership.household_id)
         .order("joined_at", { ascending: true });
@@ -114,7 +114,7 @@ export default function HouseholdPage() {
 
     if (
       !confirm(
-        "Are you sure you want to remove this member from the household?",
+        "Are you sure you want to remove this member from the household?"
       )
     ) {
       return;
@@ -235,7 +235,7 @@ export default function HouseholdPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {members.map((member) => {
+              {members.map(member => {
                 const profile = Array.isArray(member.profiles)
                   ? member.profiles[0]
                   : member.profiles;
