@@ -21,6 +21,7 @@ interface Transaction {
   account: {
     name: string
   }
+  notes?: string | null
 }
 
 interface TransactionsListProps {
@@ -78,6 +79,7 @@ export default function TransactionsList({
           date,
           description,
           amount,
+          notes,
           category:categories(name,color,icon),
           account:accounts(name,id)
         `)
@@ -217,6 +219,15 @@ export default function TransactionsList({
               {t.account?.name || 'Unknown'}
             </span>
           </div>
+          
+          {t.notes && (
+            <div className="mt-2 pt-2 border-t border-border">
+              <p className="text-xs text-muted line-clamp-2">
+                <Icon name="memo" size={12} className="inline mr-1" />
+                {t.notes}
+              </p>
+            </div>
+          )}
         </div>
       ))}
     </div>

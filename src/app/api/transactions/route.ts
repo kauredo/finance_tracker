@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         date,
         description,
         amount,
+        notes,
         category:categories(id,name,color,icon),
         account:accounts(id,name,type),
         created_at
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { date, description, amount, category_id, account_id } = body
+    const { date, description, amount, category_id, account_id, notes } = body
 
     // Validate required fields
     if (!date || !description || !amount || !account_id) {
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
           amount,
           category_id: category_id || null,
           account_id,
+          notes: notes || null,
           user_id: user.id // Explicitly set user_id from auth context
         }
       ])

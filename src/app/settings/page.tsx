@@ -183,6 +183,17 @@ export default function SettingsPage() {
                   </div>
                   <Icon name="chevron_down" className="w-5 h-5 text-gray-400 ml-auto -rotate-90" />
                 </Link>
+
+                <Link href="/household" className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                  <div className="p-3 rounded-lg bg-orange-500/10 text-orange-500 group-hover:bg-orange-500/20 transition-colors">
+                    <Icon name="user" className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 dark:text-white">Household</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Manage household members</p>
+                  </div>
+                  <Icon name="chevron_down" className="w-5 h-5 text-gray-400 ml-auto -rotate-90" />
+                </Link>
               </div>
             </div>
 

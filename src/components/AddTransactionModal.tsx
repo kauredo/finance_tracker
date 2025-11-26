@@ -39,6 +39,7 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
     description: '',
     amount: '',
     category_id: '',
+    notes: '',
     transactionType: 'expense' // expense or income
   })
 
@@ -97,7 +98,8 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
           date: formData.date,
           description: formData.description,
           amount: finalAmount,
-          category_id: formData.category_id || null
+          category_id: formData.category_id || null,
+          notes: formData.notes || null
         })
       })
 
@@ -257,6 +259,20 @@ export default function AddTransactionModal({ onClose, onSuccess }: AddTransacti
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Notes (Optional)
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Add any additional details..."
+              rows={3}
+              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            />
           </div>
 
           {/* Submit */}
