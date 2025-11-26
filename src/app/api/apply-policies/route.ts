@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Run the SQL to add missing RLS policies
-    const { error } = await supabase.rpc('exec_sql', {
+    const { error } = await supabase.rpc("exec_sql", {
       sql: `
         -- Allow authenticated users to create households
         CREATE POLICY IF NOT EXISTS "Users can create households"
@@ -40,20 +40,23 @@ export async function POST(req: NextRequest) {
               AND hm.role = 'owner'
             )
           );
-      `
-    })
+      `,
+    });
 
     if (error) {
-      console.error('Error applying policies:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error("Error applying policies:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'RLS policies applied successfully' })
+    return NextResponse.json({
+      success: true,
+      message: "RLS policies applied successfully",
+    });
   } catch (error: any) {
-    console.error('API Error:', error)
+    console.error("API Error:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+      { error: error.message || "Internal server error" },
+      { status: 500 },
+    );
   }
 }

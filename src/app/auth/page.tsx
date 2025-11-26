@@ -1,67 +1,67 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Card, CardContent } from '@/components/ui/Card'
-import Icon from '@/components/icons/Icon'
-import Image from 'next/image'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Card, CardContent } from "@/components/ui/Card";
+import Icon from "@/components/icons/Icon";
+import Image from "next/image";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [signupSuccess, setSignupSuccess] = useState(false)
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
-  const { signIn, signUp, user, loading: authLoading } = useAuth()
-  const router = useRouter()
+  const { signIn, signUp, user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/dashboard')
+      router.push("/dashboard");
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    setSignupSuccess(false)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    setSignupSuccess(false);
 
     try {
       if (isLogin) {
-        await signIn(email, password)
-        router.push('/dashboard')
+        await signIn(email, password);
+        router.push("/dashboard");
       } else {
-        await signUp(email, password, fullName)
-        setSignupSuccess(true)
-        setEmail('')
-        setPassword('')
-        setFullName('')
+        await signUp(email, password, fullName);
+        setSignupSuccess(true);
+        setEmail("");
+        setPassword("");
+        setFullName("");
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || "An error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted">Loading...</div>
       </div>
-    )
+    );
   }
 
   if (user) {
-    return null
+    return null;
   }
 
   return (
@@ -81,9 +81,7 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Wallet Joy
           </h1>
-          <p className="text-muted text-sm">
-            Manage your finances together
-          </p>
+          <p className="text-muted text-sm">Manage your finances together</p>
         </div>
 
         <Card>
@@ -91,19 +89,31 @@ export default function AuthPage() {
             {signupSuccess ? (
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 mx-auto bg-success-light rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-8 h-8 text-success"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground">Check your email</h3>
+                <h3 className="text-xl font-semibold text-foreground">
+                  Check your email
+                </h3>
                 <p className="text-muted text-sm">
                   We've sent you a confirmation link. Please check your inbox.
                 </p>
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    setSignupSuccess(false)
-                    setIsLogin(true)
+                    setSignupSuccess(false);
+                    setIsLogin(true);
                   }}
                   className="mt-4"
                 >
@@ -116,26 +126,26 @@ export default function AuthPage() {
                 <div className="flex border-b border-border mb-6">
                   <button
                     onClick={() => {
-                      setIsLogin(true)
-                      setError('')
+                      setIsLogin(true);
+                      setError("");
                     }}
                     className={`flex-1 pb-3 text-sm font-medium transition-colors border-b-2 ${
                       isLogin
-                        ? 'border-primary text-foreground'
-                        : 'border-transparent text-muted hover:text-foreground'
+                        ? "border-primary text-foreground"
+                        : "border-transparent text-muted hover:text-foreground"
                     }`}
                   >
                     Login
                   </button>
                   <button
                     onClick={() => {
-                      setIsLogin(false)
-                      setError('')
+                      setIsLogin(false);
+                      setError("");
                     }}
                     className={`flex-1 pb-3 text-sm font-medium transition-colors border-b-2 ${
                       !isLogin
-                        ? 'border-primary text-foreground'
-                        : 'border-transparent text-muted hover:text-foreground'
+                        ? "border-primary text-foreground"
+                        : "border-transparent text-muted hover:text-foreground"
                     }`}
                   >
                     Sign Up
@@ -190,7 +200,10 @@ export default function AuthPage() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="focus:outline-none hover:text-foreground transition-colors"
                         >
-                          <Icon name={showPassword ? 'eye_off' : 'eye'} size={20} />
+                          <Icon
+                            name={showPassword ? "eye_off" : "eye"}
+                            size={20}
+                          />
                         </button>
                       }
                     />
@@ -202,7 +215,7 @@ export default function AuthPage() {
                     className="w-full mt-6"
                     size="lg"
                   >
-                    {isLogin ? 'Sign In' : 'Create Account'}
+                    {isLogin ? "Sign In" : "Create Account"}
                   </Button>
                 </form>
               </>
@@ -211,5 +224,5 @@ export default function AuthPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

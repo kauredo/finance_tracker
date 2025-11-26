@@ -1,99 +1,108 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Card } from '@/components/ui/Card'
-import { useToast } from '@/contexts/ToastContext'
-import Icon, { IconName } from '@/components/icons/Icon'
+import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { useToast } from "@/contexts/ToastContext";
+import Icon, { IconName } from "@/components/icons/Icon";
 
 interface CategoryModalProps {
   category?: {
-    id: string
-    name: string
-    color: string
-    icon: string
-  }
-  onClose: () => void
-  onSuccess: () => void
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  };
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 const ICON_OPTIONS = [
-  'groceries', 'dining', 'transport', 'utilities', 'entertainment',
-  'shopping', 'healthcare', 'income', 'other', 'personal', 'joint'
-]
+  "groceries",
+  "dining",
+  "transport",
+  "utilities",
+  "entertainment",
+  "shopping",
+  "healthcare",
+  "income",
+  "other",
+  "personal",
+  "joint",
+];
 
 const COLOR_PRESETS = [
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#3b82f6', // blue
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#f43f5e', // rose
-  '#06b6d4', // cyan
-  '#22c55e', // green
-  '#6b7280', // gray
-  '#ef4444', // red
-  '#f97316', // orange
-  '#eab308', // yellow
-]
+  "#10b981", // green
+  "#f59e0b", // amber
+  "#3b82f6", // blue
+  "#8b5cf6", // purple
+  "#ec4899", // pink
+  "#f43f5e", // rose
+  "#06b6d4", // cyan
+  "#22c55e", // green
+  "#6b7280", // gray
+  "#ef4444", // red
+  "#f97316", // orange
+  "#eab308", // yellow
+];
 
-export default function CategoryModal({ category, onClose, onSuccess }: CategoryModalProps) {
-  const { error: showError, success: showSuccess } = useToast()
-  const [name, setName] = useState(category?.name || '')
-  const [color, setColor] = useState(category?.color || '#6b7280')
-  const [icon, setIcon] = useState(category?.icon || 'other')
-  const [isLoading, setIsLoading] = useState(false)
+export default function CategoryModal({
+  category,
+  onClose,
+  onSuccess,
+}: CategoryModalProps) {
+  const { error: showError, success: showSuccess } = useToast();
+  const [name, setName] = useState(category?.name || "");
+  const [color, setColor] = useState(category?.color || "#6b7280");
+  const [icon, setIcon] = useState(category?.icon || "other");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const isEdit = !!category
+  const isEdit = !!category;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!name.trim()) {
-      showError('Please enter a category name')
-      return
+      showError("Please enter a category name");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const url = isEdit
-        ? `/api/categories/${category.id}`
-        : '/api/categories'
-      
-      const method = isEdit ? 'PUT' : 'POST'
+      const url = isEdit ? `/api/categories/${category.id}` : "/api/categories";
+
+      const method = isEdit ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color, icon })
-      })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, color, icon }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save category')
+        throw new Error(data.error || "Failed to save category");
       }
 
-      showSuccess(
-        `Category ${isEdit ? 'updated' : 'created'} successfully`
-      )
-      onSuccess()
+      showSuccess(`Category ${isEdit ? "updated" : "created"} successfully`);
+      onSuccess();
     } catch (error) {
-      console.error('Error saving category:', error)
+      console.error("Error saving category:", error);
       showError(
-        error instanceof Error ? error.message : 'Failed to save category'
-      )
+        error instanceof Error ? error.message : "Failed to save category",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card variant="glass" className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">
-            {isEdit ? 'Edit Category' : 'New Category'}
+            {isEdit ? "Edit Category" : "New Category"}
           </h2>
           <button
             onClick={onClose}
@@ -135,8 +144,8 @@ export default function CategoryModal({ category, onClose, onSuccess }: Category
                   disabled={isLoading}
                   className={`p-3 rounded-lg border-2 transition-all hover:scale-110 disabled:opacity-50 flex items-center justify-center ${
                     icon === iconName
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-surface hover:border-primary/50'
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-surface hover:border-primary/50"
                   }`}
                 >
                   <Icon name={iconName as IconName} size={24} />
@@ -159,8 +168,8 @@ export default function CategoryModal({ category, onClose, onSuccess }: Category
                   disabled={isLoading}
                   className={`h-10 rounded-lg border-2 transition-all hover:scale-110 disabled:opacity-50 ${
                     color === presetColor
-                      ? 'border-foreground ring-2 ring-primary'
-                      : 'border-border'
+                      ? "border-foreground ring-2 ring-primary"
+                      : "border-border"
                   }`}
                   style={{ backgroundColor: presetColor }}
                 />
@@ -186,7 +195,7 @@ export default function CategoryModal({ category, onClose, onSuccess }: Category
                 <Icon name={icon as IconName} size={24} />
               </div>
               <span className="text-foreground font-medium">
-                {name || 'Category Name'}
+                {name || "Category Name"}
               </span>
             </div>
           </div>
@@ -206,11 +215,11 @@ export default function CategoryModal({ category, onClose, onSuccess }: Category
               disabled={isLoading || !name.trim()}
               className="flex-1 bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Create'}
+              {isLoading ? "Saving..." : isEdit ? "Update" : "Create"}
             </button>
           </div>
         </form>
       </Card>
     </div>
-  )
+  );
 }

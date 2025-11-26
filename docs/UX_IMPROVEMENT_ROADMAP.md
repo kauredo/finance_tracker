@@ -13,6 +13,7 @@
 **Goal**: Establish essential infrastructure and enable basic transaction/account management
 
 ### 1.1 Infrastructure & Navigation
+
 - [x] Multi-page routing structure
   - `/dashboard` - Overview & quick stats
   - `/transactions` - Full transaction list & management
@@ -24,6 +25,7 @@
 - [x] Loading skeleton screens (replace "Loading...")
 
 ### 1.2 Transaction Management
+
 - [x] Manual transaction creation form
 - [x] Edit transaction modal (description, amount, date, category)
 - [x] Delete transaction with confirmation
@@ -33,6 +35,7 @@
 - [ ] Pagination for transaction list
 
 ### 1.3 Account Enhancements
+
 - [x] Display account balances (calculated from transactions)
 - [x] Account detail page (filtered transactions per account)
 - [x] Account filtering dropdown in dashboard
@@ -40,6 +43,7 @@
 - [x] Delete account (with data warning)
 
 ### 1.4 Date Range Controls
+
 - [x] Date range picker component
 - [x] Preset ranges (7 days, 30 days, 3 months, 6 months, 1 year, all time)
 - [x] Custom date range selection
@@ -54,6 +58,7 @@
 **Goal**: Add powerful features for budgeting, categories, and data control
 
 ### 2.1 Category Management
+
 - [x] View all categories page/section
 - [x] Create custom categories (name, icon, color)
 - [x] Edit existing categories
@@ -61,6 +66,7 @@
 - [x] Category picker with visual icons
 
 ### 2.2 Budget & Goals
+
 - [x] Monthly budget setting per category
 - [x] Budget progress indicators (visual bars)
 - [x] Budget alerts (approaching limit, exceeded)
@@ -68,6 +74,7 @@
 - [x] Goal tracking dashboard widget
 
 ### 2.3 Recurring Transactions
+
 - [x] Create recurring transaction templates
 - [x] Set recurrence patterns (daily, weekly, monthly, yearly)
 - [x] Auto-generate upcoming recurring transactions
@@ -75,6 +82,7 @@
 - [x] Display upcoming scheduled transactions
 
 ### 2.4 Data Export & Import
+
 - [x] Export transactions to CSV
 - [x] Export transactions to Excel
 - [ ] Export reports to PDF
@@ -82,6 +90,7 @@
 - [x] Account/category filtering for exports
 
 ### 2.5 AI Enhancement
+
 - [ ] Category correction feedback loop
 - [ ] "Teach AI" mode when editing categories
 - [ ] Improved categorization accuracy over time
@@ -96,6 +105,7 @@
 **Goal**: Enhance visual design, mobile experience, and user guidance
 
 ### 3.1 Visual Design Improvements
+
 - [x] Consistent visual hierarchy across pages
 - [x] Improved spacing and grouping
 - [ ] Collapsible sections for complex pages
@@ -104,6 +114,7 @@
 - [x] Animated transitions between views
 
 ### 3.2 Mobile Optimization
+
 - [x] Card-based transaction view for mobile
 - [x] Touch-friendly controls (larger tap targets)
 - [x] Mobile navigation menu (hamburger/bottom nav)
@@ -112,6 +123,7 @@
 - [ ] Test on actual mobile devices
 
 ### 3.3 Onboarding & Help
+
 - [x] First-time user onboarding wizard
   - [x] Welcome screen
   - [x] Create first account
@@ -123,6 +135,7 @@
 - [x] Empty state CTAs with guidance
 
 ### 3.4 Accessibility & Performance
+
 - [ ] Keyboard shortcuts (e.g., 'n' = new, '/' = search, 'u' = upload)
 - [ ] Keyboard navigation throughout app
 - [ ] ARIA labels and roles
@@ -139,6 +152,7 @@
 **Goal**: Complete household/multi-user features and comprehensive settings
 
 ### 4.1 Household Management
+
 - [x] Household members list page
 - [x] View member roles (owner, member)
 - [ ] Invite status tracking (pending, accepted)
@@ -150,6 +164,7 @@
   - "Partner added transaction"
 
 ### 4.2 Settings & Profile
+
 - [x] Profile management page
   - [x] Edit full name
   - [x] Email (display only)
@@ -168,6 +183,7 @@
   - [ ] Budget alert preferences
 
 ### 4.3 Advanced Features
+
 - [x] Global search (transactions, accounts, categories)
 - [ ] Transaction attachments (receipt images)
 - [x] Transaction notes/memos
@@ -176,6 +192,7 @@
 - [ ] Data backup & restore
 
 ### 4.4 Analytics Enhancements
+
 - [x] Category breakdown (pie chart)
 - [x] Monthly trends (bar chart)
 - [x] Income vs expenses trends
@@ -191,6 +208,7 @@
 ## 🔄 Implementation Strategy
 
 ### Development Principles
+
 1. **Incremental Releases**: Deploy after each phase for user feedback
 2. **Mobile-First**: Design for mobile, enhance for desktop
 3. **Accessibility**: WCAG 2.1 AA compliance minimum
@@ -198,6 +216,7 @@
 5. **Testing**: Manual testing + user acceptance testing each phase
 
 ### Technical Approach
+
 - **Database Changes**: Migration files for schema updates
 - **API Routes**: Server-side handling for complex operations
 - **Component Library**: Reusable UI components in `/components/ui`
@@ -206,7 +225,9 @@
 - **Error Handling**: Graceful degradation with user-friendly messages
 
 ### Post-Phase Tasks
+
 After each phase:
+
 - [ ] Code review & refactoring
 - [ ] Performance optimization
 - [ ] Bug fixes
@@ -218,18 +239,21 @@ After each phase:
 ## 📈 Success Metrics
 
 ### User Experience
+
 - First-time user completes onboarding < 2 minutes
 - Transaction categorization accuracy > 85%
 - Mobile usability score > 90/100
 - Page load times < 3 seconds
 
 ### Feature Adoption
+
 - 70%+ users use transaction editing
 - 50%+ users set budgets
 - 40%+ users create recurring transactions
 - 60%+ users export data
 
 ### Technical
+
 - Zero critical bugs in production
 - 95%+ test coverage for core features
 - WCAG 2.1 AA compliance
@@ -242,11 +266,13 @@ After each phase:
 **Current Status**: Phase 0 Complete (MVP with basic features)
 
 **Next Steps**:
+
 1. ✅ Review and approve this roadmap
 2. 🔨 Begin Phase 1: Foundation & Core Functionality
 3. 🎯 Target: Phase 1 completion in 2 weeks
 
 **Phase 1 Priority Order**:
+
 1. Navigation structure & routing
 2. Toast notification system
 3. Transaction management (CRUD)

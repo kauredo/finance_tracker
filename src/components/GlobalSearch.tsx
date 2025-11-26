@@ -1,147 +1,149 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
-import Icon from '@/components/icons/Icon'
-import { Card } from '@/components/ui/Card'
+import { useState, useEffect, useRef } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import Icon from "@/components/icons/Icon";
+import { Card } from "@/components/ui/Card";
 
 interface SearchResult {
-  id: string
-  type: 'transaction' | 'account' | 'category'
-  title: string
-  subtitle: string
-  amount?: number
-  icon?: string
-  color?: string
+  id: string;
+  type: "transaction" | "account" | "category";
+  title: string;
+  subtitle: string;
+  amount?: number;
+  icon?: string;
+  color?: string;
 }
 
 export default function GlobalSearch() {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     // Keyboard shortcut: / to focus search
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !isOpen) {
-        e.preventDefault()
-        setIsOpen(true)
-        setTimeout(() => inputRef.current?.focus(), 100)
+      if (e.key === "/" && !isOpen) {
+        e.preventDefault();
+        setIsOpen(true);
+        setTimeout(() => inputRef.current?.focus(), 100);
       }
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false)
-        setQuery('')
-        setResults([])
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
+        setQuery("");
+        setResults([]);
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen])
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   useEffect(() => {
     if (query.trim().length < 2) {
-      setResults([])
-      return
+      setResults([]);
+      return;
     }
 
     const timer = setTimeout(() => {
-      performSearch()
-    }, 300) // Debounce
+      performSearch();
+    }, 300); // Debounce
 
-    return () => clearTimeout(timer)
-  }, [query])
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const performSearch = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const supabase = createClient()
-      const searchTerm = query.trim()
+      const supabase = createClient();
+      const searchTerm = query.trim();
 
       // Search transactions
       const { data: transactions } = await supabase
-        .from('transactions')
-        .select('id, description, amount, date, category:categories(name, icon, color)')
-        .ilike('description', `%${searchTerm}%`)
-        .limit(5)
+        .from("transactions")
+        .select(
+          "id, description, amount, date, category:categories(name, icon, color)",
+        )
+        .ilike("description", `%${searchTerm}%`)
+        .limit(5);
 
       // Search accounts
       const { data: accounts } = await supabase
-        .from('accounts')
-        .select('id, name, type')
-        .ilike('name', `%${searchTerm}%`)
-        .limit(5)
+        .from("accounts")
+        .select("id, name, type")
+        .ilike("name", `%${searchTerm}%`)
+        .limit(5);
 
       // Search categories
       const { data: categories } = await supabase
-        .from('categories')
-        .select('id, name, icon, color')
-        .ilike('name', `%${searchTerm}%`)
-        .limit(5)
+        .from("categories")
+        .select("id, name, icon, color")
+        .ilike("name", `%${searchTerm}%`)
+        .limit(5);
 
-      const allResults: SearchResult[] = []
+      const allResults: SearchResult[] = [];
 
       // Format transactions
-      transactions?.forEach(t => {
+      transactions?.forEach((t) => {
         allResults.push({
           id: t.id,
-          type: 'transaction',
+          type: "transaction",
           title: t.description,
           subtitle: new Date(t.date).toLocaleDateString(),
           amount: t.amount,
-          icon: (t.category as any)?.icon || 'other',
-          color: (t.category as any)?.color
-        })
-      })
+          icon: (t.category as any)?.icon || "other",
+          color: (t.category as any)?.color,
+        });
+      });
 
       // Format accounts
-      accounts?.forEach(a => {
+      accounts?.forEach((a) => {
         allResults.push({
           id: a.id,
-          type: 'account',
+          type: "account",
           title: a.name,
           subtitle: a.type,
-          icon: 'accounts'
-        })
-      })
+          icon: "accounts",
+        });
+      });
 
       // Format categories
-      categories?.forEach(c => {
+      categories?.forEach((c) => {
         allResults.push({
           id: c.id,
-          type: 'category',
+          type: "category",
           title: c.name,
-          subtitle: 'Category',
+          subtitle: "Category",
           icon: c.icon,
-          color: c.color
-        })
-      })
+          color: c.color,
+        });
+      });
 
-      setResults(allResults)
+      setResults(allResults);
     } catch (error) {
-      console.error('Search error:', error)
+      console.error("Search error:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleResultClick = (result: SearchResult) => {
-    setIsOpen(false)
-    setQuery('')
-    setResults([])
+    setIsOpen(false);
+    setQuery("");
+    setResults([]);
 
-    if (result.type === 'transaction') {
-      router.push('/transactions')
-    } else if (result.type === 'account') {
-      router.push(`/accounts/${result.id}`)
-    } else if (result.type === 'category') {
-      router.push('/categories')
+    if (result.type === "transaction") {
+      router.push("/transactions");
+    } else if (result.type === "account") {
+      router.push(`/accounts/${result.id}`);
+    } else if (result.type === "category") {
+      router.push("/categories");
     }
-  }
+  };
 
   if (!isOpen) {
     return (
@@ -151,20 +153,22 @@ export default function GlobalSearch() {
       >
         <Icon name="search" size={18} />
         <span className="text-sm hidden sm:inline">Search...</span>
-        <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs bg-surface-alt border border-border rounded">/</kbd>
+        <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs bg-surface-alt border border-border rounded">
+          /
+        </kbd>
       </button>
-    )
+    );
   }
 
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
         onClick={() => {
-          setIsOpen(false)
-          setQuery('')
-          setResults([])
+          setIsOpen(false);
+          setQuery("");
+          setResults([]);
         }}
       />
 
@@ -192,7 +196,11 @@ export default function GlobalSearch() {
           <div className="max-h-96 overflow-y-auto">
             {results.length === 0 && query.trim().length >= 2 && !loading && (
               <div className="p-8 text-center text-muted">
-                <Icon name="search" size={32} className="mx-auto mb-2 opacity-50" />
+                <Icon
+                  name="search"
+                  size={32}
+                  className="mx-auto mb-2 opacity-50"
+                />
                 <p>No results found</p>
               </div>
             )}
@@ -209,24 +217,30 @@ export default function GlobalSearch() {
                 onClick={() => handleResultClick(result)}
                 className="w-full flex items-center gap-4 p-4 hover:bg-surface-alt transition-colors text-left border-b border-border last:border-0"
               >
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ 
-                    backgroundColor: result.color ? `${result.color}15` : 'var(--surface-alt)',
-                    color: result.color || 'var(--foreground)'
+                  style={{
+                    backgroundColor: result.color
+                      ? `${result.color}15`
+                      : "var(--surface-alt)",
+                    color: result.color || "var(--foreground)",
                   }}
                 >
-                  <Icon name={result.icon as any || 'other'} size={20} />
+                  <Icon name={(result.icon as any) || "other"} size={20} />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground truncate">{result.title}</div>
+                  <div className="font-medium text-foreground truncate">
+                    {result.title}
+                  </div>
                   <div className="text-sm text-muted">{result.subtitle}</div>
                 </div>
 
                 {result.amount !== undefined && (
-                  <div className={`font-semibold ${result.amount > 0 ? 'text-success' : 'text-foreground'}`}>
-                    {result.amount > 0 ? '+' : ''}€{result.amount.toFixed(2)}
+                  <div
+                    className={`font-semibold ${result.amount > 0 ? "text-success" : "text-foreground"}`}
+                  >
+                    {result.amount > 0 ? "+" : ""}€{result.amount.toFixed(2)}
                   </div>
                 )}
 
@@ -241,22 +255,30 @@ export default function GlobalSearch() {
           <div className="px-4 py-3 bg-surface border-t border-border flex items-center justify-between text-xs text-muted">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
-                <kbd className="px-2 py-0.5 bg-background border border-border rounded">↑</kbd>
-                <kbd className="px-2 py-0.5 bg-background border border-border rounded">↓</kbd>
+                <kbd className="px-2 py-0.5 bg-background border border-border rounded">
+                  ↑
+                </kbd>
+                <kbd className="px-2 py-0.5 bg-background border border-border rounded">
+                  ↓
+                </kbd>
                 <span>Navigate</span>
               </div>
               <div className="flex items-center gap-1">
-                <kbd className="px-2 py-0.5 bg-background border border-border rounded">↵</kbd>
+                <kbd className="px-2 py-0.5 bg-background border border-border rounded">
+                  ↵
+                </kbd>
                 <span>Select</span>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <kbd className="px-2 py-0.5 bg-background border border-border rounded">Esc</kbd>
+              <kbd className="px-2 py-0.5 bg-background border border-border rounded">
+                Esc
+              </kbd>
               <span>Close</span>
             </div>
           </div>
         </Card>
       </div>
     </>
-  )
+  );
 }

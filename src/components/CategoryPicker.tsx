@@ -1,77 +1,80 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import Icon, { IconName } from '@/components/icons/Icon'
+import { useState, useEffect, useRef } from "react";
+import Icon, { IconName } from "@/components/icons/Icon";
 
 interface Category {
-  id: string
-  name: string
-  color: string
-  icon: string
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
 }
 
 interface CategoryPickerProps {
-  value: string
-  onChange: (categoryId: string) => void
-  disabled?: boolean
-  placeholder?: string
+  value: string;
+  onChange: (categoryId: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 export default function CategoryPicker({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Select category'
+  placeholder = "Select category",
 }: CategoryPickerProps) {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isOpen, setIsOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
       }
-    }
+    };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories')
-      const data = await response.json()
+      const response = await fetch("/api/categories");
+      const data = await response.json();
 
       if (response.ok) {
-        setCategories(data.categories || [])
+        setCategories(data.categories || []);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      console.error("Error fetching categories:", error);
     }
-  }
+  };
 
-  const selectedCategory = categories.find(c => c.id === value)
-  
-  const filteredCategories = categories.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const selectedCategory = categories.find((c) => c.id === value);
+
+  const filteredCategories = categories.filter((c) =>
+    c.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const handleSelect = (categoryId: string) => {
-    onChange(categoryId)
-    setIsOpen(false)
-    setSearch('')
-  }
+    onChange(categoryId);
+    setIsOpen(false);
+    setSearch("");
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -88,7 +91,7 @@ export default function CategoryPicker({
               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{
                 backgroundColor: `${selectedCategory.color}20`,
-                color: selectedCategory.color
+                color: selectedCategory.color,
               }}
             >
               <Icon name={selectedCategory.icon as IconName} size={20} />
@@ -99,12 +102,17 @@ export default function CategoryPicker({
           <span className="text-muted">{placeholder}</span>
         )}
         <svg
-          className={`w-5 h-5 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
 
@@ -138,15 +146,15 @@ export default function CategoryPicker({
                     onClick={() => handleSelect(category.id)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
                       value === category.id
-                        ? 'bg-primary/10 text-primary'
-                        : 'hover:bg-surface-alt text-foreground'
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-surface-alt text-foreground"
                     }`}
                   >
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
                         backgroundColor: `${category.color}20`,
-                        color: category.color
+                        color: category.color,
                       }}
                     >
                       <Icon name={category.icon as IconName} size={20} />
@@ -173,5 +181,5 @@ export default function CategoryPicker({
         </div>
       )}
     </div>
-  )
+  );
 }

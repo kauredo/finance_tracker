@@ -1,10 +1,10 @@
 interface PaginationProps {
-  currentPage: number
-  totalPages: number
-  totalItems: number
-  itemsPerPage: number
-  onPageChange: (page: number) => void
-  onItemsPerPageChange: (itemsPerPage: number) => void
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
 export function Pagination({
@@ -15,49 +15,49 @@ export function Pagination({
   onPageChange,
   onItemsPerPageChange,
 }: PaginationProps) {
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   const getPageNumbers = () => {
-    const pages: (number | string)[] = []
-    const maxVisible = 5
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
 
     if (totalPages <= maxVisible) {
       // Show all pages if total is small
       for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
+        pages.push(i);
       }
     } else {
       // Always show first page
-      pages.push(1)
+      pages.push(1);
 
       if (currentPage > 3) {
-        pages.push('...')
+        pages.push("...");
       }
 
       // Show pages around current
-      const start = Math.max(2, currentPage - 1)
-      const end = Math.min(totalPages - 1, currentPage + 1)
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
 
       for (let i = start; i <= end; i++) {
-        pages.push(i)
+        pages.push(i);
       }
 
       if (currentPage < totalPages - 2) {
-        pages.push('...')
+        pages.push("...");
       }
 
       // Always show last page
       if (totalPages > 1) {
-        pages.push(totalPages)
+        pages.push(totalPages);
       }
     }
 
-    return pages
-  }
+    return pages;
+  };
 
   if (totalItems === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -95,14 +95,14 @@ export function Pagination({
         {getPageNumbers().map((page, index) => (
           <button
             key={index}
-            onClick={() => typeof page === 'number' && onPageChange(page)}
-            disabled={page === '...' || page === currentPage}
+            onClick={() => typeof page === "number" && onPageChange(page)}
+            disabled={page === "..." || page === currentPage}
             className={`min-w-[2.5rem] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               page === currentPage
-                ? 'bg-primary text-white'
-                : page === '...'
-                ? 'cursor-default text-muted'
-                : 'hover:bg-surface-alt text-foreground'
+                ? "bg-primary text-white"
+                : page === "..."
+                  ? "cursor-default text-muted"
+                  : "hover:bg-surface-alt text-foreground"
             }`}
           >
             {page}
@@ -118,5 +118,5 @@ export function Pagination({
         </button>
       </div>
     </div>
-  )
+  );
 }

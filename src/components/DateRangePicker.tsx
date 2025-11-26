@@ -1,27 +1,29 @@
-'use client'
+"use client";
 
-import { Card } from '@/components/ui/Card'
+import { Card } from "@/components/ui/Card";
 
 interface DateRangePickerProps {
-  startDate: string
-  endDate: string
-  onChange: (startDate: string, endDate: string) => void
-  onPresetChange?: (preset: 'week' | 'month' | 'quarter' | 'year' | 'all') => void
+  startDate: string;
+  endDate: string;
+  onChange: (startDate: string, endDate: string) => void;
+  onPresetChange?: (
+    preset: "week" | "month" | "quarter" | "year" | "all",
+  ) => void;
 }
 
-export default function DateRangePicker({ 
-  startDate, 
-  endDate, 
+export default function DateRangePicker({
+  startDate,
+  endDate,
   onChange,
-  onPresetChange 
+  onPresetChange,
 }: DateRangePickerProps) {
   const presets = [
-    { label: 'Last 7 days', value: 'week' as const },
-    { label: 'Last month', value: 'month' as const },
-    { label: 'Last 3 months', value: 'quarter' as const },
-    { label: 'Last year', value: 'year' as const },
-    { label: 'All time', value: 'all' as const }
-  ]
+    { label: "Last 7 days", value: "week" as const },
+    { label: "Last month", value: "month" as const },
+    { label: "Last 3 months", value: "quarter" as const },
+    { label: "Last year", value: "year" as const },
+    { label: "All time", value: "all" as const },
+  ];
 
   return (
     <Card variant="glass" className="p-4">
@@ -31,7 +33,7 @@ export default function DateRangePicker({
             Quick Select
           </label>
           <div className="flex flex-wrap gap-2">
-            {presets.map(preset => (
+            {presets.map((preset) => (
               <button
                 key={preset.value}
                 onClick={() => onPresetChange?.(preset.value)}
@@ -70,5 +72,5 @@ export default function DateRangePicker({
         </div>
       </div>
     </Card>
-  )
+  );
 }

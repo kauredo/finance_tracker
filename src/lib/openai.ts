@@ -1,19 +1,19 @@
-import OpenAI from 'openai'
+import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-})
+});
 
 export interface Transaction {
-  date: string
-  description: string
-  amount: number
-  category: string
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
 }
 
 export async function parseStatementWithAI(
   fileContent: string,
-  fileType: 'csv' | 'pdf' | 'text'
+  fileType: "csv" | "pdf" | "text",
 ): Promise<Transaction[]> {
   const prompt = `You are a financial data extraction expert. Parse the following Portuguese bank statement and extract all transactions.
 
@@ -36,24 +36,24 @@ Content (extracted text):
 ${fileContent}
 
 Return ONLY valid JSON array of transactions, no markdown or explanations.
-Format: {"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`
+Format: {"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`;
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [{ role: 'user', content: prompt }],
+    model: "gpt-4o",
+    messages: [{ role: "user", content: prompt }],
     temperature: 0.1,
-    response_format: { type: 'json_object' },
-  })
+    response_format: { type: "json_object" },
+  });
 
-  const content = response.choices[0].message.content
-  if (!content) throw new Error('No response from OpenAI')
+  const content = response.choices[0].message.content;
+  if (!content) throw new Error("No response from OpenAI");
 
-  const parsed = JSON.parse(content)
-  return parsed.transactions || []
+  const parsed = JSON.parse(content);
+  return parsed.transactions || [];
 }
 
 export async function parseStatementWithVision(
-  imageBase64Array: string[]
+  imageBase64Array: string[],
 ): Promise<Transaction[]> {
   const prompt = `Analyze this Portuguese bank statement and extract ALL transactions.
 
@@ -80,56 +80,56 @@ CRITICAL:
 - If a transaction description spans multiple lines, combine them
 
 You MUST respond with valid JSON only, in this EXACT format:
-{"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`
+{"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`;
 
-  const content: any[] = [
-    { type: 'text', text: prompt }
-  ]
+  const content: any[] = [{ type: "text", text: prompt }];
 
   // Add all images
   for (const base64 of imageBase64Array) {
     content.push({
-      type: 'image_url',
+      type: "image_url",
       image_url: {
         url: `data:image/png;base64,${base64}`,
       },
-    })
+    });
   }
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: "gpt-4o",
       messages: [
         {
-          role: 'user',
+          role: "user",
           content,
         },
       ],
       temperature: 0.1,
-      response_format: { type: 'json_object' },
-    })
+      response_format: { type: "json_object" },
+    });
 
-    const responseContent = response.choices[0].message.content
-    
-    console.log('OpenAI Vision Response:', responseContent)
-    
+    const responseContent = response.choices[0].message.content;
+
+    console.log("OpenAI Vision Response:", responseContent);
+
     if (!responseContent) {
-      throw new Error('No response from OpenAI')
+      throw new Error("No response from OpenAI");
     }
 
     // Clean up the response in case there's markdown
-    let cleanContent = responseContent.trim()
-    if (cleanContent.startsWith('```json')) {
-      cleanContent = cleanContent.replace(/^```json\n/, '').replace(/\n```$/, '')
-    } else if (cleanContent.startsWith('```')) {
-      cleanContent = cleanContent.replace(/^```\n/, '').replace(/\n```$/, '')
+    let cleanContent = responseContent.trim();
+    if (cleanContent.startsWith("```json")) {
+      cleanContent = cleanContent
+        .replace(/^```json\n/, "")
+        .replace(/\n```$/, "");
+    } else if (cleanContent.startsWith("```")) {
+      cleanContent = cleanContent.replace(/^```\n/, "").replace(/\n```$/, "");
     }
 
-    const parsed = JSON.parse(cleanContent)
-    return parsed.transactions || []
+    const parsed = JSON.parse(cleanContent);
+    return parsed.transactions || [];
   } catch (error: any) {
-    console.error('Vision API Error:', error)
-    console.error('Error message:', error.message)
-    throw new Error(`Failed to parse statement: ${error.message}`)
+    console.error("Vision API Error:", error);
+    console.error("Error message:", error.message);
+    throw new Error(`Failed to parse statement: ${error.message}`);
   }
 }

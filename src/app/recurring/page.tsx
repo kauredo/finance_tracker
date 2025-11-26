@@ -1,110 +1,111 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import NavBar from '@/components/NavBar'
-import { Card } from '@/components/ui/Card'
-import { Button } from '@/components/ui/Button'
-import Icon, { IconName } from '@/components/icons/Icon'
-import RecurringTransactionModal from '@/components/RecurringTransactionModal'
-import { format } from 'date-fns'
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import NavBar from "@/components/NavBar";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import Icon, { IconName } from "@/components/icons/Icon";
+import RecurringTransactionModal from "@/components/RecurringTransactionModal";
+import { format } from "date-fns";
 
 interface RecurringTransaction {
-  id: string
-  description: string
-  amount: number
-  interval: string
-  next_run_date: string
-  active: boolean
+  id: string;
+  description: string;
+  amount: number;
+  interval: string;
+  next_run_date: string;
+  active: boolean;
   category?: {
-    name: string
-    icon: string
-    color: string
-  }
+    name: string;
+    icon: string;
+    color: string;
+  };
   account?: {
-    name: string
-  }
+    name: string;
+  };
 }
 
 export default function RecurringPage() {
-  const { user, loading: authLoading } = useAuth()
-  const [recurring, setRecurring] = useState<RecurringTransaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editId, setEditId] = useState<string | undefined>(undefined)
+  const { user, loading: authLoading } = useAuth();
+  const [recurring, setRecurring] = useState<RecurringTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (user) {
-      fetchRecurring()
+      fetchRecurring();
     }
-  }, [user])
+  }, [user]);
 
   const fetchRecurring = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await fetch('/api/recurring')
-      const data = await res.json()
+      const res = await fetch("/api/recurring");
+      const data = await res.json();
       if (data.recurring) {
-        setRecurring(data.recurring)
+        setRecurring(data.recurring);
       }
     } catch (error) {
-      console.error('Error fetching recurring:', error)
+      console.error("Error fetching recurring:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (id: string) => {
-    setEditId(id)
-    setIsModalOpen(true)
-  }
+    setEditId(id);
+    setIsModalOpen(true);
+  };
 
   const handleAdd = () => {
-    setEditId(undefined)
-    setSuggestionData(undefined)
-    setIsModalOpen(true)
-  }
+    setEditId(undefined);
+    setSuggestionData(undefined);
+    setIsModalOpen(true);
+  };
 
   const handleUseSuggestion = (suggestion: any) => {
-    setEditId(undefined)
-    setSuggestionData(suggestion)
-    setIsModalOpen(true)
-  }
+    setEditId(undefined);
+    setSuggestionData(suggestion);
+    setIsModalOpen(true);
+  };
 
-  const [suggestionData, setSuggestionData] = useState<any>(undefined)
+  const [suggestionData, setSuggestionData] = useState<any>(undefined);
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       const res = await fetch(`/api/recurring/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ active: !currentStatus })
-      })
-      if (res.ok) fetchRecurring()
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !currentStatus }),
+      });
+      if (res.ok) fetchRecurring();
     } catch (error) {
-      console.error('Error toggling status:', error)
+      console.error("Error toggling status:", error);
     }
-  }
+  };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this recurring transaction?')) return
-    
+    if (!confirm("Are you sure you want to delete this recurring transaction?"))
+      return;
+
     try {
       const res = await fetch(`/api/recurring/${id}`, {
-        method: 'DELETE'
-      })
-      if (res.ok) fetchRecurring()
+        method: "DELETE",
+      });
+      if (res.ok) fetchRecurring();
     } catch (error) {
-      console.error('Error deleting:', error)
+      console.error("Error deleting:", error);
     }
-  }
+  };
 
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted">Loading...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -121,7 +122,11 @@ export default function RecurringPage() {
                 Manage your subscriptions, bills, and salary
               </p>
             </div>
-            <Button onClick={handleAdd} variant="primary" className="flex items-center gap-2">
+            <Button
+              onClick={handleAdd}
+              variant="primary"
+              className="flex items-center gap-2"
+            >
               <Icon name="plus" size={20} />
               Add New
             </Button>
@@ -137,8 +142,13 @@ export default function RecurringPage() {
               <div className="w-16 h-16 bg-surface-alt rounded-full flex items-center justify-center mx-auto mb-4 text-muted">
                 <Icon name="calendar" size={32} />
               </div>
-              <h3 className="text-lg font-medium text-foreground mb-2">No recurring transactions</h3>
-              <p className="text-muted mb-6">Set up your first recurring transaction to automate your finances.</p>
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                No recurring transactions
+              </h3>
+              <p className="text-muted mb-6">
+                Set up your first recurring transaction to automate your
+                finances.
+              </p>
               <Button onClick={handleAdd} variant="primary">
                 Create One
               </Button>
@@ -146,23 +156,37 @@ export default function RecurringPage() {
           ) : (
             <div className="grid gap-4">
               {recurring.map((item) => (
-                <Card key={item.id} variant="glass" className={`p-4 flex items-center justify-between ${!item.active ? 'opacity-60' : ''}`}>
+                <Card
+                  key={item.id}
+                  variant="glass"
+                  className={`p-4 flex items-center justify-between ${!item.active ? "opacity-60" : ""}`}
+                >
                   <div className="flex items-center gap-4">
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center"
-                      style={{ 
-                        backgroundColor: item.category ? `${item.category.color}20` : '#8882',
-                        color: item.category ? item.category.color : '#888'
+                      style={{
+                        backgroundColor: item.category
+                          ? `${item.category.color}20`
+                          : "#8882",
+                        color: item.category ? item.category.color : "#888",
                       }}
                     >
-                      <Icon name={(item.category?.icon as IconName) || 'other'} size={24} />
+                      <Icon
+                        name={(item.category?.icon as IconName) || "other"}
+                        size={24}
+                      />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground text-lg">{item.description}</h3>
+                      <h3 className="font-semibold text-foreground text-lg">
+                        {item.description}
+                      </h3>
                       <div className="flex items-center gap-2 text-sm text-muted">
                         <span className="capitalize">{item.interval}</span>
                         <span>•</span>
-                        <span>Next: {format(new Date(item.next_run_date), 'MMM d, yyyy')}</span>
+                        <span>
+                          Next:{" "}
+                          {format(new Date(item.next_run_date), "MMM d, yyyy")}
+                        </span>
                         <span>•</span>
                         <span>{item.account?.name}</span>
                       </div>
@@ -170,17 +194,23 @@ export default function RecurringPage() {
                   </div>
 
                   <div className="flex items-center gap-6">
-                    <div className={`text-lg font-bold ${item.amount >= 0 ? 'text-success' : 'text-foreground'}`}>
-                      {item.amount >= 0 ? '+' : ''}€{Math.abs(item.amount).toFixed(2)}
+                    <div
+                      className={`text-lg font-bold ${item.amount >= 0 ? "text-success" : "text-foreground"}`}
+                    >
+                      {item.amount >= 0 ? "+" : ""}€
+                      {Math.abs(item.amount).toFixed(2)}
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleToggleActive(item.id, item.active)}
-                        className={`p-2 rounded-lg transition-colors ${item.active ? 'text-success hover:bg-success/10' : 'text-muted hover:bg-surface-alt'}`}
-                        title={item.active ? 'Active' : 'Paused'}
+                        className={`p-2 rounded-lg transition-colors ${item.active ? "text-success hover:bg-success/10" : "text-muted hover:bg-surface-alt"}`}
+                        title={item.active ? "Active" : "Paused"}
                       >
-                        <Icon name={item.active ? 'check' : 'close'} size={20} />
+                        <Icon
+                          name={item.active ? "check" : "close"}
+                          size={20}
+                        />
                       </button>
                       <button
                         onClick={() => handleEdit(item.id)}
@@ -213,24 +243,24 @@ export default function RecurringPage() {
         initialData={suggestionData}
       />
     </>
-  )
+  );
 }
 
 function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
-  const [suggestions, setSuggestions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/recurring/suggestions')
-      .then(res => res.json())
-      .then(data => {
-        if (data.suggestions) setSuggestions(data.suggestions)
+    fetch("/api/recurring/suggestions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.suggestions) setSuggestions(data.suggestions);
       })
       .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
-  if (loading || suggestions.length === 0) return null
+  if (loading || suggestions.length === 0) return null;
 
   return (
     <div className="mb-8">
@@ -240,11 +270,17 @@ function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {suggestions.map((s, i) => (
-          <Card key={i} variant="glass" className="p-4 border-primary/20 bg-primary/5">
+          <Card
+            key={i}
+            variant="glass"
+            className="p-4 border-primary/20 bg-primary/5"
+          >
             <div className="flex justify-between items-start mb-2">
               <div className="font-medium text-foreground">{s.description}</div>
-              <div className={`font-bold ${s.amount >= 0 ? 'text-success' : 'text-foreground'}`}>
-                {s.amount >= 0 ? '+' : ''}€{Math.abs(s.amount).toFixed(2)}
+              <div
+                className={`font-bold ${s.amount >= 0 ? "text-success" : "text-foreground"}`}
+              >
+                {s.amount >= 0 ? "+" : ""}€{Math.abs(s.amount).toFixed(2)}
               </div>
             </div>
             <div className="flex justify-between items-center mt-4">
@@ -259,5 +295,5 @@ function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
         ))}
       </div>
     </div>
-  )
+  );
 }

@@ -1,43 +1,43 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
-import Icon from '@/components/icons/Icon'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import Icon from "@/components/icons/Icon";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function UserMenu() {
-  const { user, signOut } = useAuth()
-  const { theme, toggleTheme } = useTheme()
-  const [isOpen, setIsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+        setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      router.push('/auth')
+      await signOut();
+      router.push("/auth");
     } catch (error) {
-      console.error('Sign out error:', error)
+      console.error("Sign out error:", error);
     }
-  }
+  };
 
-  if (!user) return null
+  if (!user) return null;
 
   // Get initials from email
-  const initials = user.email?.substring(0, 2).toUpperCase() || 'U'
+  const initials = user.email?.substring(0, 2).toUpperCase() || "U";
 
   return (
     <div className="relative" ref={menuRef}>
@@ -56,9 +56,7 @@ export default function UserMenu() {
             <p className="text-sm font-medium text-foreground truncate">
               {user.email}
             </p>
-            <p className="text-xs text-muted mt-0.5">
-              Free Plan
-            </p>
+            <p className="text-xs text-muted mt-0.5">Free Plan</p>
           </div>
 
           {/* Menu Items */}
@@ -69,12 +67,21 @@ export default function UserMenu() {
               className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground rounded-lg hover:bg-surface-alt transition-colors"
             >
               <div className="flex items-center gap-3">
-                <Icon name={theme === 'light' ? 'sun' : 'moon'} size={18} className="text-muted" />
-                <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+                <Icon
+                  name={theme === "light" ? "sun" : "moon"}
+                  size={18}
+                  className="text-muted"
+                />
+                <span>{theme === "light" ? "Light Mode" : "Dark Mode"}</span>
               </div>
               {/* Switch-like visual */}
-              <div className={`w-8 h-4 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-primary' : 'bg-gray-300'}`}>
-                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${theme === 'dark' ? 'left-4.5' : 'left-0.5'}`} style={{ left: theme === 'dark' ? '18px' : '2px' }} />
+              <div
+                className={`w-8 h-4 rounded-full relative transition-colors ${theme === "dark" ? "bg-primary" : "bg-gray-300"}`}
+              >
+                <div
+                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${theme === "dark" ? "left-4.5" : "left-0.5"}`}
+                  style={{ left: theme === "dark" ? "18px" : "2px" }}
+                />
               </div>
             </button>
 
@@ -102,5 +109,5 @@ export default function UserMenu() {
         </div>
       )}
     </div>
-  )
+  );
 }

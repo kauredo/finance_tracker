@@ -1,19 +1,19 @@
-import { icons } from './icons'
+import { icons } from "./icons";
 
-export type IconName = keyof typeof icons
+export type IconName = keyof typeof icons;
 
 interface IconProps {
-  name: IconName
-  size?: number
-  className?: string
+  name: IconName;
+  size?: number;
+  className?: string;
 }
 
-export default function Icon({ name, size = 24, className = '' }: IconProps) {
-  const path = icons[name]
+export default function Icon({ name, size = 24, className = "" }: IconProps) {
+  const path = icons[name];
 
   if (!path) {
-    console.warn(`Icon "${name}" not found`)
-    return null
+    console.warn(`Icon "${name}" not found`);
+    return null;
   }
 
   return (
@@ -31,5 +31,5 @@ export default function Icon({ name, size = 24, className = '' }: IconProps) {
     >
       <path d={path} />
     </svg>
-  )
+  );
 }

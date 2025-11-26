@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { parseStatementWithVision, parseStatementWithAI } from '@/lib/openai'
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { parseStatementWithVision, parseStatementWithAI } from "@/lib/openai";
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Check authentication
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return NextResponse.json({ error: 'Missing Authorization header' }, { status: 401 })
+      return NextResponse.json(
+        { error: "Missing Authorization header" },
+        { status: 401 },
+      );
     }
 
     // 2. Initialize Supabase client with user's token to respect RLS
@@ -20,198 +23,239 @@ export async function POST(req: NextRequest) {
             Authorization: authHeader,
           },
         },
-      }
-    )
+      },
+    );
 
     // 3. Get request body
-    const { files, accountId } = await req.json()
+    const { files, accountId } = await req.json();
 
     if (!files || !Array.isArray(files) || files.length === 0 || !accountId) {
       return NextResponse.json(
-        { error: 'Missing required fields: files (array), accountId' },
-        { status: 400 }
-      )
+        { error: "Missing required fields: files (array), accountId" },
+        { status: 400 },
+      );
     }
 
     // Validate all file types
     for (const file of files) {
-      const isImage = ['image/png', 'image/jpeg', 'image/jpg'].includes(file.fileType)
-      const isCsvTsv = file.fileType.includes('csv') || file.fileType.includes('tsv') || 
-                       file.filePath.endsWith('.csv') || file.filePath.endsWith('.tsv')
-      
+      const isImage = ["image/png", "image/jpeg", "image/jpg"].includes(
+        file.fileType,
+      );
+      const isCsvTsv =
+        file.fileType.includes("csv") ||
+        file.fileType.includes("tsv") ||
+        file.filePath.endsWith(".csv") ||
+        file.filePath.endsWith(".tsv");
+
       if (!isImage && !isCsvTsv) {
         return NextResponse.json(
-          { error: 'Only PNG, JPEG, CSV, and TSV files are supported.' },
-          { status: 400 }
-        )
+          { error: "Only PNG, JPEG, CSV, and TSV files are supported." },
+          { status: 400 },
+        );
       }
     }
 
     // 4. Separate files by type
-    const imageFiles = files.filter(f => 
-      ['image/png', 'image/jpeg', 'image/jpg'].includes(f.fileType)
-    )
-    const textFiles = files.filter(f => 
-      f.fileType.includes('csv') || f.fileType.includes('tsv') ||
-      f.filePath.endsWith('.csv') || f.filePath.endsWith('.tsv')
-    )
+    const imageFiles = files.filter((f) =>
+      ["image/png", "image/jpeg", "image/jpg"].includes(f.fileType),
+    );
+    const textFiles = files.filter(
+      (f) =>
+        f.fileType.includes("csv") ||
+        f.fileType.includes("tsv") ||
+        f.filePath.endsWith(".csv") ||
+        f.filePath.endsWith(".tsv"),
+    );
 
-    let transactions: any[] = []
+    let transactions: any[] = [];
 
     // 5. Process image files with Vision API
     if (imageFiles.length > 0) {
-      const base64Images: string[] = []
-      
+      const base64Images: string[] = [];
+
       for (const file of imageFiles) {
         const { data: fileData, error: downloadError } = await supabase.storage
-          .from('statements')
-          .download(file.filePath)
+          .from("statements")
+          .download(file.filePath);
 
         if (downloadError) {
-          console.error('Storage download error:', downloadError)
-          return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+          console.error("Storage download error:", downloadError);
+          return NextResponse.json(
+            { error: "Failed to download file" },
+            { status: 500 },
+          );
         }
 
-        console.log(`Processing image ${file.filePath}, size:`, fileData.size, 'bytes')
-        const arrayBuffer = await fileData.arrayBuffer()
-        const base64Image = Buffer.from(arrayBuffer).toString('base64')
-        base64Images.push(base64Image)
-        console.log(`Image ${file.filePath} converted, base64 length:`, base64Image.length)
+        console.log(
+          `Processing image ${file.filePath}, size:`,
+          fileData.size,
+          "bytes",
+        );
+        const arrayBuffer = await fileData.arrayBuffer();
+        const base64Image = Buffer.from(arrayBuffer).toString("base64");
+        base64Images.push(base64Image);
+        console.log(
+          `Image ${file.filePath} converted, base64 length:`,
+          base64Image.length,
+        );
       }
 
-      console.log(`Calling vision API with ${base64Images.length} image(s)...`)
-      const imageTransactions = await parseStatementWithVision(base64Images)
-      console.log('Extracted transactions from images:', imageTransactions.length)
-      transactions.push(...imageTransactions)
+      console.log(`Calling vision API with ${base64Images.length} image(s)...`);
+      const imageTransactions = await parseStatementWithVision(base64Images);
+      console.log(
+        "Extracted transactions from images:",
+        imageTransactions.length,
+      );
+      transactions.push(...imageTransactions);
     }
 
     // 6. Process CSV/TSV files with text parsing
     if (textFiles.length > 0) {
       for (const file of textFiles) {
         const { data: fileData, error: downloadError } = await supabase.storage
-          .from('statements')
-          .download(file.filePath)
+          .from("statements")
+          .download(file.filePath);
 
         if (downloadError) {
-          console.error('Storage download error:', downloadError)
-          return NextResponse.json({ error: 'Failed to download file' }, { status: 500 })
+          console.error("Storage download error:", downloadError);
+          return NextResponse.json(
+            { error: "Failed to download file" },
+            { status: 500 },
+          );
         }
 
-        console.log(`Processing text file ${file.filePath}`)
-        const fileContent = await fileData.text()
-        
+        console.log(`Processing text file ${file.filePath}`);
+        const fileContent = await fileData.text();
+
         // Determine file type for AI parsing
-        const fileType = file.filePath.endsWith('.csv') ? 'csv' as const : 'text' as const
-        const textTransactions = await parseStatementWithAI(fileContent, fileType)
-        console.log(`Extracted ${textTransactions.length} transactions from ${file.filePath}`)
-        transactions.push(...textTransactions)
+        const fileType = file.filePath.endsWith(".csv")
+          ? ("csv" as const)
+          : ("text" as const);
+        const textTransactions = await parseStatementWithAI(
+          fileContent,
+          fileType,
+        );
+        console.log(
+          `Extracted ${textTransactions.length} transactions from ${file.filePath}`,
+        );
+        transactions.push(...textTransactions);
       }
     }
 
-    console.log('Total transactions extracted:', transactions.length)
+    console.log("Total transactions extracted:", transactions.length);
 
     // 7. Get existing transactions for this account to detect duplicates
     const { data: existingTransactions, error: fetchError } = await supabase
-      .from('transactions')
-      .select('date, amount, description')
-      .eq('account_id', accountId)
+      .from("transactions")
+      .select("date, amount, description")
+      .eq("account_id", accountId);
 
     if (fetchError) {
-      console.error('Error fetching existing transactions:', fetchError)
+      console.error("Error fetching existing transactions:", fetchError);
       // Continue anyway - better to have duplicates than fail
     }
 
     // 8. Get categories to map names to IDs
     const { data: categories } = await supabase
-      .from('categories')
-      .select('id, name')
+      .from("categories")
+      .select("id, name");
 
     const categoryMap = new Map(
-      categories?.map((c) => [c.name.toLowerCase(), c.id]) || []
-    )
+      categories?.map((c) => [c.name.toLowerCase(), c.id]) || [],
+    );
 
     // 9. Map transactions to database schema and filter duplicates
     const dbTransactions = transactions.map((t) => {
-      const categoryId = categoryMap.get(t.category.toLowerCase()) || categoryMap.get('other')
-      
+      const categoryId =
+        categoryMap.get(t.category.toLowerCase()) || categoryMap.get("other");
+
       return {
         account_id: accountId,
         date: t.date,
         description: t.description,
         amount: t.amount,
         category_id: categoryId,
-      }
-    })
+      };
+    });
 
     // Helper function to check if two descriptions are similar
     const areSimilar = (desc1: string, desc2: string): boolean => {
-      const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ')
-      const d1 = normalize(desc1)
-      const d2 = normalize(desc2)
-      
+      const normalize = (s: string) =>
+        s.toLowerCase().trim().replace(/\s+/g, " ");
+      const d1 = normalize(desc1);
+      const d2 = normalize(desc2);
+
       // Exact match
-      if (d1 === d2) return true
-      
+      if (d1 === d2) return true;
+
       // One contains the other (handles truncated descriptions)
-      if (d1.includes(d2) || d2.includes(d1)) return true
-      
-      return false
-    }
+      if (d1.includes(d2) || d2.includes(d1)) return true;
+
+      return false;
+    };
 
     // Helper to check date proximity (+/- 3 days)
     const isDateClose = (date1: string, date2: string): boolean => {
-      const d1 = new Date(date1).getTime()
-      const d2 = new Date(date2).getTime()
-      const diffTime = Math.abs(d2 - d1)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) 
-      return diffDays <= 3
-    }
+      const d1 = new Date(date1).getTime();
+      const d2 = new Date(date2).getTime();
+      const diffTime = Math.abs(d2 - d1);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 3;
+    };
 
     // Filter out duplicates and update existing recurring transactions if matched
-    const newTransactions: any[] = []
-    
+    const newTransactions: any[] = [];
+
     for (const newTx of dbTransactions) {
       // Find potential match
-      const match = existingTransactions?.find(existingTx => 
-        Math.abs(parseFloat(existingTx.amount) - newTx.amount) < 0.01 && // Same amount
-        isDateClose(existingTx.date, newTx.date) // Similar date
-      )
+      const match = existingTransactions?.find(
+        (existingTx) =>
+          Math.abs(parseFloat(existingTx.amount) - newTx.amount) < 0.01 && // Same amount
+          isDateClose(existingTx.date, newTx.date), // Similar date
+      );
 
       if (match) {
         // If matched, we skip insertion (it's a duplicate or the recurring tx already exists)
         // Optionally we could update the description if it was a recurring placeholder
-        console.log(`Skipping duplicate/match: ${newTx.description} (${newTx.amount}) matches ${match.description}`)
+        console.log(
+          `Skipping duplicate/match: ${newTx.description} (${newTx.amount}) matches ${match.description}`,
+        );
       } else {
-        newTransactions.push(newTx)
+        newTransactions.push(newTx);
       }
     }
 
-    const duplicateCount = dbTransactions.length - newTransactions.length
-    console.log(`Found ${newTransactions.length} new transactions, ${duplicateCount} duplicates skipped`)
+    const duplicateCount = dbTransactions.length - newTransactions.length;
+    console.log(
+      `Found ${newTransactions.length} new transactions, ${duplicateCount} duplicates skipped`,
+    );
 
     // 10. Insert only new transactions
     if (newTransactions.length > 0) {
       const { error: insertError } = await supabase
-        .from('transactions')
-        .insert(newTransactions)
+        .from("transactions")
+        .insert(newTransactions);
 
       if (insertError) {
-        console.error('Database insert error:', insertError)
-        return NextResponse.json({ error: 'Failed to save transactions' }, { status: 500 })
+        console.error("Database insert error:", insertError);
+        return NextResponse.json(
+          { error: "Failed to save transactions" },
+          { status: 500 },
+        );
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       total: transactions.length,
       new: newTransactions.length,
-      duplicates: duplicateCount
-    })
+      duplicates: duplicateCount,
+    });
   } catch (error: any) {
-    console.error('API Error:', error)
+    console.error("API Error:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
-      { status: 500 }
-    )
+      { error: error.message || "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

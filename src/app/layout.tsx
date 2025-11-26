@@ -13,7 +13,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Wallet Joy - Manage Your Finances Together",
-  description: "Track expenses, upload bank statements, and visualize your finances",
+  description:
+    "Track expenses, upload bank statements, and visualize your finances",
   icons: {
     icon: "/favicon.png",
   },
@@ -26,7 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased bg-background text-foreground`}>
+      <body
+        className={`${inter.variable} antialiased bg-background text-foreground`}
+      >
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>

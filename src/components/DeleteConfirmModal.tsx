@@ -1,16 +1,16 @@
-'use client'
+"use client";
 
-import { Card } from '@/components/ui/Card'
+import { Card } from "@/components/ui/Card";
 
 interface DeleteConfirmModalProps {
-  title: string
-  message: string
-  itemName?: string
-  confirmText?: string
-  onConfirm?: () => void
-  onCancel: () => void
-  isLoading?: boolean
-  variant?: 'danger' | 'info'
+  title: string;
+  message: string;
+  itemName?: string;
+  confirmText?: string;
+  onConfirm?: () => void;
+  onCancel: () => void;
+  isLoading?: boolean;
+  variant?: "danger" | "info";
 }
 
 export default function DeleteConfirmModal({
@@ -21,10 +21,10 @@ export default function DeleteConfirmModal({
   onConfirm,
   onCancel,
   isLoading = false,
-  variant = 'danger'
+  variant = "danger",
 }: DeleteConfirmModalProps) {
-  const isInfoOnly = !onConfirm || variant === 'info'
-  
+  const isInfoOnly = !onConfirm || variant === "info";
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card variant="glass" className="w-full max-w-md">
@@ -40,9 +40,13 @@ export default function DeleteConfirmModal({
         </div>
 
         <div className="space-y-4">
-          <div className={`${
-            variant === 'danger' ? 'bg-danger/10 border-danger/30' : 'bg-primary/10 border-primary/30'
-          } border rounded-lg p-4`}>
+          <div
+            className={`${
+              variant === "danger"
+                ? "bg-danger/10 border-danger/30"
+                : "bg-primary/10 border-primary/30"
+            } border rounded-lg p-4`}
+          >
             <p className="text-foreground">{message}</p>
             {itemName && (
               <p className="text-sm text-muted mt-2">
@@ -61,7 +65,7 @@ export default function DeleteConfirmModal({
                 onClick={onCancel}
                 className="flex-1 px-4 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-all"
               >
-                {confirmText || 'OK'}
+                {confirmText || "OK"}
               </button>
             ) : (
               <>
@@ -77,7 +81,7 @@ export default function DeleteConfirmModal({
                   disabled={isLoading}
                   className="flex-1 bg-danger text-white font-bold py-3 rounded-lg hover:bg-danger/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Deleting...' : confirmText || 'Delete'}
+                  {isLoading ? "Deleting..." : confirmText || "Delete"}
                 </button>
               </>
             )}
@@ -85,5 +89,5 @@ export default function DeleteConfirmModal({
         </div>
       </Card>
     </div>
-  )
+  );
 }

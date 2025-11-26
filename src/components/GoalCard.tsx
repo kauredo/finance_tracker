@@ -1,30 +1,38 @@
-'use client'
+"use client";
 
-import { Card } from '@/components/ui/Card'
-import Icon, { IconName } from '@/components/icons/Icon'
-import { format } from 'date-fns'
+import { Card } from "@/components/ui/Card";
+import Icon, { IconName } from "@/components/icons/Icon";
+import { format } from "date-fns";
 
 interface Goal {
-  id: string
-  name: string
-  target_amount: number
-  current_amount: number
-  target_date: string | null
-  color: string
-  icon: string
+  id: string;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  target_date: string | null;
+  color: string;
+  icon: string;
 }
 
 interface GoalCardProps {
-  goal: Goal
-  onEdit: (goal: Goal) => void
-  onDelete: (goal: Goal) => void
-  onAddMoney: (goal: Goal) => void
+  goal: Goal;
+  onEdit: (goal: Goal) => void;
+  onDelete: (goal: Goal) => void;
+  onAddMoney: (goal: Goal) => void;
 }
 
-export default function GoalCard({ goal, onEdit, onDelete, onAddMoney }: GoalCardProps) {
-  const progress = Math.min((goal.current_amount / goal.target_amount) * 100, 100)
-  const remaining = Math.max(goal.target_amount - goal.current_amount, 0)
-  
+export default function GoalCard({
+  goal,
+  onEdit,
+  onDelete,
+  onAddMoney,
+}: GoalCardProps) {
+  const progress = Math.min(
+    (goal.current_amount / goal.target_amount) * 100,
+    100,
+  );
+  const remaining = Math.max(goal.target_amount - goal.current_amount, 0);
+
   return (
     <Card variant="glass" className="group hover:shadow-lg transition-all">
       <div className="p-5">
@@ -40,12 +48,12 @@ export default function GoalCard({ goal, onEdit, onDelete, onAddMoney }: GoalCar
               <h3 className="font-bold text-foreground text-lg">{goal.name}</h3>
               {goal.target_date && (
                 <p className="text-xs text-muted">
-                  Target: {format(new Date(goal.target_date), 'MMM d, yyyy')}
+                  Target: {format(new Date(goal.target_date), "MMM d, yyyy")}
                 </p>
               )}
             </div>
           </div>
-          
+
           <div className="relative group/menu">
             <button className="p-2 text-muted hover:text-foreground rounded-lg hover:bg-surface-alt transition-colors">
               <Icon name="other" size={20} />
@@ -76,14 +84,14 @@ export default function GoalCard({ goal, onEdit, onDelete, onAddMoney }: GoalCar
               of €{goal.target_amount.toLocaleString()}
             </span>
           </div>
-          
+
           <div className="h-3 bg-surface-alt rounded-full overflow-hidden">
             <div
               className="h-full transition-all duration-1000 ease-out"
               style={{ width: `${progress}%`, backgroundColor: goal.color }}
             />
           </div>
-          
+
           <div className="flex justify-between mt-2 text-xs text-muted">
             <span>{progress.toFixed(0)}% Complete</span>
             <span>€{remaining.toLocaleString()} to go</span>
@@ -98,5 +106,5 @@ export default function GoalCard({ goal, onEdit, onDelete, onAddMoney }: GoalCar
         </button>
       </div>
     </Card>
-  )
+  );
 }

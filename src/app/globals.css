@@ -3,30 +3,30 @@
 
 :root {
   /* Primary (Brand) Colors */
-  --primary: #FF8FAB;
-  --primary-light: #FFC2D1;
-  --primary-dark: #FB6F92;
-  --primary-pale: #FFF0F4;
+  --primary: #ff8fab;
+  --primary-light: #ffc2d1;
+  --primary-dark: #fb6f92;
+  --primary-pale: #fff0f4;
 
   /* Neutral Colors */
-  --background: #FFFFFF;
-  --surface: #F8FAFC;
-  --surface-alt: #F1F5F9;
-  --foreground: #1E293B;
-  --text-secondary: #64748B;
-  --muted: #94A3B8;
-  --border: #E2E8F0;
-  --border-light: #F1F5F9;
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --surface-alt: #f1f5f9;
+  --foreground: #1e293b;
+  --text-secondary: #64748b;
+  --muted: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
 
   /* Functional Colors */
-  --success: #10B981;
-  --success-light: #D1FAE5;
-  --danger: #EF4444;
-  --danger-light: #FEE2E2;
-  --warning: #F59E0B;
-  --warning-light: #FEF3C7;
-  --info: #3B82F6;
-  --info-light: #DBEAFE;
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --info: #3b82f6;
+  --info-light: #dbeafe;
 
   /* Shadow tokens */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -47,12 +47,12 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-border-light: var(--border-light);
-  
+
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
   --color-primary-pale: var(--primary-pale);
-  
+
   --color-success: var(--success);
   --color-success-light: var(--success-light);
   --color-danger: var(--danger);
@@ -77,20 +77,20 @@
 
 /* Dark mode - using .dark class for manual control */
 .dark {
-  --background: #0F172A;
-  --surface: #1E293B;
+  --background: #0f172a;
+  --surface: #1e293b;
   --surface-alt: #273549;
-  --foreground: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --muted: #64748B;
+  --foreground: #f8fafc;
+  --text-secondary: #94a3b8;
+  --muted: #64748b;
   --border: #334155;
-  --border-light: #1E293B;
-  
+  --border-light: #1e293b;
+
   /* Keep brand colors vibrant in dark mode */
-  --primary: #FF8FAB; 
-  --primary-light: #FFC2D1;
-  --primary-dark: #FB6F92;
-  --primary-pale: #2D1A21;
+  --primary: #ff8fab;
+  --primary-light: #ffc2d1;
+  --primary-dark: #fb6f92;
+  --primary-pale: #2d1a21;
 
   /* Reduce shadow opacity for dark mode */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -107,7 +107,9 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
+  transition:
+    background-color 200ms ease-in-out,
+    color 200ms ease-in-out;
 }
 
 /* Utility classes for animations */
@@ -116,7 +118,9 @@ body {
 }
 
 .transition-colors-smooth {
-  transition: color 150ms ease-out, background-color 150ms ease-out;
+  transition:
+    color 150ms ease-out,
+    background-color 150ms ease-out;
 }
 
 /* Custom scrollbar */
@@ -151,7 +155,8 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -166,4 +171,3 @@ body {
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-

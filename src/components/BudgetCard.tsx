@@ -1,75 +1,81 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Card } from '@/components/ui/Card'
-import Icon, { IconName } from '@/components/icons/Icon'
-import { useToast } from '@/contexts/ToastContext'
+import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import Icon, { IconName } from "@/components/icons/Icon";
+import { useToast } from "@/contexts/ToastContext";
 
 interface Category {
-  id: string
-  name: string
-  icon: string
-  color: string
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
 }
 
 interface Budget {
-  id: string
-  category_id: string
-  amount: number
-  period: string
+  id: string;
+  category_id: string;
+  amount: number;
+  period: string;
 }
 
 interface BudgetCardProps {
-  category: Category
-  budget?: Budget
-  spent: number
-  onSave: (amount: number) => Promise<void>
-  onDelete: () => Promise<void>
+  category: Category;
+  budget?: Budget;
+  spent: number;
+  onSave: (amount: number) => Promise<void>;
+  onDelete: () => Promise<void>;
 }
 
-export default function BudgetCard({ category, budget, spent, onSave, onDelete }: BudgetCardProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [amount, setAmount] = useState(budget?.amount?.toString() || '')
-  const [isLoading, setIsLoading] = useState(false)
-  const { success, error } = useToast()
+export default function BudgetCard({
+  category,
+  budget,
+  spent,
+  onSave,
+  onDelete,
+}: BudgetCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [amount, setAmount] = useState(budget?.amount?.toString() || "");
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
 
-  const percentage = budget ? Math.min((spent / budget.amount) * 100, 100) : 0
-  const isOverBudget = budget ? spent > budget.amount : false
-  
+  const percentage = budget ? Math.min((spent / budget.amount) * 100, 100) : 0;
+  const isOverBudget = budget ? spent > budget.amount : false;
+
   // Color logic
-  let progressColor = 'bg-success'
-  if (percentage >= 80) progressColor = 'bg-warning'
-  if (percentage >= 100) progressColor = 'bg-danger'
+  let progressColor = "bg-success";
+  if (percentage >= 80) progressColor = "bg-warning";
+  if (percentage >= 100) progressColor = "bg-danger";
 
   const handleSave = async () => {
-    if (!amount || isNaN(parseFloat(amount))) return
+    if (!amount || isNaN(parseFloat(amount))) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await onSave(parseFloat(amount))
-      setIsEditing(false)
-      success('Budget saved successfully')
+      await onSave(parseFloat(amount));
+      setIsEditing(false);
+      success("Budget saved successfully");
     } catch (err) {
-      error('Failed to save budget')
+      error("Failed to save budget");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to remove this budget?')) return
+    if (!confirm("Are you sure you want to remove this budget?")) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await onDelete()
-      setAmount('')
-      success('Budget removed')
+      await onDelete();
+      setAmount("");
+      success("Budget removed");
     } catch (err) {
-      error('Failed to remove budget')
+      error("Failed to remove budget");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (isEditing || !budget) {
     return (
@@ -77,7 +83,10 @@ export default function BudgetCard({ category, budget, spent, onSave, onDelete }
         <div className="flex items-center gap-3 mb-4">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: `${category.color}20`, color: category.color }}
+            style={{
+              backgroundColor: `${category.color}20`,
+              color: category.color,
+            }}
           >
             <Icon name={category.icon as IconName} size={20} />
           </div>
@@ -86,9 +95,13 @@ export default function BudgetCard({ category, budget, spent, onSave, onDelete }
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-muted mb-1">Monthly Limit</label>
+            <label className="block text-sm text-muted mb-1">
+              Monthly Limit
+            </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">€</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+                €
+              </span>
               <input
                 type="number"
                 value={amount}
@@ -118,7 +131,7 @@ export default function BudgetCard({ category, budget, spent, onSave, onDelete }
           </div>
         </div>
       </Card>
-    )
+    );
   }
 
   return (
@@ -143,7 +156,10 @@ export default function BudgetCard({ category, budget, spent, onSave, onDelete }
       <div className="flex items-center gap-3 mb-4">
         <div
           className="w-10 h-10 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: `${category.color}20`, color: category.color }}
+          style={{
+            backgroundColor: `${category.color}20`,
+            color: category.color,
+          }}
         >
           <Icon name={category.icon as IconName} size={20} />
         </div>
@@ -155,12 +171,14 @@ export default function BudgetCard({ category, budget, spent, onSave, onDelete }
 
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className={isOverBudget ? 'text-danger font-medium' : 'text-foreground'}>
+          <span
+            className={
+              isOverBudget ? "text-danger font-medium" : "text-foreground"
+            }
+          >
             €{spent.toFixed(2)}
           </span>
-          <span className="text-muted">
-            of €{budget.amount.toFixed(2)}
-          </span>
+          <span className="text-muted">of €{budget.amount.toFixed(2)}</span>
         </div>
 
         <div className="h-2 bg-surface-alt rounded-full overflow-hidden">
@@ -175,5 +193,5 @@ export default function BudgetCard({ category, budget, spent, onSave, onDelete }
         </div>
       </div>
     </Card>
-  )
+  );
 }

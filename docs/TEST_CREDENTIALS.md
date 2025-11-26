@@ -8,6 +8,7 @@ Use these credentials for testing the application:
 ## Usage
 
 These credentials can be used to:
+
 - Test authentication flow
 - Verify features in development
 - Run browser automation tests

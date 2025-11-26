@@ -1,44 +1,49 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/Card'
-import Icon, { IconName } from '@/components/icons/Icon'
-import Link from 'next/link'
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/Card";
+import Icon, { IconName } from "@/components/icons/Icon";
+import Link from "next/link";
 
 interface Goal {
-  id: string
-  name: string
-  target_amount: number
-  current_amount: number
-  color: string
-  icon: string
+  id: string;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  color: string;
+  icon: string;
 }
 
 export default function GoalsWidget() {
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [loading, setLoading] = useState(true)
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchGoals()
-  }, [])
+    fetchGoals();
+  }, []);
 
   const fetchGoals = async () => {
     try {
-      const response = await fetch('/api/goals')
-      const data = await response.json()
+      const response = await fetch("/api/goals");
+      const data = await response.json();
       if (response.ok) {
-        setGoals(data.goals || [])
+        setGoals(data.goals || []);
       }
     } catch (error) {
-      console.error('Error fetching goals:', error)
+      console.error("Error fetching goals:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  if (loading) return <Card variant="glass" className="h-full animate-pulse bg-surface-alt" />
+  if (loading)
+    return (
+      <Card variant="glass" className="h-full animate-pulse bg-surface-alt" />
+    );
 
-  const activeGoals = goals.filter(g => g.current_amount < g.target_amount).slice(0, 3)
+  const activeGoals = goals
+    .filter((g) => g.current_amount < g.target_amount)
+    .slice(0, 3);
 
   return (
     <Card variant="glass" className="h-full flex flex-col">
@@ -48,7 +53,7 @@ export default function GoalsWidget() {
             <Icon name="savings" size={24} className="text-primary" />
             Savings Goals
           </h2>
-          <Link 
+          <Link
             href="/goals"
             className="text-sm text-primary hover:text-primary/80 font-medium"
           >
@@ -68,29 +73,38 @@ export default function GoalsWidget() {
           </div>
         ) : (
           <div className="space-y-4">
-            {activeGoals.map(goal => {
-              const progress = Math.min((goal.current_amount / goal.target_amount) * 100, 100)
-              
+            {activeGoals.map((goal) => {
+              const progress = Math.min(
+                (goal.current_amount / goal.target_amount) * 100,
+                100,
+              );
+
               return (
                 <div key={goal.id} className="group">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-foreground">{goal.name}</span>
+                    <span className="font-medium text-foreground">
+                      {goal.name}
+                    </span>
                     <span className="text-muted">
-                      €{goal.current_amount.toLocaleString()} / €{goal.target_amount.toLocaleString()}
+                      €{goal.current_amount.toLocaleString()} / €
+                      {goal.target_amount.toLocaleString()}
                     </span>
                   </div>
                   <div className="h-2 bg-surface-alt rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all duration-500"
-                      style={{ width: `${progress}%`, backgroundColor: goal.color }}
+                      style={{
+                        width: `${progress}%`,
+                        backgroundColor: goal.color,
+                      }}
                     />
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </Card>
-  )
+  );
 }

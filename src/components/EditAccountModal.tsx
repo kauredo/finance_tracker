@@ -1,62 +1,66 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface Account {
-  id: string
-  name: string
-  type: 'personal' | 'joint'
+  id: string;
+  name: string;
+  type: "personal" | "joint";
 }
 
 interface EditAccountModalProps {
-  account: Account
-  onClose: () => void
-  onSuccess: () => void
+  account: Account;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
-export default function EditAccountModal({ account, onClose, onSuccess }: EditAccountModalProps) {
-  const [name, setName] = useState(account.name)
-  const [type, setType] = useState<'personal' | 'joint'>(account.type)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+export default function EditAccountModal({
+  account,
+  onClose,
+  onSuccess,
+}: EditAccountModalProps) {
+  const [name, setName] = useState(account.name);
+  const [type, setType] = useState<"personal" | "joint">(account.type);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!name.trim()) {
-      setError('Account name is required')
-      return
+      setError("Account name is required");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/update-account', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/update-account", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           accountId: account.id,
           name: name.trim(),
-          type
-        })
-      })
+          type,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update account')
+        throw new Error(data.error || "Failed to update account");
       }
 
-      onSuccess()
+      onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Failed to update account')
+      setError(err.message || "Failed to update account");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -73,7 +77,10 @@ export default function EditAccountModal({ account, onClose, onSuccess }: EditAc
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-foreground mb-2"
+            >
               Account Name
             </label>
             <Input
@@ -88,13 +95,16 @@ export default function EditAccountModal({ account, onClose, onSuccess }: EditAc
           </div>
 
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-foreground mb-2">
+            <label
+              htmlFor="type"
+              className="block text-sm font-medium text-foreground mb-2"
+            >
               Account Type
             </label>
             <select
               id="type"
               value={type}
-              onChange={(e) => setType(e.target.value as 'personal' | 'joint')}
+              onChange={(e) => setType(e.target.value as "personal" | "joint")}
               className="w-full px-4 py-2 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="personal">Personal</option>
@@ -113,11 +123,11 @@ export default function EditAccountModal({ account, onClose, onSuccess }: EditAc
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }

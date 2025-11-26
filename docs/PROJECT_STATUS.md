@@ -3,6 +3,7 @@
 **Last Updated:** 2025-11-20
 
 ## 📊 Project Overview
+
 A web application for couples to track shared finances by uploading bank statements, using AI to parse and categorize transactions, and visualizing spending patterns.
 
 ---
@@ -10,6 +11,7 @@ A web application for couples to track shared finances by uploading bank stateme
 ## ✅ Completed Features
 
 ### 1. Project Setup & Infrastructure
+
 - ✅ Next.js 16 with TypeScript
 - ✅ TailwindCSS for styling
 - ✅ Supabase client library installed
@@ -17,6 +19,7 @@ A web application for couples to track shared finances by uploading bank stateme
 - ✅ Environment configuration (`.env.example`)
 
 ### 2. Authentication System
+
 - ✅ Supabase Auth integration
 - ✅ Login/Signup UI with glassmorphism design
 - ✅ Email confirmation flow
@@ -25,6 +28,7 @@ A web application for couples to track shared finances by uploading bank stateme
 - ✅ Auto-redirect logic (logged-in users → dashboard, logged-out → auth)
 
 ### 3. Database Schema
+
 - ✅ Complete PostgreSQL schema in `supabase/schema.sql`
 - ✅ Tables: `profiles`, `households`, `household_members`, `accounts`, `transactions`, `categories`, `statements`
 - ✅ Row Level Security (RLS) policies for privacy
@@ -32,6 +36,7 @@ A web application for couples to track shared finances by uploading bank stateme
 - ✅ Pre-populated expense categories
 
 ### 4. File Upload (Partial)
+
 - ✅ Storage bucket created (`statements`)
 - ✅ File upload UI component (`FileUpload.tsx`)
 - ✅ Integration with dashboard
@@ -42,12 +47,14 @@ A web application for couples to track shared finances by uploading bank stateme
 ## ⏳ In Progress / Incomplete
 
 ### 1. File Upload - Remaining Work
+
 - [ ] Apply storage RLS policies from `supabase/storage.sql`
 - [ ] Test file upload functionality
 - [ ] Link uploaded files to `statements` table
 - [ ] Account selection during upload (which account does this statement belong to?)
 
 ### 2. OpenAI Integration
+
 - ✅ Helper function created (`src/lib/openai.ts`)
 - [ ] API route to process uploaded files
 - [ ] Extract text from PDFs (might need external library)
@@ -56,12 +63,14 @@ A web application for couples to track shared finances by uploading bank stateme
 - [ ] Save parsed transactions to database
 
 ### 3. Account Management
+
 - [ ] UI to create accounts (personal vs joint)
 - [ ] List of user's accounts
 - [ ] Edit/delete accounts
 - [ ] Assign accounts to households
 
 ### 4. Transaction Management
+
 - [ ] Display transactions in dashboard
 - [ ] Filter by date, category, account
 - [ ] Manual transaction creation
@@ -69,12 +78,14 @@ A web application for couples to track shared finances by uploading bank stateme
 - [ ] Recategorize transactions
 
 ### 5. Household/Partner Features
+
 - [ ] Create household
 - [ ] Invite partner via email
 - [ ] Accept household invitation
 - [ ] Manage joint vs personal accounts visibility
 
 ### 6. Data Visualization
+
 - [ ] Spending over time (line/bar chart)
 - [ ] Category breakdown (pie chart)
 - [ ] Monthly comparison
@@ -82,6 +93,7 @@ A web application for couples to track shared finances by uploading bank stateme
 - [ ] Budget tracking (optional)
 
 ### 7. Dashboard Enhancements
+
 - [ ] Real stats (currently showing $0.00 placeholders)
 - [ ] Recent transactions list
 - [ ] Quick filters
@@ -144,6 +156,7 @@ finance_tracker/
 ## 🔧 Configuration Files Needed
 
 ### Supabase Setup
+
 Run these SQL files in your Supabase SQL Editor (in order):
 
 1. `supabase/schema.sql` - Creates tables and RLS policies
@@ -151,6 +164,7 @@ Run these SQL files in your Supabase SQL Editor (in order):
 3. `supabase/storage.sql` - Creates file storage bucket
 
 ### Environment Variables (`.env.local`)
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-public-key

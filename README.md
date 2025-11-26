@@ -5,16 +5,16 @@ A modern, intelligent personal finance tracker designed to make managing your mo
 ## Features ✨
 
 - **Dashboard**: Get a clear overview of your financial health with real-time balance updates and spending summaries.
-- **Smart Transactions**: 
+- **Smart Transactions**:
   - Automatically categorize transactions.
   - Support for recurring transactions.
   - **AI-Powered Parsing**: Upload bank statements (PDF/CSV) and let OpenAI parse them into structured data.
-- **Household Management**: 
+- **Household Management**:
   - Create joint accounts and invite partners.
   - Manage shared finances with role-based access (Owner/Member).
 - **Goals**: Set and track savings goals with visual progress indicators.
 - **Reports & Analytics**: Visualize your spending habits with interactive charts and graphs.
-- **Import/Export**: 
+- **Import/Export**:
   - Export data to Excel or PDF.
   - Import historical data easily.
 - **Modern UI**: Fully responsive design with Dark/Light mode support, built with Tailwind CSS 4.

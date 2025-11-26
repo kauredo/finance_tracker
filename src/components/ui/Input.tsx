@@ -1,24 +1,27 @@
-'use client'
+"use client";
 
-import { InputHTMLAttributes, forwardRef, ReactNode } from 'react'
-import { cn } from '@/lib/utils'
+import { InputHTMLAttributes, forwardRef, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  error?: boolean
-  icon?: ReactNode
-  endIcon?: ReactNode
-  helperText?: string
+  error?: boolean;
+  icon?: ReactNode;
+  endIcon?: ReactNode;
+  helperText?: string;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, error, icon, endIcon, helperText, ...props }, ref) => {
-    const baseStyles = 'w-full px-4 py-2.5 bg-surface border border-border rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:bg-surface/50 disabled:cursor-not-allowed disabled:opacity-60'
-    
-    const errorStyles = error ? 'border-danger focus:ring-danger/50 focus:border-danger' : ''
-    
-    const inputWithIcon = icon ? 'pl-10' : ''
-    const inputWithEndIcon = endIcon ? 'pr-10' : ''
-    
+    const baseStyles =
+      "w-full px-4 py-2.5 bg-surface border border-border rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:bg-surface/50 disabled:cursor-not-allowed disabled:opacity-60";
+
+    const errorStyles = error
+      ? "border-danger focus:ring-danger/50 focus:border-danger"
+      : "";
+
+    const inputWithIcon = icon ? "pl-10" : "";
+    const inputWithEndIcon = endIcon ? "pr-10" : "";
+
     return (
       <div className="w-full">
         <div className="relative">
@@ -34,7 +37,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               errorStyles,
               inputWithIcon,
               inputWithEndIcon,
-              className
+              className,
             )}
             {...props}
           />
@@ -45,18 +48,20 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {helperText && (
-          <p className={cn(
-            'mt-1.5 text-sm',
-            error ? 'text-danger' : 'text-muted'
-          )}>
+          <p
+            className={cn(
+              "mt-1.5 text-sm",
+              error ? "text-danger" : "text-muted",
+            )}
+          >
             {helperText}
           </p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-Input.displayName = 'Input'
+Input.displayName = "Input";
 
-export { Input }
+export { Input };
