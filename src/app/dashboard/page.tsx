@@ -13,7 +13,9 @@ import TransactionsList from '@/components/TransactionsList'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { Tooltip } from '@/components/ui/Tooltip'
 import GoalsWidget from '@/components/dashboard/GoalsWidget'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 import { createClient } from '@/utils/supabase/client'
 
@@ -74,6 +76,25 @@ export default function DashboardPage() {
       console.error('Error checking welcome tour:', error)
     }
   }
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      handler: () => setShowUpload(true),
+      description: 'Upload new statement'
+    },
+    {
+      key: 'Escape',
+      handler: () => {
+        if (showUpload) setShowUpload(false)
+        if (showAccountModal) setShowAccountModal(false)
+        if (showInviteModal) setShowInviteModal(false)
+        if (showWelcomeTour) setShowWelcomeTour(false)
+      },
+      description: 'Close modal'
+    }
+  ])
 
   const fetchDashboardData = async () => {
     try {
@@ -259,18 +280,26 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button onClick={() => setShowUpload(true)}>
-                  Upload Statement
-                </Button>
-                <Button variant="secondary" onClick={() => setShowAccountModal(true)}>
-                  Add Account
-                </Button>
-                <Button variant="secondary" onClick={() => setShowInviteModal(true)}>
-                  Invite Partner
-                </Button>
-                <Button variant="secondary" onClick={() => router.push('/reports')}>
-                  View Reports
-                </Button>
+                <Tooltip content="Upload a bank statement (Press 'n')">
+                  <Button onClick={() => setShowUpload(true)}>
+                    Upload Statement
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Create a new account">
+                  <Button variant="secondary" onClick={() => setShowAccountModal(true)}>
+                    Add Account
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Invite a partner to your household">
+                  <Button variant="secondary" onClick={() => setShowInviteModal(true)}>
+                    Invite Partner
+                  </Button>
+                </Tooltip>
+                <Tooltip content="View detailed analytics and reports">
+                  <Button variant="secondary" onClick={() => router.push('/reports')}>
+                    View Reports
+                  </Button>
+                </Tooltip>
               </div>
             )}
           </CardContent>

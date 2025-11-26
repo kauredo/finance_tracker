@@ -68,11 +68,17 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
   const currentStepData = steps[step]
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="welcome-tour-title"
+    >
       <Card variant="glass" className="w-full max-w-md overflow-hidden relative">
         <button 
           onClick={handleComplete}
           className="absolute top-4 right-4 text-muted hover:text-foreground transition-colors"
+          aria-label="Close welcome tour"
         >
           <Icon name="close" size={24} />
         </button>
@@ -82,20 +88,21 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
             <Icon name={currentStepData.icon} size={48} />
           </div>
 
-          <h2 className="text-2xl font-bold text-foreground mb-3">
+          <h2 id="welcome-tour-title" className="text-2xl font-bold text-foreground mb-3">
             {currentStepData.title}
           </h2>
           <p className="text-muted text-lg mb-8 min-h-[3.5rem]">
             {currentStepData.description}
           </p>
 
-          <div className="flex justify-center gap-2 mb-8">
+          <div className="flex justify-center gap-2 mb-8" role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={step + 1}>
             {steps.map((_, i) => (
               <div 
                 key={i}
                 className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                   i === step ? 'bg-primary w-6' : 'bg-surface-alt'
                 }`}
+                aria-label={`Step ${i + 1} ${i === step ? '(current)' : ''}`}
               />
             ))}
           </div>
@@ -105,6 +112,7 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
             className="w-full" 
             onClick={handleNext}
             disabled={loading}
+            autoFocus
           >
             {step === steps.length - 1 ? (loading ? 'Finishing...' : "Let's Go!") : 'Next'}
           </Button>
