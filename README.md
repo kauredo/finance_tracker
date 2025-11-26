@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wallet Joy 🐷
 
-## Getting Started
+A modern, intelligent personal finance tracker designed to make managing your money a joy. Built with Next.js 16, Supabase, and AI.
 
-First, run the development server:
+## Features ✨
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Dashboard**: Get a clear overview of your financial health with real-time balance updates and spending summaries.
+- **Smart Transactions**: 
+  - Automatically categorize transactions.
+  - Support for recurring transactions.
+  - **AI-Powered Parsing**: Upload bank statements (PDF/CSV) and let OpenAI parse them into structured data.
+- **Household Management**: 
+  - Create joint accounts and invite partners.
+  - Manage shared finances with role-based access (Owner/Member).
+- **Goals**: Set and track savings goals with visual progress indicators.
+- **Reports & Analytics**: Visualize your spending habits with interactive charts and graphs.
+- **Import/Export**: 
+  - Export data to Excel or PDF.
+  - Import historical data easily.
+- **Modern UI**: Fully responsive design with Dark/Light mode support, built with Tailwind CSS 4.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack 🛠️
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Language**: TypeScript
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **AI**: [OpenAI API](https://openai.com/) (GPT-4o)
+- **Charts**: Recharts
+- **Icons**: Custom SVG Icons
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Getting Started 🚀
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js (v20+)
+- npm or yarn
+- A Supabase project
+- An OpenAI API key
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1.  **Clone the repository**
 
-## Deploy on Vercel
+    ```bash
+    git clone <repository-url>
+    cd finance_tracker
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2.  **Install dependencies**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Setup**
+
+    Copy the example environment file and fill in your credentials:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    You will need to provide:
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    - `SUPABASE_SECRET_KEY` (for admin operations like household invites)
+    - `OPENAI_API_KEY` (for statement parsing)
+
+4.  **Run the development server**
+
+    ```bash
+    npm run dev
+    ```
+
+    The application will start on `http://localhost:5678`.
+
+## Project Structure 📂
+
+- `/src/app`: App Router pages and API routes.
+- `/src/components`: Reusable UI components.
+- `/src/contexts`: React contexts (Auth, Theme, etc.).
+- `/src/utils`: Utility functions (Supabase client, formatting, etc.).
+- `/supabase`: Database migrations and types.
+
+## License
+
+Private
