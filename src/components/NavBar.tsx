@@ -21,10 +21,12 @@ export default function NavBar() {
   const navigation: { name: string; href: string; icon: IconName }[] = [
     { name: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
     { name: 'Transactions', href: '/transactions', icon: 'transactions' },
+    { name: 'Categories', href: '/categories', icon: 'tag' },
     { name: 'Budgets', href: '/budgets', icon: 'chart' },
     { name: 'Goals', href: '/goals', icon: 'savings' },
     { name: 'Recurring', href: '/recurring', icon: 'calendar' },
     { name: 'Reports', href: '/reports', icon: 'reports' },
+    { name: 'Settings', href: '/settings', icon: 'settings' },
   ]
 
   const handleSignOut = async () => {
@@ -83,8 +85,7 @@ export default function NavBar() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 rounded-lg hover:bg-background transition-colors"
               aria-label="Toggle menu"
-            >
-              <Icon name={isMobileMenuOpen ? 'close' : 'dashboard'} size={24} /> 
+            > 
               {/* Note: Using 'dashboard' as hamburger/menu icon proxy if 'menu' not avail, or just SVG */}
                {isMobileMenuOpen ? (
                 <svg className="w-6 h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
