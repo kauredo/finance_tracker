@@ -166,16 +166,31 @@ export default function OnboardingWizard() {
                 </div>
               </div>
 
-              <Button 
-                size="lg" 
-                className="w-full mt-6"
-                onClick={handleCreateAccount}
-                disabled={loading}
-              >
-                {loading ? 'Setting up...' : 'Complete Setup'}
-              </Button>
+              <div className="flex gap-3 mt-6">
+                <Button 
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => {
+                    showSuccess('You can add an account later!')
+                    setCurrentStep('complete')
+                    setTimeout(() => {
+                      router.push('/dashboard')
+                    }, 1000)
+                  }}
+                  disabled={loading}
+                >
+                  Skip
+                </Button>
+                <Button 
+                  className="flex-[2]"
+                  onClick={handleCreateAccount}
+                  disabled={loading}
+                >
+                  {loading ? 'Setting up...' : 'Complete Setup'}
+                </Button>
+              </div>
               
-              <div className="text-center">
+              <div className="text-center mt-4">
                 <button 
                   onClick={() => setCurrentStep('currency')}
                   className="text-muted hover:text-foreground text-sm"

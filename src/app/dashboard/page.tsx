@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import NavBar from '@/components/NavBar'
 import FileUpload from '@/components/FileUpload'
+import WelcomeTour from '@/components/WelcomeTour'
 import AddAccountModal from '@/components/AddAccountModal'
 import InvitePartnerModal from '@/components/InvitePartnerModal'
 import TransactionsList from '@/components/TransactionsList'
@@ -31,6 +32,15 @@ export default function DashboardPage() {
   const [showUpload, setShowUpload] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false)
+  
+  // Filters
+  const [dateRange, setDateRange] = useState({
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    to: new Date()
+  })
+  const [selectedAccount, setSelectedAccount] = useState('all')
+
   const [stats, setStats] = useState<DashboardStats>({
     totalExpenses: 0,
     monthlyExpenses: 0,
@@ -44,6 +54,31 @@ export default function DashboardPage() {
       router.push('/auth')
     } else if (user) {
       fetchDashboardData()
+      checkWelcomeTour()
+    }
+  }, [user, loading, router, dateRange, selectedAccount])
+
+  const checkWelcomeTour = async () => {
+    try {
+      const supabase = createClient()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('has_seen_welcome_tour')
+        .eq('id', user!.id)
+        .single()
+      
+      if (profile && !profile.has_seen_welcome_tour) {
+        setShowWelcomeTour(true)
+      }
+    } catch (error) {
+      console.error('Error checking welcome tour:', error)
+    }
+  }
+
+  const fetchDashboardData = async () => {
+    try {
+      const supabase = createClient()
+      
       // Trigger recurring transaction processing
       fetch('/api/recurring/process', { method: 'POST' })
         .then(res => res.json())
@@ -53,12 +88,7 @@ export default function DashboardPage() {
           }
         })
         .catch(err => console.error('Error processing recurring:', err))
-    }
-  }, [user, loading, router])
-
-  const fetchDashboardData = async () => {
-    try {
-      const supabase = createClient()
+      
       // Fetch transactions
       const { data: transactionsData, error: transactionsError } = await supabase
         .from('transactions')
@@ -257,7 +287,7 @@ export default function DashboardPage() {
         </Card>
       </main>
 
-      {/* Modals */}
+        {/* Modals */}
       {showAccountModal && (
         <AddAccountModal
           onClose={() => setShowAccountModal(false)}
@@ -269,6 +299,9 @@ export default function DashboardPage() {
       )}
       {showInviteModal && (
         <InvitePartnerModal onClose={() => setShowInviteModal(false)} />
+      )}
+      {showWelcomeTour && (
+        <WelcomeTour onClose={() => setShowWelcomeTour(false)} />
       )}
     </div>
   )
