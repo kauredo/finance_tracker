@@ -20,7 +20,6 @@ export default function NavBar() {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const navigation: { name: string; href: string; icon: IconName }[] = [
-    { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
     { name: "Transactions", href: "/transactions", icon: "transactions" },
     { name: "Categories", href: "/categories", icon: "tag" },
     { name: "Budgets", href: "/budgets", icon: "chart" },
@@ -86,9 +85,11 @@ export default function NavBar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            {/* Global Search */}
-            <GlobalSearch />
-
+            {/* Global Search - Desktop only */}
+            <div className="hidden md:block">
+              <GlobalSearch />
+            </div>
+            
             {/* Desktop User Menu */}
             <div className="hidden md:block">
               <UserMenu />
@@ -135,34 +136,35 @@ export default function NavBar() {
         </div>
 
         {/* Mobile menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-surface">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {mobileNavigation.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  pathname?.startsWith(item.href + "/");
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted hover:text-foreground hover:bg-surface-alt"
-                    }`}
-                  >
-                    <Icon name={item.icon} size={18} className="mr-2" />
-                    {item.name}
-                  </Link>
-                );
+          <div 
+            className={`md:hidden border-t border-border bg-surface transition-all duration-200 ease-out overflow-hidden ${
+              isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+              <div className="px-4 pt-2 pb-3 space-y-1">
+                {mobileNavigation.map((item) => {
+                  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted hover:text-foreground hover:bg-surface-alt'
+                      }`}
+                    >
+                      <Icon name={item.icon} size={18} className="mr-2" />
+                      {item.name}
+                    </Link>
+                )
               })}
 
               {/* Mobile Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="w-full flex items-center px-4 py-3 text-sm font-medium text-muted hover:text-foreground hover:bg-surface-alt transition-all rounded-lg"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-muted hover:text-foreground hover:bg-surface-alt transition-colors rounded-md"
               >
                 <Icon
                   name={theme === "light" ? "sun" : "moon"}
@@ -174,17 +176,17 @@ export default function NavBar() {
                   : "Switch to Light Mode"}
               </button>
 
+              {/* Mobile Sign Out */}
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-all rounded-lg disabled:opacity-50"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors rounded-md disabled:opacity-50"
               >
                 <Icon name="logout" size={18} className="mr-2" />
                 {isSigningOut ? "Signing out..." : "Sign Out"}
               </button>
             </div>
           </div>
-        )}
       </div>
     </nav>
   );
