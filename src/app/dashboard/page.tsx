@@ -315,14 +315,15 @@ export default function DashboardPage() {
                 <FileUpload onUploadComplete={() => setShowUpload(false)} />
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Tooltip content="Upload a bank statement (Press 'n')">
-                  <Button onClick={() => setShowUpload(true)}>
+                  <Button className="w-full" onClick={() => setShowUpload(true)}>
                     Upload Statement
                   </Button>
                 </Tooltip>
                 <Tooltip content="Create a new account">
                   <Button
+                    className="w-full"
                     variant="secondary"
                     onClick={() => setShowAccountModal(true)}
                   >
@@ -331,6 +332,7 @@ export default function DashboardPage() {
                 </Tooltip>
                 <Tooltip content="Invite a partner to your household">
                   <Button
+                    className="w-full"
                     variant="secondary"
                     onClick={() => setShowInviteModal(true)}
                   >
@@ -339,6 +341,7 @@ export default function DashboardPage() {
                 </Tooltip>
                 <Tooltip content="View detailed analytics and reports">
                   <Button
+                    className="w-full"
                     variant="secondary"
                     onClick={() => router.push("/reports")}
                   >

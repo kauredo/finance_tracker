@@ -49,7 +49,7 @@ export function Tooltip({
 
   return (
     <div
-      className={`relative inline-block ${className}`}
+      className={`relative block ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

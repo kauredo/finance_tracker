@@ -97,12 +97,12 @@ export default function FileUpload({
     try {
       const supabase = createClient();
       // Validate all files first
-      const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv"];
+      const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv", "pdf"];
       for (const file of files) {
         const fileExt = file.name.split(".").pop()?.toLowerCase();
         if (!validExtensions.includes(fileExt || "")) {
           throw new Error(
-            `Invalid file type: ${file.name}. Only PNG, JPEG, CSV, and TSV files are supported.`,
+            `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`,
           );
         }
       }
@@ -269,7 +269,7 @@ export default function FileUpload({
                   and drop
                 </p>
                 <p className="text-xs text-muted">
-                  Images (PNG/JPEG), CSV, or TSV files
+                  Images (PNG/JPEG), PDF, CSV, or TSV files
                 </p>
                 <p className="text-xs text-muted mt-1">
                   <Icon name="tip" size={12} className="mr-1 inline-block" />
@@ -281,7 +281,7 @@ export default function FileUpload({
           <input
             type="file"
             className="hidden"
-            accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg,.csv,.tsv"
+            accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg,.pdf,application/pdf,.csv,.tsv"
             multiple
             onChange={handleFileUpload}
             disabled={uploading}

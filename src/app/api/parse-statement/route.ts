@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { parseStatementWithVision, parseStatementWithAI } from "@/lib/openai";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import { createCanvas } from "@napi-rs/canvas";
+
+// Configure PDF.js to use the Node.js canvas
+const NodeCanvasFactory = {
+  create(width: number, height: number) {
+    const canvas = createCanvas(width, height);
+    return {
+      canvas,
+      context: canvas.getContext("2d"),
+    };
+  },
+  reset(canvasAndContext: any, width: number, height: number) {
+    canvasAndContext.canvas.width = width;
+    canvasAndContext.canvas.height = height;
+  },
+  destroy(canvasAndContext: any) {
+    canvasAndContext.canvas.width = 0;
+    canvasAndContext.canvas.height = 0;
+    canvasAndContext.canvas = null;
+    canvasAndContext.context = null;
+  },
+};
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,15 +65,17 @@ export async function POST(req: NextRequest) {
       const isImage = ["image/png", "image/jpeg", "image/jpg"].includes(
         file.fileType,
       );
+      const isPdf =
+        file.fileType === "application/pdf" || file.filePath.endsWith(".pdf");
       const isCsvTsv =
         file.fileType.includes("csv") ||
         file.fileType.includes("tsv") ||
         file.filePath.endsWith(".csv") ||
         file.filePath.endsWith(".tsv");
 
-      if (!isImage && !isCsvTsv) {
+      if (!isImage && !isPdf && !isCsvTsv) {
         return NextResponse.json(
-          { error: "Only PNG, JPEG, CSV, and TSV files are supported." },
+          { error: "Only PNG, JPEG, PDF, CSV, and TSV files are supported." },
           { status: 400 },
         );
       }
@@ -58,6 +84,9 @@ export async function POST(req: NextRequest) {
     // 4. Separate files by type
     const imageFiles = files.filter((f) =>
       ["image/png", "image/jpeg", "image/jpg"].includes(f.fileType),
+    );
+    const pdfFiles = files.filter(
+      (f) => f.fileType === "application/pdf" || f.filePath.endsWith(".pdf"),
     );
     const textFiles = files.filter(
       (f) =>
@@ -107,6 +136,96 @@ export async function POST(req: NextRequest) {
         imageTransactions.length,
       );
       transactions.push(...imageTransactions);
+    }
+
+    // 5b. Process PDF files by converting to images
+    if (pdfFiles.length > 0) {
+      const base64Images: string[] = [];
+
+      for (const file of pdfFiles) {
+        const { data: fileData, error: downloadError } = await supabase.storage
+          .from("statements")
+          .download(file.filePath);
+
+        if (downloadError) {
+          console.error("Storage download error:", downloadError);
+          return NextResponse.json(
+            { error: "Failed to download PDF file" },
+            { status: 500 },
+          );
+        }
+
+        console.log(
+          `Processing PDF ${file.filePath}, size:`,
+          fileData.size,
+          "bytes",
+        );
+
+        // Convert PDF to images
+        try {
+          const arrayBuffer = await fileData.arrayBuffer();
+          const typedArray = new Uint8Array(arrayBuffer);
+
+          // Load the PDF document
+          const pdfDocument = await pdfjsLib.getDocument({
+            data: typedArray,
+            useSystemFonts: true,
+          }).promise;
+
+          const numPages = pdfDocument.numPages;
+          console.log(`PDF has ${numPages} page(s)`);
+
+          // Process each page
+          for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+            const page = await pdfDocument.getPage(pageNum);
+            
+            // Use a high scale for better quality
+            const scale = 2.0;
+            const viewport = page.getViewport({ scale });
+
+            // Create canvas
+            const canvasFactory = NodeCanvasFactory.create(
+              viewport.width,
+              viewport.height,
+            );
+
+            // Render PDF page to canvas
+            await page.render({
+              canvasContext: canvasFactory.context as any,
+              viewport: viewport,
+              canvas: canvasFactory.canvas as any,
+            }).promise;
+
+            // Convert canvas to base64 PNG
+            const base64Image = canvasFactory.canvas
+              .toBuffer("image/png")
+              .toString("base64");
+            base64Images.push(base64Image);
+
+            console.log(
+              `Rendered page ${pageNum}/${numPages}, base64 length:`,
+              base64Image.length,
+            );
+
+            // Clean up
+            NodeCanvasFactory.destroy(canvasFactory);
+          }
+        } catch (pdfError: any) {
+          console.error("PDF processing error:", pdfError);
+          return NextResponse.json(
+            { error: `Failed to process PDF: ${pdfError.message}` },
+            { status: 500 },
+          );
+        }
+      }
+
+      console.log(`Calling vision API with ${base64Images.length} PDF page(s)...`);
+      const pdfTransactions = await parseStatementWithVision(base64Images);
+      console.log(
+        "Extracted transactions from PDF:",
+        pdfTransactions.length,
+      );
+      transactions.push(...pdfTransactions);
     }
 
     // 6. Process CSV/TSV files with text parsing
