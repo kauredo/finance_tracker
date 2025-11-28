@@ -85,7 +85,7 @@
 
 - [x] Export transactions to CSV
 - [x] Export transactions to Excel
-- [ ] Export reports to PDF
+- [ ] Export reports (future)
 - [x] Date range selection for exports
 - [x] Account/category filtering for exports
 

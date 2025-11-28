@@ -111,6 +111,10 @@ export async function POST(req: NextRequest) {
 
     // 6. Process CSV/TSV files with text parsing
     if (textFiles.length > 0) {
+      const jschardet = require("jschardet");
+      const iconv = require("iconv-lite");
+      const Papa = require("papaparse");
+
       for (const file of textFiles) {
         const { data: fileData, error: downloadError } = await supabase.storage
           .from("statements")
@@ -125,12 +129,43 @@ export async function POST(req: NextRequest) {
         }
 
         console.log(`Processing text file ${file.filePath}`);
-        const fileContent = await fileData.text();
+        
+        // Get raw buffer
+        const arrayBuffer = await fileData.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        // Determine file type for AI parsing
+        // Detect encoding
+        const detected = jschardet.detect(buffer);
+        const encoding = detected.encoding || "utf-8";
+        console.log(`Detected encoding for ${file.filePath}: ${encoding} (confidence: ${detected.confidence})`);
+
+        // Decode content
+        let fileContent = iconv.decode(buffer, encoding);
+
+        // Determine file type
         const fileType = file.filePath.endsWith(".csv")
           ? ("csv" as const)
           : ("text" as const);
+
+        // Parse CSV/TSV to JSON if possible
+        if (fileType === "csv" || file.filePath.endsWith(".tsv")) {
+           const parseResult = Papa.parse(fileContent, {
+             header: true,
+             skipEmptyLines: true,
+           });
+           
+           if (parseResult.errors.length > 0) {
+             console.warn(`CSV parsing warnings for ${file.filePath}:`, parseResult.errors);
+           }
+           
+           // If parsing was successful and we have data, use the JSON string
+           if (parseResult.data && parseResult.data.length > 0) {
+             console.log(`Successfully parsed ${parseResult.data.length} rows from CSV`);
+             fileContent = JSON.stringify(parseResult.data, null, 2);
+             console.log(fileContent);
+           }
+        }
+
         const textTransactions = await parseStatementWithAI(
           fileContent,
           fileType,

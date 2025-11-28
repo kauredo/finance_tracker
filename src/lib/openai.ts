@@ -13,7 +13,7 @@ export interface Transaction {
 
 export async function parseStatementWithAI(
   fileContent: string,
-  fileType: "csv" | "pdf" | "text",
+  fileType: "csv" | "text",
 ): Promise<Transaction[]> {
   const prompt = `You are a financial data extraction expert. Parse the following Portuguese bank statement and extract all transactions.
 
@@ -32,7 +32,7 @@ For each transaction, provide:
 - category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, income, other)
 
 File type: ${fileType}
-Content (extracted text):
+Content (extracted text or JSON):
 ${fileContent}
 
 Return ONLY valid JSON array of transactions, no markdown or explanations.

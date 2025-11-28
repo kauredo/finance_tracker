@@ -56,11 +56,11 @@ A web application for couples to track shared finances by uploading bank stateme
 ### 2. OpenAI Integration
 
 - ✅ Helper function created (`src/lib/openai.ts`)
-- [ ] API route to process uploaded files
-- [ ] Extract text from PDFs (might need external library)
-- [ ] Parse CSV files
-- [ ] Call OpenAI API with file content
-- [ ] Save parsed transactions to database
+- ✅ API route to process uploaded files (`/api/parse-statement`)
+- ✅ Extract text from images (Vision API)
+- ✅ Parse CSV files (with encoding detection)
+- ✅ Call OpenAI API with file content
+- ✅ Save parsed transactions to database
 
 ### 3. Account Management
 
@@ -113,11 +113,11 @@ A web application for couples to track shared finances by uploading bank stateme
    - Allow users to create personal accounts
    - Store in database with proper owner_id
 
-3. **Implement OpenAI Parsing**
-   - Create API route (`/api/parse-statement`)
-   - Read uploaded file from storage
-   - Send to OpenAI for parsing
-   - Save transactions to database
+3. **Implement OpenAI Parsing** ✅
+   - Create API route (`/api/parse-statement`) ✅
+   - Read uploaded file from storage ✅
+   - Send to OpenAI for parsing ✅
+   - Save transactions to database ✅
 
 4. **Display Transactions**
    - Fetch transactions from database
@@ -190,7 +190,7 @@ OPENAI_API_KEY=your-openai-key
 
 1. **File upload not fully tested** - Storage policies need to be applied
 2. **No account creation flow** - Users can't create accounts yet
-3. **OpenAI integration incomplete** - Parsing logic exists but no API route
+
 4. **No error handling for failed uploads** - Should show better feedback
 
 ---
