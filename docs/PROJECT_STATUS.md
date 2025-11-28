@@ -1,6 +1,6 @@
 # Finance Tracker - Project Status
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-28
 
 ## 📊 Project Overview
 
@@ -13,7 +13,7 @@ A web application for couples to track shared finances by uploading bank stateme
 ### 1. Project Setup & Infrastructure
 
 - ✅ Next.js 16 with TypeScript
-- ✅ TailwindCSS for styling
+- ✅ TailwindCSS 4 for styling
 - ✅ Supabase client library installed
 - ✅ OpenAI SDK installed
 - ✅ Environment configuration (`.env.example`)
@@ -30,30 +30,20 @@ A web application for couples to track shared finances by uploading bank stateme
 ### 3. Database Schema
 
 - ✅ Complete PostgreSQL schema in `supabase/schema.sql`
-- ✅ Tables: `profiles`, `households`, `household_members`, `accounts`, `transactions`, `categories`, `statements`
+- ✅ Tables: `profiles`, `households`, `household_members`, `accounts`, `transactions`, `categories`, `statements`, `budgets`, `goals`
 - ✅ Row Level Security (RLS) policies for privacy
 - ✅ Database trigger for auto-creating profiles on signup
 - ✅ Pre-populated expense categories
 
-### 4. File Upload (Partial)
+### 4. File Upload & Storage
 
 - ✅ Storage bucket created (`statements`)
 - ✅ File upload UI component (`FileUpload.tsx`)
 - ✅ Integration with dashboard
-- ⚠️ **Not tested** - needs storage RLS policies applied
+- ✅ Support for Images (PNG, JPEG) and Text (CSV, TSV)
+- ✅ Storage RLS policies applied
 
----
-
-## ⏳ In Progress / Incomplete
-
-### 1. File Upload - Remaining Work
-
-- [ ] Apply storage RLS policies from `supabase/storage.sql`
-- [ ] Test file upload functionality
-- [ ] Link uploaded files to `statements` table
-- [ ] Account selection during upload (which account does this statement belong to?)
-
-### 2. OpenAI Integration
+### 5. OpenAI Integration (Statement Parsing)
 
 - ✅ Helper function created (`src/lib/openai.ts`)
 - ✅ API route to process uploaded files (`/api/parse-statement`)
@@ -61,68 +51,74 @@ A web application for couples to track shared finances by uploading bank stateme
 - ✅ Parse CSV files (with encoding detection)
 - ✅ Call OpenAI API with file content
 - ✅ Save parsed transactions to database
+- ✅ Duplicate transaction detection
 
-### 3. Account Management
+### 6. Account Management
 
-- [ ] UI to create accounts (personal vs joint)
-- [ ] List of user's accounts
-- [ ] Edit/delete accounts
-- [ ] Assign accounts to households
+- ✅ UI to create accounts (personal vs joint)
+- ✅ Add Account Modal
+- ✅ List of user's accounts
+- ✅ Edit/delete accounts
 
-### 4. Transaction Management
+### 7. Transaction Management
 
-- [ ] Display transactions in dashboard
-- [ ] Filter by date, category, account
-- [ ] Manual transaction creation
-- [ ] Edit/delete transactions
-- [ ] Recategorize transactions
+- ✅ Display transactions in dashboard (TransactionsList)
+- ✅ Filter by date range
+- ✅ Manual transaction creation (AddTransactionModal)
+- ✅ Edit/delete transactions
+- ✅ Recategorize transactions
 
-### 5. Household/Partner Features
+### 8. Household/Partner Features
 
-- [ ] Create household
-- [ ] Invite partner via email
-- [ ] Accept household invitation
-- [ ] Manage joint vs personal accounts visibility
+- ✅ Create household
+- ✅ Invite partner via email (InvitePartnerModal)
+- ✅ Accept household invitation
+- ✅ Manage joint vs personal accounts visibility
 
-### 6. Data Visualization
+### 9. Data Visualization & Dashboard
 
-- [ ] Spending over time (line/bar chart)
-- [ ] Category breakdown (pie chart)
-- [ ] Monthly comparison
-- [ ] Savings calculation
-- [ ] Budget tracking (optional)
+- ✅ Real-time stats (Total Expenses, Monthly Expenses, Savings)
+- ✅ Budget Overview (Progress bar)
+- ✅ Goals Widget
+- ✅ Recent transactions list
+- ✅ Quick Actions panel
 
-### 7. Dashboard Enhancements
+---
 
-- [ ] Real stats (currently showing $0.00 placeholders)
-- [ ] Recent transactions list
-- [ ] Quick filters
-- [ ] Export data (CSV/PDF)
+## ⏳ In Progress / Incomplete
+
+### 1. Advanced Analytics
+
+- [ ] Detailed spending breakdown by category (Pie charts)
+- [ ] Monthly comparison charts
+- [ ] Export data (CSV/PDF) - *Partially implemented in dependencies*
+
+### 2. Mobile Experience
+
+- [ ] Mobile-optimized navigation
+- [ ] Touch-friendly charts
+- [ ] PWA support
+
+### 3. Recurring Transactions
+
+- [ ] Improved detection logic
+- [ ] Calendar view for upcoming bills
 
 ---
 
 ## 🎯 Next Immediate Steps
 
-1. **Test File Upload**
-   - Run `supabase/storage.sql` to apply bucket policies
-   - Upload a test file via dashboard
-   - Verify it appears in Supabase Storage
+1. **Polish Reports Page**
+   - Implement the detailed reports view
+   - Add date range filtering for reports
 
-2. **Create Account Management**
-   - Build "Add Account" modal/page
-   - Allow users to create personal accounts
-   - Store in database with proper owner_id
+2. **Mobile Responsiveness**
+   - Test and refine UI on mobile devices
+   - Ensure modals work well on small screens
 
-3. **Implement OpenAI Parsing** ✅
-   - Create API route (`/api/parse-statement`) ✅
-   - Read uploaded file from storage ✅
-   - Send to OpenAI for parsing ✅
-   - Save transactions to database ✅
-
-4. **Display Transactions**
-   - Fetch transactions from database
-   - Show in dashboard table
-   - Add filtering by date/category
+3. **User Onboarding**
+   - Refine the Welcome Tour
+   - Add tooltips for complex features
 
 ---
 
@@ -132,12 +128,17 @@ A web application for couples to track shared finances by uploading bank stateme
 finance_tracker/
 ├── src/
 │   ├── app/
-│   │   ├── auth/page.tsx          # Login/Signup page
-│   │   ├── dashboard/page.tsx     # Main dashboard
+│   │   ├── api/                  # API routes (parse-statement, recurring)
+│   │   ├── auth/                 # Login/Signup pages
+│   │   ├── dashboard/            # Main dashboard
 │   │   ├── layout.tsx            # Root layout with AuthProvider
 │   │   └── page.tsx              # Landing page (redirects)
 │   ├── components/
-│   │   └── FileUpload.tsx        # File upload component
+│   │   ├── dashboard/            # Dashboard specific widgets
+│   │   ├── ui/                   # Reusable UI components (Card, Button, etc.)
+│   │   ├── FileUpload.tsx        # File upload component
+│   │   ├── TransactionsList.tsx  # Transaction management
+│   │   └── ...                   # Modals (AddAccount, InvitePartner, etc.)
 │   ├── contexts/
 │   │   └── AuthContext.tsx       # Auth state management
 │   └── lib/
@@ -168,39 +169,13 @@ Run these SQL files in your Supabase SQL Editor (in order):
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-public-key
+SUPABASE_SECRET_KEY=your-secret-key # For admin operations
 OPENAI_API_KEY=your-openai-key
 ```
 
 ---
 
-## 🚀 Deployment Checklist
-
-- [ ] All Supabase SQL scripts applied
-- [ ] Environment variables configured
-- [ ] OpenAI API key added
-- [ ] Test file upload
-- [ ] Test transaction parsing
-- [ ] Deploy to Vercel
-- [ ] Configure production environment variables
-- [ ] Test email confirmation in production
-
----
-
 ## 🐛 Known Issues
 
-1. **File upload not fully tested** - Storage policies need to be applied
-2. **No account creation flow** - Users can't create accounts yet
-
-4. **No error handling for failed uploads** - Should show better feedback
-
----
-
-## 💡 Future Enhancements
-
-- [ ] Recurring transaction detection
-- [ ] Budget goals and alerts
-- [ ] Mobile app (React Native)
-- [ ] Data export (CSV, PDF reports)
-- [ ] Multi-currency support
-- [ ] Bank API integration (Plaid/TrueLayer)
-- [ ] Receipt scanning with OCR
+1. **CSV Parsing** - Some bank specific formats might need custom parsers.
+2. **Large Files** - Very large PDF/Image uploads might time out (need to implement chunking/async processing).

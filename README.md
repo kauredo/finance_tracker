@@ -8,7 +8,7 @@ A modern, intelligent personal finance tracker designed to make managing your mo
 - **Smart Transactions**:
   - Automatically categorize transactions.
   - Support for recurring transactions.
-  - **AI-Powered Parsing**: Upload bank statements (CSV/Images) and let OpenAI parse them into structured data. [Learn more](./docs/statement_processing.md).
+  - **AI-Powered Parsing**: Upload bank statements (CSV/TSV/Images) and let OpenAI parse them into structured data. [Learn more](./docs/statement_processing.md).
 - **Household Management**:
   - Create joint accounts and invite partners.
   - Manage shared finances with role-based access (Owner/Member).

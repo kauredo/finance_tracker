@@ -90,6 +90,7 @@ You MUST respond with valid JSON only, in this EXACT format:
       type: "image_url",
       image_url: {
         url: `data:image/png;base64,${base64}`,
+        detail: "high",
       },
     });
   }
