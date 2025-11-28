@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { createClient } from "@/utils/supabase/client";
 import Icon from "@/components/icons/Icon";
 
@@ -148,12 +150,14 @@ export default function AddTransactionModal({
           <h2 className="text-2xl font-bold text-foreground">
             Add Transaction
           </h2>
-          <button
+          <Button
             onClick={onClose}
+            variant="ghost"
+            size="sm"
             className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,7 +167,7 @@ export default function AddTransactionModal({
               Transaction Type
             </label>
             <div className="grid grid-cols-2 gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={() =>
                   setFormData((prev) => ({
@@ -171,16 +175,13 @@ export default function AddTransactionModal({
                     transactionType: "expense",
                   }))
                 }
-                className={`py-3 px-4 rounded-lg font-medium transition-all ${
-                  formData.transactionType === "expense"
-                    ? "bg-danger text-white shadow-lg"
-                    : "bg-surface text-muted hover:text-foreground border border-border"
-                }`}
+                variant={formData.transactionType === "expense" ? "danger" : "secondary"}
+                className={formData.transactionType === "expense" ? "shadow-lg" : ""}
               >
-                <Icon name="expense" size={16} className="mr-2" />
+                <Icon name="expense" size={16} />
                 Expense
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() =>
                   setFormData((prev) => ({
@@ -188,15 +189,12 @@ export default function AddTransactionModal({
                     transactionType: "income",
                   }))
                 }
-                className={`py-3 px-4 rounded-lg font-medium transition-all ${
-                  formData.transactionType === "income"
-                    ? "bg-success text-white shadow-lg"
-                    : "bg-surface text-muted hover:text-foreground border border-border"
-                }`}
+                variant={formData.transactionType === "income" ? "primary" : "secondary"}
+                className={formData.transactionType === "income" ? "bg-success hover:bg-success/90 shadow-lg" : ""}
               >
-                <Icon name="income" size={16} className="mr-2" />
+                <Icon name="income" size={16} />
                 Income
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -227,13 +225,12 @@ export default function AddTransactionModal({
             <label className="block text-sm font-medium text-foreground mb-2">
               Date *
             </label>
-            <input
+            <Input
               type="date"
               value={formData.date}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, date: e.target.value }))
               }
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
             />
           </div>
@@ -243,7 +240,7 @@ export default function AddTransactionModal({
             <label className="block text-sm font-medium text-foreground mb-2">
               Description *
             </label>
-            <input
+            <Input
               type="text"
               value={formData.description}
               onChange={(e) =>
@@ -253,7 +250,6 @@ export default function AddTransactionModal({
                 }))
               }
               placeholder="e.g., Grocery shopping, Salary"
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
             />
           </div>
@@ -263,7 +259,7 @@ export default function AddTransactionModal({
             <label className="block text-sm font-medium text-foreground mb-2">
               Amount (€) *
             </label>
-            <input
+            <Input
               type="number"
               step="0.01"
               min="0"
@@ -272,7 +268,6 @@ export default function AddTransactionModal({
                 setFormData((prev) => ({ ...prev, amount: e.target.value }))
               }
               placeholder="0.00"
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
             />
           </div>
@@ -319,20 +314,23 @@ export default function AddTransactionModal({
 
           {/* Submit */}
           <div className="flex gap-3 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground rounded-lg transition-all border border-border"
+              variant="secondary"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              isLoading={loading}
+              variant="primary"
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl"
             >
               {loading ? "Creating..." : "Create Transaction"}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>

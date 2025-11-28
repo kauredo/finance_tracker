@@ -1,6 +1,8 @@
 "use client";
 
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface DateRangePickerProps {
   startDate: string;
@@ -34,13 +36,15 @@ export default function DateRangePicker({
           </label>
           <div className="flex flex-wrap gap-2">
             {presets.map((preset) => (
-              <button
+              <Button
                 key={preset.value}
                 onClick={() => onPresetChange?.(preset.value)}
-                className="px-3 py-1.5 text-sm rounded-lg bg-surface hover:bg-surface-alt text-foreground border border-border transition-colors"
+                variant="secondary"
+                size="sm"
+                className="px-3 py-1.5 h-auto text-sm bg-surface hover:bg-surface-alt border border-border"
               >
                 {preset.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -50,11 +54,10 @@ export default function DateRangePicker({
             <label className="block text-sm font-medium text-foreground mb-2">
               Start Date
             </label>
-            <input
+            <Input
               type="date"
               value={startDate}
               onChange={(e) => onChange(e.target.value, endDate)}
-              className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
@@ -62,11 +65,10 @@ export default function DateRangePicker({
             <label className="block text-sm font-medium text-foreground mb-2">
               End Date
             </label>
-            <input
+            <Input
               type="date"
               value={endDate}
               onChange={(e) => onChange(startDate, e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
         </div>

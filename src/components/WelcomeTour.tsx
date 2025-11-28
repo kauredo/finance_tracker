@@ -83,13 +83,15 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
         variant="glass"
         className="w-full max-w-md overflow-hidden relative"
       >
-        <button
+        <Button
           onClick={handleComplete}
-          className="absolute top-4 right-4 text-muted hover:text-foreground transition-colors"
+          variant="ghost"
+          size="sm"
+          className="absolute top-4 right-4 text-muted hover:text-foreground"
           aria-label="Close welcome tour"
         >
           <Icon name="close" size={24} />
-        </button>
+        </Button>
 
         <div className="p-8 text-center">
           <div

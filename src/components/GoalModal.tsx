@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { useToast } from "@/contexts/ToastContext";
 import Icon, { IconName } from "@/components/icons/Icon";
 
@@ -122,13 +124,15 @@ export default function GoalModal({
           <h2 className="text-2xl font-bold text-foreground">
             {isEdit ? "Edit Goal" : "New Savings Goal"}
           </h2>
-          <button
+          <Button
             onClick={onClose}
             disabled={loading}
-            className="text-muted hover:text-foreground text-2xl disabled:opacity-50"
+            variant="ghost"
+            size="sm"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -137,14 +141,13 @@ export default function GoalModal({
             <label className="block text-sm font-medium text-muted mb-2">
               Goal Name *
             </label>
-            <input
+            <Input
               type="text"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="e.g., New Car"
-              className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required
             />
           </div>
@@ -155,7 +158,7 @@ export default function GoalModal({
               <label className="block text-sm font-medium text-muted mb-2">
                 Target Amount *
               </label>
-              <input
+              <Input
                 type="number"
                 value={formData.target_amount}
                 onChange={(e) =>
@@ -164,7 +167,6 @@ export default function GoalModal({
                 placeholder="0.00"
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                 required
               />
             </div>
@@ -172,7 +174,7 @@ export default function GoalModal({
               <label className="block text-sm font-medium text-muted mb-2">
                 Current Saved
               </label>
-              <input
+              <Input
                 type="number"
                 value={formData.current_amount}
                 onChange={(e) =>
@@ -181,7 +183,6 @@ export default function GoalModal({
                 placeholder="0.00"
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               />
             </div>
           </div>
@@ -191,13 +192,12 @@ export default function GoalModal({
             <label className="block text-sm font-medium text-muted mb-2">
               Target Date (Optional)
             </label>
-            <input
+            <Input
               type="date"
               value={formData.target_date || ""}
               onChange={(e) =>
                 setFormData({ ...formData, target_date: e.target.value })
               }
-              className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
             />
           </div>
 
@@ -208,18 +208,19 @@ export default function GoalModal({
             </label>
             <div className="grid grid-cols-5 gap-2">
               {ICON_OPTIONS.map((iconName) => (
-                <button
+                <Button
                   key={iconName}
                   type="button"
                   onClick={() => setFormData({ ...formData, icon: iconName })}
-                  className={`p-3 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                  variant="ghost"
+                  className={`p-3 rounded-lg border-2 hover:scale-110 h-auto ${
                     formData.icon === iconName
                       ? "border-primary bg-primary/10"
                       : "border-border bg-surface hover:border-primary/50"
                   }`}
                 >
                   <Icon name={iconName as IconName} size={24} />
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -231,11 +232,12 @@ export default function GoalModal({
             </label>
             <div className="grid grid-cols-5 gap-2">
               {COLOR_PRESETS.map((color) => (
-                <button
+                <Button
                   key={color}
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
-                  className={`h-10 rounded-lg border-2 transition-all hover:scale-110 ${
+                  variant="ghost"
+                  className={`h-10 rounded-lg border-2 transition-all hover:scale-110 p-0 ${
                     formData.color === color
                       ? "border-foreground ring-2 ring-primary"
                       : "border-border"
@@ -248,21 +250,22 @@ export default function GoalModal({
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground rounded-lg transition-all border border-border"
+              variant="secondary"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+              className="flex-1 shadow-lg hover:shadow-xl"
             >
               {loading ? "Saving..." : isEdit ? "Update Goal" : "Create Goal"}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>

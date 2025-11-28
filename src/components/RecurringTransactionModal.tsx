@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import Icon from "@/components/icons/Icon";
 
 interface RecurringTransactionModalProps {
@@ -176,12 +177,14 @@ export default function RecurringTransactionModal({
               ? "Edit Recurring Transaction"
               : "New Recurring Transaction"}
           </h2>
-          <button
+          <Button
             onClick={onClose}
+            variant="ghost"
+            size="sm"
             className="text-muted hover:text-foreground"
           >
             <Icon name="close" size={20} />
-          </button>
+          </Button>
         </div>
 
         {fetching ? (
@@ -190,28 +193,22 @@ export default function RecurringTransactionModal({
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {/* Type Selection */}
             <div className="grid grid-cols-2 gap-2 p-1 bg-surface-alt rounded-lg">
-              <button
+              <Button
                 type="button"
                 onClick={() => setType("expense")}
-                className={`py-2 rounded-md text-sm font-medium transition-colors ${
-                  type === "expense"
-                    ? "bg-surface text-danger shadow-sm"
-                    : "text-muted hover:text-foreground"
-                }`}
+                variant={type === "expense" ? "secondary" : "ghost"}
+                className={type === "expense" ? "text-danger shadow-sm" : "text-muted"}
               >
                 Expense
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setType("income")}
-                className={`py-2 rounded-md text-sm font-medium transition-colors ${
-                  type === "income"
-                    ? "bg-surface text-success shadow-sm"
-                    : "text-muted hover:text-foreground"
-                }`}
+                variant={type === "income" ? "secondary" : "ghost"}
+                className={type === "income" ? "text-success shadow-sm" : "text-muted"}
               >
                 Income
-              </button>
+              </Button>
             </div>
 
             {/* Description */}
@@ -219,12 +216,11 @@ export default function RecurringTransactionModal({
               <label className="block text-sm font-medium text-muted mb-1">
                 Description
               </label>
-              <input
+              <Input
                 type="text"
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                 placeholder="e.g., Monthly Rent"
               />
             </div>
@@ -238,14 +234,14 @@ export default function RecurringTransactionModal({
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
                   €
                 </span>
-                <input
+                <Input
                   type="number"
                   required
                   step="0.01"
                   min="0"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  className="pl-8"
                   placeholder="0.00"
                 />
               </div>
@@ -312,12 +308,11 @@ export default function RecurringTransactionModal({
                 <label className="block text-sm font-medium text-muted mb-1">
                   Next Due Date
                 </label>
-                <input
+                <Input
                   type="date"
                   required
                   value={nextRunDate}
                   onChange={(e) => setNextRunDate(e.target.value)}
-                  className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                 />
               </div>
             </div>

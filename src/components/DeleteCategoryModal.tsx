@@ -70,13 +70,15 @@ export default function DeleteCategoryModal({
           <h2 className="text-2xl font-bold text-foreground">
             Delete Category
           </h2>
-          <button
+          <Button
             onClick={onClose}
             disabled={loading}
-            className="text-muted hover:text-foreground text-2xl disabled:opacity-50"
+            variant="ghost"
+            size="sm"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-6">

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { useToast } from "@/contexts/ToastContext";
 import Icon, { IconName } from "@/components/icons/Icon";
 
@@ -104,13 +106,15 @@ export default function CategoryModal({
           <h2 className="text-2xl font-bold text-foreground">
             {isEdit ? "Edit Category" : "New Category"}
           </h2>
-          <button
+          <Button
             onClick={onClose}
             disabled={isLoading}
-            className="text-muted hover:text-foreground text-2xl disabled:opacity-50"
+            variant="ghost"
+            size="sm"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -119,13 +123,12 @@ export default function CategoryModal({
             <label className="block text-sm font-medium text-muted mb-2">
               Category Name
             </label>
-            <input
+            <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Coffee Shops"
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground disabled:opacity-50"
               autoFocus
             />
           </div>
@@ -137,19 +140,20 @@ export default function CategoryModal({
             </label>
             <div className="grid grid-cols-6 gap-2">
               {ICON_OPTIONS.map((iconName) => (
-                <button
+                <Button
                   key={iconName}
                   type="button"
                   onClick={() => setIcon(iconName)}
                   disabled={isLoading}
-                  className={`p-3 rounded-lg border-2 transition-all hover:scale-110 disabled:opacity-50 flex items-center justify-center ${
+                  variant="secondary"
+                  className={`p-3 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center ${
                     icon === iconName
                       ? "border-primary bg-primary/10"
                       : "border-border bg-surface hover:border-primary/50"
                   }`}
                 >
                   <Icon name={iconName as IconName} size={24} />
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -161,12 +165,13 @@ export default function CategoryModal({
             </label>
             <div className="grid grid-cols-6 gap-2 mb-3">
               {COLOR_PRESETS.map((presetColor) => (
-                <button
+                <Button
                   key={presetColor}
                   type="button"
                   onClick={() => setColor(presetColor)}
                   disabled={isLoading}
-                  className={`h-10 rounded-lg border-2 transition-all hover:scale-110 disabled:opacity-50 ${
+                  variant="ghost"
+                  className={`h-10 rounded-lg border-2 transition-all hover:scale-110 disabled:opacity-50 p-0 ${
                     color === presetColor
                       ? "border-foreground ring-2 ring-primary"
                       : "border-border"
@@ -175,12 +180,12 @@ export default function CategoryModal({
                 />
               ))}
             </div>
-            <input
+            <Input
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
               disabled={isLoading}
-              className="w-full h-10 rounded-lg border border-border cursor-pointer disabled:opacity-50"
+              className="h-10 cursor-pointer"
             />
           </div>
 
@@ -202,21 +207,24 @@ export default function CategoryModal({
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <button
+            <Button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground rounded-lg transition-all border border-border disabled:opacity-50"
+              variant="secondary"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isLoading || !name.trim()}
-              className="flex-1 bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              isLoading={isLoading}
+              variant="primary"
+              className="flex-1 shadow-lg hover:shadow-xl"
             >
               {isLoading ? "Saving..." : isEdit ? "Update" : "Create"}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>

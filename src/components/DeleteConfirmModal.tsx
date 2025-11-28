@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 interface DeleteConfirmModalProps {
   title: string;
@@ -30,13 +31,15 @@ export default function DeleteConfirmModal({
       <Card variant="glass" className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-          <button
+          <Button
             onClick={onCancel}
             disabled={isLoading}
-            className="text-muted hover:text-foreground text-2xl disabled:opacity-50"
+            variant="ghost"
+            size="sm"
+            className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-4">
@@ -61,28 +64,30 @@ export default function DeleteConfirmModal({
 
           <div className="flex gap-3 pt-4">
             {isInfoOnly ? (
-              <button
+              <Button
                 onClick={onCancel}
-                className="flex-1 px-4 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-all"
+                className="flex-1"
               >
                 {confirmText || "OK"}
-              </button>
+              </Button>
             ) : (
               <>
-                <button
+                <Button
                   onClick={onCancel}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground rounded-lg transition-all border border-border disabled:opacity-50"
+                  variant="secondary"
+                  className="flex-1"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={onConfirm}
                   disabled={isLoading}
-                  className="flex-1 bg-danger text-white font-bold py-3 rounded-lg hover:bg-danger/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="danger"
+                  className="flex-1 shadow-lg hover:shadow-xl"
                 >
                   {isLoading ? "Deleting..." : confirmText || "Delete"}
-                </button>
+                </Button>
               </>
             )}
           </div>

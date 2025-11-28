@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import Icon from "@/components/icons/Icon";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -109,30 +110,33 @@ export default function OnboardingWizard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {["EUR", "USD", "GBP"].map((curr) => (
-                <button
+                <Button
                   key={curr}
                   onClick={() => handleCurrencySelect(curr)}
-                  className={`p-6 rounded-xl border-2 transition-all hover:scale-105 ${
+                  variant="secondary"
+                  className={`p-6 rounded-xl border-2 hover:scale-105 ${
                     currency === curr
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50 bg-surface"
+                      : "border-border hover:border-primary/50"
                   }`}
                 >
                   <div className="text-3xl font-bold text-foreground mb-2">
                     {curr === "EUR" ? "€" : curr === "USD" ? "$" : "£"}
                   </div>
                   <div className="font-medium text-muted">{curr}</div>
-                </button>
+                </Button>
               ))}
             </div>
 
             <div className="flex justify-center mt-8">
-              <button
+              <Button
                 onClick={() => setCurrentStep("welcome")}
-                className="text-muted hover:text-foreground text-sm"
+                variant="ghost"
+                size="sm"
+                className="text-muted"
               >
                 Back
-              </button>
+              </Button>
             </div>
           </div>
         );
@@ -154,12 +158,11 @@ export default function OnboardingWizard() {
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Account Name
                 </label>
-                <input
+                <Input
                   type="text"
                   placeholder="e.g. Main Checking"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </div>
 
@@ -171,12 +174,12 @@ export default function OnboardingWizard() {
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-medium">
                     {currency === "EUR" ? "€" : currency === "USD" ? "$" : "£"}
                   </span>
-                  <input
+                  <Input
                     type="number"
                     placeholder="0.00"
                     value={accountBalance}
                     onChange={(e) => setAccountBalance(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    className="pl-10"
                   />
                 </div>
               </div>
@@ -206,13 +209,15 @@ export default function OnboardingWizard() {
               </div>
 
               <div className="text-center mt-4">
-                <button
+                <Button
                   onClick={() => setCurrentStep("currency")}
-                  className="text-muted hover:text-foreground text-sm"
+                  variant="ghost"
+                  size="sm"
                   disabled={loading}
+                  className="text-muted"
                 >
                   Back
-                </button>
+                </Button>
               </div>
             </div>
           </div>

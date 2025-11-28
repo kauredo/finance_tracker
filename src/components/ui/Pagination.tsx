@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/Button";
+import Icon from "@/components/icons/Icon";
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -84,38 +87,40 @@ export function Pagination({
 
       {/* Page navigation */}
       <div className="flex items-center gap-1">
-        <button
+        <Button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-alt text-foreground"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-3 text-sm font-medium hover:bg-surface-alt"
         >
           Previous
-        </button>
+        </Button>
 
         {getPageNumbers().map((page, index) => (
-          <button
+          <Button
             key={index}
             onClick={() => typeof page === "number" && onPageChange(page)}
             disabled={page === "..." || page === currentPage}
-            className={`min-w-[2.5rem] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              page === currentPage
-                ? "bg-primary text-white"
-                : page === "..."
-                  ? "cursor-default text-muted"
-                  : "hover:bg-surface-alt text-foreground"
+            variant={page === currentPage ? "primary" : "ghost"}
+            size="sm"
+            className={`min-w-[2rem] h-8 px-0 text-sm font-medium ${
+              page === "..." ? "cursor-default hover:bg-transparent" : ""
             }`}
           >
             {page}
-          </button>
+          </Button>
         ))}
 
-        <button
+        <Button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-alt text-foreground"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-3 text-sm font-medium hover:bg-surface-alt"
         >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   );

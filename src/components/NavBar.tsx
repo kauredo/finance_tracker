@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import Icon, { IconName } from "@/components/icons/Icon";
 
 import UserMenu from "@/components/UserMenu";
@@ -70,7 +71,7 @@ export default function NavBar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center ${
                     isActive
                       ? "bg-primary/10 text-primary"
                       : "text-muted hover:text-foreground hover:bg-surface-alt"
@@ -96,12 +97,13 @@ export default function NavBar() {
             </div>
 
             {/* Mobile menu button */}
-            <button
+            <Button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-background transition-colors"
+              variant="ghost"
+              size="sm"
+              className="md:hidden p-2 rounded-lg"
               aria-label="Toggle menu"
             >
-              {/* Note: Using 'dashboard' as hamburger/menu icon proxy if 'menu' not avail, or just SVG */}
               {isMobileMenuOpen ? (
                 <svg
                   className="w-6 h-6 text-foreground"
@@ -131,7 +133,7 @@ export default function NavBar() {
                   />
                 </svg>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -141,7 +143,7 @@ export default function NavBar() {
               isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
             }`}
           >
-              <div className="px-4 pt-2 pb-3 space-y-1">
+              <div className="px-2 pt-2 pb-3 space-y-1">
                 {mobileNavigation.map((item) => {
                   const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
                   return (
@@ -149,7 +151,7 @@ export default function NavBar() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      className={`flex items-center w-full px-4 py-2 rounded-xl text-base font-medium transition-colors ${
                         isActive
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted hover:text-foreground hover:bg-surface-alt'
@@ -162,9 +164,10 @@ export default function NavBar() {
               })}
 
               {/* Mobile Theme Toggle */}
-              <button
+              <Button
                 onClick={toggleTheme}
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-muted hover:text-foreground hover:bg-surface-alt transition-colors rounded-md"
+                variant="ghost"
+                className="w-full justify-start px-4 py-2 text-base font-medium text-muted hover:text-foreground hover:bg-surface-alt h-auto"
               >
                 <Icon
                   name={theme === "light" ? "sun" : "moon"}
@@ -174,17 +177,18 @@ export default function NavBar() {
                 {theme === "light"
                   ? "Switch to Dark Mode"
                   : "Switch to Light Mode"}
-              </button>
+              </Button>
 
               {/* Mobile Sign Out */}
-              <button
+              <Button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors rounded-md disabled:opacity-50"
+                variant="ghost"
+                className="w-full justify-start px-4 py-2 text-base font-medium text-red-500 hover:bg-red-500/10 h-auto"
               >
                 <Icon name="logout" size={18} className="mr-2" />
                 {isSigningOut ? "Signing out..." : "Sign Out"}
-              </button>
+              </Button>
             </div>
           </div>
       </div>

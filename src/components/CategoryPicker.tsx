@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Icon, { IconName } from "@/components/icons/Icon";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface Category {
   id: string;
@@ -79,11 +81,12 @@ export default function CategoryPicker({
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
-      <button
+      <Button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+        variant="secondary"
+        className="w-full justify-between h-auto py-3 px-4"
       >
         {selectedCategory ? (
           <div className="flex items-center gap-3">
@@ -114,20 +117,20 @@ export default function CategoryPicker({
             d="M19 9l-7 7-7-7"
           />
         </svg>
-      </button>
+      </Button>
 
       {/* Dropdown */}
       {isOpen && (
         <div className="absolute z-50 w-full mt-2 bg-surface border border-border rounded-lg shadow-xl max-h-80 overflow-hidden">
           {/* Search */}
           <div className="p-2 border-b border-border">
-            <input
+            <Input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search categories..."
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground text-sm"
               autoFocus
+              className="text-sm"
             />
           </div>
 
@@ -140,18 +143,19 @@ export default function CategoryPicker({
             ) : (
               <div className="p-2 space-y-1">
                 {filteredCategories.map((category) => (
-                  <button
+                  <Button
                     key={category.id}
                     type="button"
                     onClick={() => handleSelect(category.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                    variant="ghost"
+                    className={`w-full justify-start h-auto py-2 px-3 ${
                       value === category.id
                         ? "bg-primary/10 text-primary"
-                        : "hover:bg-surface-alt text-foreground"
+                        : "text-foreground"
                     }`}
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mr-3"
                       style={{
                         backgroundColor: `${category.color}20`,
                         color: category.color,
@@ -159,7 +163,7 @@ export default function CategoryPicker({
                     >
                       <Icon name={category.icon as IconName} size={20} />
                     </div>
-                    <span className="text-sm font-medium">{category.name}</span>
+                    <span className="text-sm font-medium flex-1 text-left">{category.name}</span>
                     {value === category.id && (
                       <svg
                         className="w-5 h-5 ml-auto"
@@ -173,7 +177,7 @@ export default function CategoryPicker({
                         />
                       </svg>
                     )}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

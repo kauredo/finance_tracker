@@ -5,6 +5,8 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/icons/Icon";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface SearchResult {
   id: string;
@@ -147,16 +149,17 @@ export default function GlobalSearch() {
 
   if (!isOpen) {
     return (
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface border border-border hover:bg-surface-alt transition-colors text-muted"
+        variant="ghost"
+        className="flex items-center gap-2 px-4 py-2 border border-border hover:bg-surface-alt text-muted"
       >
         <Icon name="search" size={18} />
         <span className="text-sm hidden sm:inline">Search...</span>
         <kbd className="hidden sm:inline-block px-2 py-0.5 text-xs bg-surface-alt border border-border rounded">
           /
         </kbd>
-      </button>
+      </Button>
     );
   }
 
@@ -178,13 +181,13 @@ export default function GlobalSearch() {
           {/* Search Input */}
           <div className="flex items-center gap-3 p-4 border-b border-border">
             <Icon name="search" size={20} className="text-muted" />
-            <input
+            <Input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search transactions, accounts, categories..."
-              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder-muted"
+              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder-muted focus:ring-0"
               autoFocus
             />
             {loading && (
@@ -212,10 +215,11 @@ export default function GlobalSearch() {
             )}
 
             {results.map((result) => (
-              <button
+              <Button
                 key={`${result.type}-${result.id}`}
                 onClick={() => handleResultClick(result)}
-                className="w-full flex items-center gap-4 p-4 hover:bg-surface-alt transition-colors text-left border-b border-border last:border-0"
+                variant="ghost"
+                className="w-full flex items-center gap-4 p-4 hover:bg-surface-alt text-left border-b border-border last:border-0 h-auto rounded-none"
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -247,7 +251,7 @@ export default function GlobalSearch() {
                 <div className="text-xs px-2 py-1 bg-surface rounded text-muted capitalize">
                   {result.type}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
 

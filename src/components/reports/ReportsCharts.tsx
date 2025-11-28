@@ -17,6 +17,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 interface CategoryData {
   name: string;
@@ -57,26 +58,28 @@ export default function ReportsCharts({
     <div className="space-y-6">
       {/* View Toggle */}
       <div className="flex gap-2 mb-6">
-        <button
+        <Button
           onClick={() => setView("category")}
+          variant={view === "category" ? "primary" : "secondary"}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             view === "category"
-              ? "bg-primary text-white shadow-lg"
+              ? "bg-primary text-white shadow-lg border-none"
               : "bg-surface text-muted hover:text-foreground border border-border"
           }`}
         >
           Category Breakdown
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setView("monthly")}
+          variant={view === "monthly" ? "primary" : "secondary"}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             view === "monthly"
-              ? "bg-primary text-white shadow-lg"
+              ? "bg-primary text-white shadow-lg border-none"
               : "bg-surface text-muted hover:text-foreground border border-border"
           }`}
         >
           Monthly Trends
-        </button>
+        </Button>
       </div>
 
       {/* Category Breakdown */}

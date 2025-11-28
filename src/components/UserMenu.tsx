@@ -6,6 +6,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import Icon from "@/components/icons/Icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 export default function UserMenu() {
   const { user, signOut } = useAuth();
@@ -41,13 +42,14 @@ export default function UserMenu() {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
+      <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/20 cursor-pointer"
+        variant="ghost"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 p-0"
         aria-label="User menu"
       >
         <span className="font-semibold text-sm">{initials}</span>
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
@@ -62,9 +64,10 @@ export default function UserMenu() {
           {/* Menu Items */}
           <div className="p-2 space-y-1">
             {/* Theme Toggle */}
-            <button
+            <Button
               onClick={toggleTheme}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground rounded-lg hover:bg-surface-alt transition-colors"
+              variant="ghost"
+              className="w-full flex items-center justify-between px-3 py-2 text-sm text-foreground rounded-lg hover:bg-surface-alt h-auto font-normal"
             >
               <div className="flex items-center gap-3">
                 <Icon
@@ -83,7 +86,7 @@ export default function UserMenu() {
                   style={{ left: theme === "dark" ? "18px" : "2px" }}
                 />
               </div>
-            </button>
+            </Button>
 
             {/* Settings Link */}
             <Link
@@ -98,13 +101,14 @@ export default function UserMenu() {
             <div className="h-px bg-border my-1" />
 
             {/* Sign Out */}
-            <button
+            <Button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-500 rounded-lg hover:bg-red-500/10 transition-colors"
+              variant="ghost"
+              className="w-full justify-start px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 h-auto font-normal"
             >
-              <Icon name="logout" size={18} />
+              <Icon name="logout" size={18} className="mr-3" />
               <span>Sign Out</span>
-            </button>
+            </Button>
           </div>
         </div>
       )}

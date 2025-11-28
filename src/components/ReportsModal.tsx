@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import {
   PieChart,
   Pie,
@@ -140,12 +141,14 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
           <h2 className="text-2xl font-bold text-foreground">
             Financial Reports
           </h2>
-          <button
+          <Button
             onClick={onClose}
+            variant="ghost"
+            size="sm"
             className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -156,26 +159,28 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
           <>
             {/* View Toggle */}
             <div className="flex gap-2 mb-6">
-              <button
+              <Button
                 onClick={() => setView("category")}
+                variant={view === "category" ? "primary" : "secondary"}
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   view === "category"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-none"
                     : "bg-surface text-muted hover:text-foreground border border-border"
                 }`}
               >
                 Category Breakdown
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setView("monthly")}
+                variant={view === "monthly" ? "primary" : "secondary"}
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   view === "monthly"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-none"
                     : "bg-surface text-muted hover:text-foreground border border-border"
                 }`}
               >
                 Monthly Trends
-              </button>
+              </Button>
             </div>
 
             {/* Category Breakdown */}

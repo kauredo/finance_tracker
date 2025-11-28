@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { format } from "date-fns";
 
@@ -55,22 +56,28 @@ export default function GoalCard({
           </div>
 
           <div className="relative group/menu">
-            <button className="p-2 text-muted hover:text-foreground rounded-lg hover:bg-surface-alt transition-colors">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-2 h-auto text-muted hover:text-foreground hover:bg-surface-alt"
+            >
               <Icon name="other" size={20} />
-            </button>
+            </Button>
             <div className="absolute right-0 mt-1 w-32 bg-surface border border-border rounded-lg shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10">
-              <button
+              <Button
                 onClick={() => onEdit(goal)}
-                className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-surface-alt first:rounded-t-lg"
+                variant="ghost"
+                className="w-full justify-start px-4 py-2 text-sm text-foreground hover:bg-surface-alt first:rounded-t-lg h-auto font-normal"
               >
                 Edit
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => onDelete(goal)}
-                className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-danger/10 last:rounded-b-lg"
+                variant="ghost"
+                className="w-full justify-start px-4 py-2 text-sm text-danger hover:bg-danger/10 last:rounded-b-lg h-auto font-normal"
               >
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -98,12 +105,13 @@ export default function GoalCard({
           </div>
         </div>
 
-        <button
+        <Button
           onClick={() => onAddMoney(goal)}
-          className="w-full py-2 bg-primary/10 text-primary font-semibold rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+          variant="secondary"
+          className="w-full bg-primary/10 text-primary hover:bg-primary/20 border-none"
         >
           <span>+</span> Add Money
-        </button>
+        </Button>
       </div>
     </Card>
   );

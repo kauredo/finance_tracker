@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useToast, Toast as ToastType } from "@/contexts/ToastContext";
+import { Button } from "@/components/ui/Button";
 
 export default function ToastContainer() {
   const { toasts, removeToast } = useToast();
@@ -117,9 +118,11 @@ function Toast({ toast, onClose }: { toast: ToastType; onClose: () => void }) {
       <div className="flex items-start gap-3 p-4">
         <div className="flex-shrink-0">{icons[toast.type]}</div>
         <div className="flex-1 text-sm font-medium">{toast.message}</div>
-        <button
+        <Button
           onClick={onClose}
-          className="flex-shrink-0 hover:opacity-70 transition-opacity"
+          variant="ghost"
+          size="sm"
+          className="flex-shrink-0 hover:opacity-70 text-current hover:bg-transparent p-0 h-auto"
           aria-label="Close"
         >
           <svg
@@ -135,7 +138,7 @@ function Toast({ toast, onClose }: { toast: ToastType; onClose: () => void }) {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </button>
+        </Button>
       </div>
       {toast.duration && toast.duration > 0 && (
         <div className="h-1 bg-white/20">

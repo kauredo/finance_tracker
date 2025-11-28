@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/utils/supabase/client";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import EditTransactionModal from "@/components/EditTransactionModal";
@@ -135,12 +136,14 @@ export default function TransactionDetailModal({
             <h2 className="text-2xl font-bold text-foreground">
               Transaction Details
             </h2>
-            <button
+            <Button
               onClick={onClose}
+              variant="ghost"
+              size="sm"
               className="text-muted hover:text-foreground text-2xl"
             >
               ✕
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -239,20 +242,22 @@ export default function TransactionDetailModal({
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t border-border">
-              <button
+              <Button
                 onClick={() => setShowEditModal(true)}
-                className="flex-1 px-4 py-3 bg-surface hover:bg-surface-alt text-foreground font-medium rounded-lg transition-all border border-border"
+                variant="secondary"
+                className="flex-1"
               >
                 <Icon name="edit" size={18} className="mr-2" />
                 Edit
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setShowDeleteModal(true)}
-                className="flex-1 px-4 py-3 bg-danger/20 hover:bg-danger/30 text-danger font-medium rounded-lg transition-all border border-danger/30"
+                variant="danger"
+                className="flex-1 bg-danger/20 hover:bg-danger/30 text-danger border-danger/30"
               >
                 <Icon name="delete" size={18} className="mr-2" />
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </Card>

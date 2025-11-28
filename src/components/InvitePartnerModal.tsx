@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import Icon from "@/components/icons/Icon";
 
 interface InvitePartnerModalProps {
@@ -78,12 +80,14 @@ export default function InvitePartnerModal({
       <Card variant="glass" className="w-full max-w-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-foreground">Invite Partner</h2>
-          <button
+          <Button
             onClick={onClose}
+            variant="ghost"
+            size="sm"
             className="text-muted hover:text-foreground text-2xl"
           >
             ✕
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -135,19 +139,19 @@ export default function InvitePartnerModal({
                   Invitation Link
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <Input
                     type="text"
                     value={inviteLink}
                     readOnly
-                    className="flex-1 px-4 py-3 rounded-lg bg-surface border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 select-all"
+                    className="flex-1 select-all"
                     onClick={(e) => e.currentTarget.select()}
                   />
-                  <button
+                  <Button
                     onClick={handleCopyLink}
-                    className="px-4 py-3 bg-surface-alt hover:bg-background text-foreground rounded-lg transition-all border border-border"
+                    variant="secondary"
                   >
                     {copied ? "Copied!" : "Copy"}
-                  </button>
+                  </Button>
                 </div>
                 <p className="text-xs text-muted mt-2">
                   <Icon name="tip" size={12} className="mr-1 inline-block" />

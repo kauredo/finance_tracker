@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -102,31 +104,32 @@ export default function BudgetCard({
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
                 €
               </span>
-              <input
+              <Input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-8 pr-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                className="pl-8"
               />
             </div>
           </div>
 
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={handleSave}
               disabled={isLoading || !amount}
-              className="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
+              className="flex-1"
             >
               Save
-            </button>
+            </Button>
             {isEditing && (
-              <button
+              <Button
                 onClick={() => setIsEditing(false)}
-                className="px-3 py-2 text-muted hover:text-foreground"
+                variant="ghost"
+                className="text-muted hover:text-foreground"
               >
                 Cancel
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -137,20 +140,24 @@ export default function BudgetCard({
   return (
     <Card variant="glass" className="p-4 group relative">
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-        <button
+        <Button
           onClick={() => setIsEditing(true)}
-          className="p-1.5 text-muted hover:text-primary rounded-md hover:bg-surface"
+          variant="ghost"
+          size="sm"
+          className="p-1.5 h-auto text-muted hover:text-primary hover:bg-surface"
           title="Edit Budget"
         >
           <Icon name="edit" size={16} />
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleDelete}
-          className="p-1.5 text-muted hover:text-danger rounded-md hover:bg-surface"
+          variant="ghost"
+          size="sm"
+          className="p-1.5 h-auto text-muted hover:text-danger hover:bg-surface"
           title="Remove Budget"
         >
           <Icon name="trash" size={16} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-3 mb-4">
