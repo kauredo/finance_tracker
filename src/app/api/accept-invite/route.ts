@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
 
     // 2. Create Supabase client with user's token to verify identity
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabaseKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
     const token = authHeader.replace("Bearer ", "");
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (!householdId) {
       return NextResponse.json(
         { error: "Missing householdId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -46,14 +47,14 @@ export async function POST(req: NextRequest) {
 
     if (!supabaseUrl || !supabaseSecretKey) {
       console.error(
-        "Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY",
+        "Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY"
       );
       return NextResponse.json(
         {
           error:
             "Server configuration error. Please contact the administrator.",
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (householdError || !household) {
       return NextResponse.json(
         { error: "Household not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     if (existingMember) {
       return NextResponse.json(
         { error: "Already a member of this household" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
       console.error("Error adding member:", insertError);
       return NextResponse.json(
         { error: "Failed to join household" },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
     console.error("API Error:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
