@@ -6,9 +6,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent, MotionCard } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
+import Image from "next/image";
+import { format } from "date-fns";
+import { motion } from "motion/react";
 
 interface HouseholdMember {
   user_id: string;
@@ -142,12 +146,12 @@ export default function HouseholdPage() {
     return (
       <div className="min-h-screen bg-background">
         <NavBar />
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
-            <div className="h-10 bg-surface-alt rounded w-1/3" />
-            <div className="h-32 bg-surface-alt rounded" />
+            <div className="h-32 bg-sand rounded-3xl" />
+            <div className="h-64 bg-sand rounded-3xl" />
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -156,25 +160,41 @@ export default function HouseholdPage() {
     return (
       <div className="min-h-screen bg-background">
         <NavBar />
+
+        {/* Hero Header */}
+        <div className="bg-gradient-to-br from-primary-pale via-cream to-growth-pale">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-4"
+            >
+              <div className="p-4 bg-surface rounded-2xl shadow-sm">
+                <span className="text-4xl">👨‍👩‍👧‍👦</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-display font-bold text-foreground">
+                  Garden Partners
+                </h1>
+                <p className="text-text-secondary">
+                  Grow your finances together
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="text-center py-12">
-            <CardContent>
-              <Icon name="user" size={48} className="mx-auto mb-4 text-muted" />
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                No Household
-              </h2>
-              <p className="text-muted mb-6">
-                You're not part of a household yet. Get invited to start
-                collaborating!
-              </p>
-              <Button
-                variant="secondary"
-                onClick={() => router.push("/dashboard")}
-              >
-                Go to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
+          <EmptyState
+            illustration="piggy"
+            title="No household yet"
+            description="You're not part of a household yet. Get invited by a partner to start managing finances together!"
+            action={{
+              label: "Back to Dashboard",
+              onClick: () => router.push("/dashboard"),
+              variant: "secondary",
+            }}
+          />
         </main>
       </div>
     );
@@ -186,128 +206,213 @@ export default function HouseholdPage() {
     <div className="min-h-screen bg-background">
       <NavBar />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <button
-            onClick={() => router.back()}
-            className="text-muted hover:text-foreground transition-colors mb-4 inline-flex items-center gap-2"
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-primary-pale via-cream to-growth-pale">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            <Icon name="chevron_down" size={20} className="rotate-90" />
-            Back
-          </button>
-          <h1 className="text-3xl font-bold text-foreground">Household</h1>
-          <p className="text-muted mt-1">
-            Manage your household members and permissions
-          </p>
+            <button
+              onClick={() => router.back()}
+              className="text-text-secondary hover:text-foreground transition-colors mb-4 inline-flex items-center gap-2"
+            >
+              <Icon name="arrow_left" size={18} />
+              Back
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-surface rounded-2xl shadow-sm">
+                <motion.span
+                  className="text-4xl block"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  👨‍👩‍👧‍👦
+                </motion.span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-display font-bold text-foreground">
+                  {household.name}
+                </h1>
+                <p className="text-text-secondary">
+                  Growing together since {format(new Date(household.created_at), "MMMM yyyy")}
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
+      </div>
 
-        {/* Household Info */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Household Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted">Name</span>
-              <span className="font-medium text-foreground">
-                {household.name}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Members</span>
-              <span className="font-medium text-foreground">
-                {members.length}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Created</span>
-              <span className="font-medium text-foreground">
-                {new Date(household.created_at).toLocaleDateString()}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
+        <div className="space-y-6">
+          {/* Household Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <MotionCard variant="glass" transition={{ delay: 0.1 }}>
+              <CardContent className="p-5 text-center">
+                <p className="text-sm text-text-secondary mb-1">Garden Partners</p>
+                <p className="text-3xl font-bold text-foreground font-mono">
+                  {members.length}
+                </p>
+              </CardContent>
+            </MotionCard>
 
-        {/* Members List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Members</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {members.map((member) => {
-                const profile = Array.isArray(member.profiles)
-                  ? member.profiles[0]
-                  : member.profiles;
-                const isCurrentUser = member.user_id === user!.id;
+            <MotionCard variant="glass" transition={{ delay: 0.15 }}>
+              <CardContent className="p-5 text-center">
+                <p className="text-sm text-text-secondary mb-1">Your Role</p>
+                <p className="text-lg font-bold text-foreground capitalize flex items-center justify-center gap-2">
+                  {isOwner && <span className="text-xl">👑</span>}
+                  {currentUserRole}
+                </p>
+              </CardContent>
+            </MotionCard>
+          </div>
 
-                return (
-                  <div
-                    key={member.user_id}
-                    className="flex items-center justify-between p-4 bg-surface border border-border rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Icon name="user" size={20} className="text-primary" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground">
-                            {profile?.full_name || profile?.email || "Unknown"}
-                          </span>
-                          {member.role === "owner" && (
-                            <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                              Owner
-                            </span>
-                          )}
-                          {isCurrentUser && (
-                            <span className="px-2 py-0.5 bg-surface-alt text-muted text-xs font-medium rounded-full">
-                              You
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm text-muted">
-                          {profile?.email}
-                        </span>
-                        <div className="text-xs text-muted mt-1">
-                          Joined{" "}
-                          {new Date(member.joined_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {isOwner && !isCurrentUser && member.role !== "owner" && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleRemoveMember(member.user_id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {!isOwner && (
-          <Card className="mt-6">
-            <CardContent className="py-6">
-              <div className="flex items-start gap-3">
-                <Icon name="memo" size={20} className="text-muted mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted">
-                    You are a member of this household. Only the owner can
-                    remove members.
-                  </p>
+          {/* Members List */}
+          <MotionCard transition={{ delay: 0.2 }}>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-growth-pale rounded-xl">
+                  <Icon name="user" size={20} className="text-growth" />
                 </div>
+                <CardTitle>Members</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {members.map((member, index) => {
+                  const profile = Array.isArray(member.profiles)
+                    ? member.profiles[0]
+                    : member.profiles;
+                  const isCurrentUser = member.user_id === user!.id;
+                  const memberIsOwner = member.role === "owner";
+
+                  return (
+                    <motion.div
+                      key={member.user_id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center justify-between p-4 bg-sand/30 rounded-2xl group hover:bg-sand/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-primary-pale flex items-center justify-center">
+                          {memberIsOwner ? (
+                            <span className="text-2xl">👑</span>
+                          ) : (
+                            <Icon name="user" size={24} className="text-primary" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-display font-bold text-foreground">
+                              {profile?.full_name || profile?.email || "Unknown"}
+                            </span>
+                            {memberIsOwner && (
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                                Owner
+                              </span>
+                            )}
+                            {isCurrentUser && (
+                              <span className="px-2 py-0.5 bg-growth-pale text-growth text-xs font-medium rounded-full">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-text-secondary">
+                            {profile?.email}
+                          </p>
+                          <p className="text-xs text-text-secondary mt-1">
+                            Joined {format(new Date(member.joined_at), "MMM d, yyyy")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isOwner && !isCurrentUser && !memberIsOwner && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveMember(member.user_id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-expense hover:bg-expense/10"
+                        >
+                          <Icon name="trash" size={16} />
+                          Remove
+                        </Button>
+                      )}
+                    </motion.div>
+                  );
+                })}
               </div>
             </CardContent>
-          </Card>
-        )}
+          </MotionCard>
+
+          {/* Info Card */}
+          {!isOwner && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="bg-sand/30">
+                <CardContent className="py-5">
+                  <div className="flex items-start gap-3">
+                    <Icon name="memo" size={20} className="text-text-secondary mt-0.5" />
+                    <div>
+                      <p className="text-sm text-text-secondary">
+                        You are a member of this household. Only the owner can manage members and settings.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Invite Link (Owner Only) */}
+          {isOwner && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="bg-primary-pale/50 border-primary/20">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-primary/10 rounded-2xl">
+                      <Icon name="joint" size={24} className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-display font-bold text-foreground mb-2">
+                        Invite a Partner
+                      </h3>
+                      <p className="text-sm text-text-secondary mb-4">
+                        Share this link with someone to invite them to your household garden.
+                      </p>
+                      <div className="flex gap-2">
+                        <code className="flex-1 px-4 py-2 bg-surface rounded-xl text-sm font-mono text-foreground truncate">
+                          {typeof window !== "undefined"
+                            ? `${window.location.origin}/join?household=${household.id}`
+                            : `/join?household=${household.id}`}
+                        </code>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              `${window.location.origin}/join?household=${household.id}`
+                            );
+                            showSuccess("Link copied!");
+                          }}
+                        >
+                          <Icon name="edit" size={16} />
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
       </main>
     </div>
   );

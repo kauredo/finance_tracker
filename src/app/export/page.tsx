@@ -4,14 +4,36 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
-import { Card } from "@/components/ui/Card";
+import { Card, CardContent, MotionCard } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Select, Input } from "@/components/ui/Input";
+import Icon from "@/components/icons/Icon";
+import Image from "next/image";
 import { format } from "date-fns";
 import { createClient } from "@/utils/supabase/client";
+import { motion } from "motion/react";
 
 interface Account {
   id: string;
   name: string;
 }
+
+const exportFormats = [
+  {
+    id: "csv",
+    name: "CSV",
+    emoji: "📄",
+    description: "Spreadsheet compatible",
+    subtitle: "Works in Excel, Google Sheets, etc.",
+  },
+  {
+    id: "excel",
+    name: "Excel",
+    emoji: "📊",
+    description: "Formatted with summaries",
+    subtitle: "Includes colors and totals",
+  },
+];
 
 export default function DataExportPage() {
   const { user, loading: authLoading } = useAuth();
@@ -90,7 +112,7 @@ export default function DataExportPage() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      showSuccess("Data exported successfully!");
+      showSuccess("Your data has been harvested! 🌾");
     } catch (error) {
       console.error("Error exporting data:", error);
       showError(
@@ -104,7 +126,12 @@ export default function DataExportPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
@@ -112,154 +139,214 @@ export default function DataExportPage() {
   return (
     <>
       <NavBar />
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-2">
-              Export Data
-            </h1>
-            <p className="text-muted">
-              Download your transaction data in various formats
-            </p>
-          </div>
-
-          <Card variant="glass" className="p-6">
-            <div className="space-y-6">
-              {/* Export Format */}
+      <div className="min-h-screen bg-background">
+        {/* Hero Header */}
+        <div className="bg-gradient-to-br from-growth-pale via-cream to-sand">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-4"
+            >
+              <div className="p-4 bg-surface rounded-2xl shadow-sm">
+                <motion.span
+                  className="text-4xl block"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🌾
+                </motion.span>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-3">
-                  Export Format
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setExportFormat("csv")}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      exportFormat === "csv"
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-surface hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">📄</div>
-                      <div className="font-semibold text-foreground">CSV</div>
-                      <div className="text-xs text-muted mt-1">
-                        Spreadsheet compatible
-                      </div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setExportFormat("excel")}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      exportFormat === "excel"
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-surface hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">📊</div>
-                      <div className="font-semibold text-foreground">Excel</div>
-                      <div className="text-xs text-muted mt-1">
-                        Formatted with summaries
-                      </div>
-                    </div>
-                  </button>
-                </div>
+                <h1 className="text-3xl font-display font-bold text-foreground">
+                  Harvest Your Data
+                </h1>
+                <p className="text-text-secondary">
+                  Export your financial history to take with you
+                </p>
               </div>
+            </motion.div>
+          </div>
+        </div>
 
-              {/* Filters */}
-              <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Filters
-                </h3>
-
-                {/* Account Filter */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Account
-                  </label>
-                  <select
-                    value={selectedAccount}
-                    onChange={(e) => setSelectedAccount(e.target.value)}
-                    className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-                    disabled={loading}
-                  >
-                    <option value="all">All Accounts</option>
-                    {accounts.map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {account.name}
-                      </option>
-                    ))}
-                  </select>
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
+          <div className="space-y-6">
+            {/* Format Selection */}
+            <MotionCard transition={{ delay: 0.1 }}>
+              <CardContent className="p-6">
+                <h2 className="font-display font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Icon name="download" size={20} className="text-primary" />
+                  Choose Export Format
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {exportFormats.map((format, index) => (
+                    <motion.button
+                      key={format.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + index * 0.05 }}
+                      onClick={() => setExportFormat(format.id as "csv" | "excel")}
+                      className={`p-5 rounded-2xl border-2 transition-all text-left ${
+                        exportFormat === format.id
+                          ? "border-primary bg-primary-pale shadow-md"
+                          : "border-border bg-surface hover:border-primary/30 hover:shadow-sm"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="text-3xl">{format.emoji}</span>
+                        <div>
+                          <h3 className="font-display font-bold text-foreground mb-1">
+                            {format.name}
+                          </h3>
+                          <p className="text-sm text-text-secondary">
+                            {format.description}
+                          </p>
+                          <p className="text-xs text-text-secondary mt-1">
+                            {format.subtitle}
+                          </p>
+                        </div>
+                        {exportFormat === format.id && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="ml-auto"
+                          >
+                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                              <Icon name="check" size={14} className="text-white" />
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.button>
+                  ))}
                 </div>
+              </CardContent>
+            </MotionCard>
 
-                {/* Date Range */}
-                <div className="grid grid-cols-2 gap-4">
+            {/* Filters */}
+            <MotionCard transition={{ delay: 0.2 }}>
+              <CardContent className="p-6">
+                <h2 className="font-display font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Icon name="search" size={20} className="text-primary" />
+                  Filter Your Harvest
+                </h2>
+
+                <div className="space-y-4">
+                  {/* Account Filter */}
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Start Date
+                      Account
                     </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-                    />
+                    <Select
+                      value={selectedAccount}
+                      onChange={(e) => setSelectedAccount(e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="all">All Accounts</option>
+                      {accounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.name}
+                        </option>
+                      ))}
+                    </Select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-                    />
+
+                  {/* Date Range */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Start Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        End Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </CardContent>
+            </MotionCard>
 
-              {/* Export Button */}
-              <div className="border-t border-border pt-6">
-                <button
+            {/* Export Button */}
+            <MotionCard transition={{ delay: 0.3 }}>
+              <CardContent className="p-6">
+                <Button
                   onClick={handleExport}
                   disabled={exporting}
-                  className="w-full px-6 py-4 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  variant="bloom"
+                  size="lg"
+                  className="w-full"
+                  pill
                 >
                   {exporting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Exporting...
+                      Harvesting...
                     </>
                   ) : (
                     <>
-                      <span className="text-xl">⬇</span>
+                      <Icon name="download" size={20} />
                       Export {exportFormat.toUpperCase()}
                     </>
                   )}
-                </button>
-              </div>
+                </Button>
+              </CardContent>
+            </MotionCard>
 
-              {/* Info */}
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                <h4 className="font-semibold text-primary mb-2">
-                  Export Details
-                </h4>
-                <ul className="text-sm text-muted space-y-1">
-                  <li>
-                    • CSV: Simple format, works in Excel, Google Sheets, etc.
-                  </li>
-                  <li>• Excel: Formatted with colors, totals, and summaries</li>
-                  <li>
-                    • All exports include: date, description, category, account,
-                    type, and amount
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </Card>
-        </div>
+            {/* Info Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="bg-growth-pale/50 border-growth/20">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-growth/10 rounded-2xl">
+                      <Icon name="tip" size={24} className="text-growth" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-bold text-foreground mb-2">
+                        What's included in your harvest?
+                      </h3>
+                      <ul className="text-sm text-text-secondary space-y-1.5">
+                        <li className="flex items-center gap-2">
+                          <Icon name="check" size={14} className="text-growth" />
+                          Date, description, and amount
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Icon name="check" size={14} className="text-growth" />
+                          Category and account information
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Icon name="check" size={14} className="text-growth" />
+                          Transaction type (income/expense)
+                        </li>
+                        {exportFormat === "excel" && (
+                          <li className="flex items-center gap-2">
+                            <Icon name="check" size={14} className="text-growth" />
+                            Formatted with colors and totals
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </main>
       </div>
     </>
   );

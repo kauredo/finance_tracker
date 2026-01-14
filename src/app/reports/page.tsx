@@ -6,8 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import { createClient } from "@/utils/supabase/client";
 import ReportsCharts from "@/components/reports/ReportsCharts";
-import { Card } from "@/components/ui/Card";
+import { Card, MotionCard, CardContent } from "@/components/ui/Card";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { AmountDisplay } from "@/components/ui/AmountDisplay";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
+import Image from "next/image";
+import { motion } from "motion/react";
 
 interface CategoryData {
   name: string;
@@ -23,14 +28,14 @@ interface MonthlyData {
 }
 
 const COLORS = [
-  "#3b82f6", // blue
-  "#ef4444", // red
-  "#10b981", // green
-  "#f59e0b", // amber
-  "#8b5cf6", // purple
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#f97316", // orange
+  "#ff8fab", // pink
+  "#7cb482", // green
+  "#64b5f6", // blue
+  "#ffb74d", // amber
+  "#ba68c8", // purple
+  "#4dd0e1", // cyan
+  "#ff8a65", // orange
+  "#a1887f", // brown
 ];
 
 export default function ReportsPage() {
@@ -133,7 +138,7 @@ export default function ReportsPage() {
           income: parseFloat(data.income.toFixed(2)),
           rawDate: month, // for sorting
         }))
-        .sort((a, b) => a.rawDate.localeCompare(b.rawDate))
+        .sort((a: any, b: any) => a.rawDate.localeCompare(b.rawDate))
         .slice(-6); // Last 6 months
 
       setCategoryData(catData);
@@ -156,110 +161,238 @@ export default function ReportsPage() {
     }
   };
 
+  // Get health message based on savings rate
+  const getFinancialHealth = () => {
+    if (summary.savingsRate >= 30) return { emoji: "🌸", label: "Blooming!", status: "excellent" };
+    if (summary.savingsRate >= 20) return { emoji: "🌿", label: "Thriving", status: "good" };
+    if (summary.savingsRate >= 10) return { emoji: "🌱", label: "Growing", status: "okay" };
+    if (summary.savingsRate > 0) return { emoji: "🌰", label: "Sprouting", status: "needs-attention" };
+    return { emoji: "🥀", label: "Needs Water", status: "critical" };
+  };
+
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
+
+  const health = getFinancialHealth();
 
   return (
     <div key={pathname} className="min-h-screen bg-background">
       <NavBar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">
-            Financial Reports
-          </h1>
-          <p className="text-muted mt-1">
-            Analyze your spending patterns and trends
-          </p>
-        </div>
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br from-primary-pale via-cream to-growth-pale">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row md:items-center justify-between gap-6"
+          >
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <motion.span
+                  className="text-4xl"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  📊
+                </motion.span>
+                <h1 className="text-3xl font-display font-bold text-foreground">
+                  Financial Health Checkup
+                </h1>
+              </div>
+              <p className="text-text-secondary">
+                See how your financial garden is growing over time
+              </p>
+            </div>
 
+            {/* Health Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3 bg-surface px-5 py-3 rounded-2xl shadow-sm"
+            >
+              <span className="text-3xl">{health.emoji}</span>
+              <div>
+                <p className="text-sm text-text-secondary">Garden Status</p>
+                <p className="font-display font-bold text-foreground">{health.label}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-muted">Loading reports...</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="h-6 w-24 bg-sand rounded-lg mb-3" />
+                  <div className="h-8 w-32 bg-sand rounded-lg" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <>
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-success/10 rounded-xl text-success">
-                    <Icon name="income" size={24} />
+              <MotionCard variant="glass" transition={{ delay: 0.1 }}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-growth-pale rounded-2xl">
+                      <Icon name="income" size={24} className="text-growth" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary font-medium">
+                        Total Income
+                      </p>
+                      <AmountDisplay
+                        value={summary.totalIncome}
+                        currency="EUR"
+                        variant="income"
+                        size="md"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted font-medium">
-                      Total Income
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      €{summary.totalIncome.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </Card>
+                </CardContent>
+              </MotionCard>
 
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-danger/10 rounded-xl text-danger">
-                    <Icon name="expense" size={24} />
+              <MotionCard variant="glass" transition={{ delay: 0.15 }}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-expense/10 rounded-2xl">
+                      <Icon name="expense" size={24} className="text-expense" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary font-medium">
+                        Total Expenses
+                      </p>
+                      <AmountDisplay
+                        value={summary.totalExpenses}
+                        currency="EUR"
+                        variant="expense"
+                        size="md"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted font-medium">
-                      Total Expenses
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      €{summary.totalExpenses.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </Card>
+                </CardContent>
+              </MotionCard>
 
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                    <Icon name="savings" size={24} />
+              <MotionCard variant="glass" transition={{ delay: 0.2 }}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary-pale rounded-2xl">
+                      <Icon name="savings" size={24} className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-secondary font-medium">
+                        Net Savings
+                      </p>
+                      <AmountDisplay
+                        value={summary.netSavings}
+                        currency="EUR"
+                        variant={summary.netSavings >= 0 ? "income" : "expense"}
+                        size="md"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted font-medium">
-                      Net Savings
-                    </p>
-                    <p
-                      className={`text-2xl font-bold ${summary.netSavings >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      €{summary.netSavings.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </Card>
+                </CardContent>
+              </MotionCard>
 
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
-                    <Icon name="chart" size={24} />
+              <MotionCard variant="glass" transition={{ delay: 0.25 }}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <ProgressRing
+                      progress={Math.max(0, Math.min(100, summary.savingsRate))}
+                      size="md"
+                      color={summary.savingsRate >= 20 ? "growth" : summary.savingsRate > 0 ? "primary" : "danger"}
+                    />
+                    <div>
+                      <p className="text-sm text-text-secondary font-medium">
+                        Savings Rate
+                      </p>
+                      <p className={`text-2xl font-bold font-mono ${
+                        summary.savingsRate >= 20
+                          ? "text-growth"
+                          : summary.savingsRate > 0
+                            ? "text-primary"
+                            : "text-expense"
+                      }`}>
+                        {summary.savingsRate.toFixed(1)}%
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted font-medium">
-                      Savings Rate
-                    </p>
-                    <p
-                      className={`text-2xl font-bold ${summary.savingsRate >= 20 ? "text-success" : summary.savingsRate > 0 ? "text-primary" : "text-danger"}`}
-                    >
-                      {summary.savingsRate.toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
-              </Card>
+                </CardContent>
+              </MotionCard>
             </div>
 
             {/* Charts */}
-            <ReportsCharts
-              categoryData={categoryData}
-              monthlyData={monthlyData}
-            />
+            {categoryData.length > 0 || monthlyData.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <ReportsCharts
+                  categoryData={categoryData}
+                  monthlyData={monthlyData}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <EmptyState
+                  illustration="chart"
+                  title="No data to analyze yet"
+                  description="Add some transactions to see your financial health insights bloom."
+                />
+              </motion.div>
+            )}
+
+            {/* Tips Section */}
+            {!loading && summary.savingsRate < 20 && categoryData.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mt-8"
+              >
+                <Card className="bg-primary-pale/50 border-primary/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-primary/10 rounded-2xl">
+                        <Icon name="tip" size={24} className="text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-display font-bold text-foreground mb-2">
+                          Growing Tips 🌱
+                        </h3>
+                        <p className="text-text-secondary">
+                          Your top spending category is <strong>{categoryData[0]?.name}</strong>.
+                          Consider reviewing these expenses to help your savings grow.
+                          A healthy garden needs at least 20% savings rate to thrive!
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
           </>
         )}
       </main>

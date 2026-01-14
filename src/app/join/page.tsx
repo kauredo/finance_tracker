@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import Icon from "@/components/icons/Icon";
+import Image from "next/image";
+import { motion } from "motion/react";
 
 function JoinContent() {
   const router = useRouter();
@@ -47,18 +49,6 @@ function JoinContent() {
         throw new Error(data.error || "Failed to fetch household info");
       }
 
-      // Check if user is already a member (we can't check this easily without auth,
-      // but the accept-invite endpoint will handle it.
-      // For now, we just show the join UI. If they are already a member,
-      // the accept-invite call will return a specific error or we can redirect them.)
-
-      // Ideally we should check if they are already a member if they are logged in.
-      // But since we are using the admin API to get info, we don't get the member list relative to the user easily without more logic.
-      // Let's rely on the accept-invite check or a separate check if needed.
-      // Actually, if we are logged in, we can still check membership via RLS if we wanted,
-      // but the whole point was RLS was blocking.
-
-      // Let's just set the household data for display.
       setHousehold(data);
     } catch (err: any) {
       console.error("Error fetching household:", err);
@@ -103,96 +93,180 @@ function JoinContent() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md bg-surface border-border">
-        <div className="p-8">
-          {success ? (
-            <div className="text-center">
-              <Icon
-                name="check"
-                size={64}
-                className="mb-4 mx-auto text-success"
-              />
-              <h2 className="text-2xl font-semibold text-foreground mb-2">
-                Welcome to the household!
-              </h2>
-              <p className="text-muted mb-6">
-                You now have access to joint accounts. Redirecting to
-                dashboard...
-              </p>
-            </div>
-          ) : error ? (
-            <div className="text-center">
-              <Icon
-                name="cross"
-                size={64}
-                className="mb-4 mx-auto text-danger"
-              />
-              <h2 className="text-2xl font-semibold text-foreground mb-2">
-                Invitation Error
-              </h2>
-              <p className="text-muted mb-6">{error}</p>
-              <Button onClick={() => router.push("/dashboard")}>
-                Go to Dashboard
-              </Button>
-            </div>
-          ) : household ? (
-            <div>
-              <div className="text-center mb-6">
-                <Icon
-                  name="joint"
-                  size={64}
-                  className="mb-4 mx-auto text-primary"
-                />
-                <h2 className="text-2xl font-semibold text-foreground mb-2">
-                  Join {household.name}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream via-surface to-primary-pale p-4">
+      {/* Background decoration */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-20 left-10 text-6xl opacity-20"
+          animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          🌱
+        </motion.div>
+        <motion.div
+          className="absolute bottom-20 right-10 text-5xl opacity-20"
+          animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+          transition={{ duration: 5, repeat: Infinity }}
+        >
+          🌿
+        </motion.div>
+        <motion.div
+          className="absolute top-1/3 right-1/4 text-4xl opacity-20"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 3, repeat: Infinity }}
+        >
+          💚
+        </motion.div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="w-full max-w-md relative overflow-hidden">
+          <CardContent className="p-8">
+            {success ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", delay: 0.2 }}
+                  className="w-20 h-20 bg-growth-pale rounded-full flex items-center justify-center mx-auto mb-6"
+                >
+                  <Icon name="check" size={40} className="text-growth" />
+                </motion.div>
+                <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+                  Welcome to the garden! 🌸
                 </h2>
-                <p className="text-muted">
-                  You've been invited to join this household
+                <p className="text-text-secondary mb-6">
+                  You're now part of the household. Redirecting to your dashboard...
                 </p>
-              </div>
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="text-4xl"
+                >
+                  🎉
+                </motion.div>
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center"
+              >
+                <div className="w-20 h-20 bg-expense/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">🥀</span>
+                </div>
+                <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+                  Oops!
+                </h2>
+                <p className="text-text-secondary mb-6">{error}</p>
+                <Button
+                  onClick={() => router.push("/dashboard")}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Go to Dashboard
+                </Button>
+              </motion.div>
+            ) : household ? (
+              <div>
+                <div className="text-center mb-8">
+                  <motion.div
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="w-20 h-20 bg-primary-pale rounded-full flex items-center justify-center mx-auto mb-4"
+                  >
+                    <span className="text-4xl">👨‍👩‍👧‍👦</span>
+                  </motion.div>
+                  <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+                    Join {household.name}
+                  </h2>
+                  <p className="text-text-secondary">
+                    You've been invited to grow together 🌱
+                  </p>
+                </div>
 
-              {household.household_members &&
-                household.household_members.length > 0 && (
-                  <div className="bg-background rounded-lg p-4 mb-6">
-                    <p className="text-sm text-muted mb-2">Current members:</p>
-                    <div className="space-y-2">
-                      {household.household_members.map(
-                        (member: any, index: number) => (
-                          <div key={index} className="text-sm text-foreground">
-                            • {member.profiles?.email || "Unknown"}
-                          </div>
-                        ),
-                      )}
+                {household.household_members &&
+                  household.household_members.length > 0 && (
+                    <div className="bg-sand/30 rounded-2xl p-4 mb-6">
+                      <p className="text-sm text-text-secondary mb-3 flex items-center gap-2">
+                        <Icon name="user" size={16} />
+                        Current garden partners:
+                      </p>
+                      <div className="space-y-2">
+                        {household.household_members.map(
+                          (member: any, index: number) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              className="flex items-center gap-3 p-2 bg-surface rounded-xl"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-primary-pale flex items-center justify-center">
+                                <Icon name="user" size={16} className="text-primary" />
+                              </div>
+                              <span className="text-sm text-foreground">
+                                {member.profiles?.email || "Unknown"}
+                              </span>
+                            </motion.div>
+                          ),
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-              <Button
-                onClick={handleJoin}
-                isLoading={joining}
-                className="w-full"
-              >
-                {joining ? "Joining..." : "Join Household"}
-              </Button>
+                <Button
+                  onClick={handleJoin}
+                  disabled={joining}
+                  variant="bloom"
+                  size="lg"
+                  className="w-full"
+                  pill
+                >
+                  {joining ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Joining...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="joint" size={20} />
+                      Join Household
+                    </>
+                  )}
+                </Button>
 
-              <Button
-                variant="ghost"
-                onClick={() => router.push("/dashboard")}
-                className="w-full mt-3"
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      </Card>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push("/dashboard")}
+                  className="w-full mt-3"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
@@ -202,7 +276,12 @@ export default function JoinPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-muted">Loading...</div>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Image src="/logo.png" alt="Loading" width={48} height={48} />
+          </motion.div>
         </div>
       }
     >
