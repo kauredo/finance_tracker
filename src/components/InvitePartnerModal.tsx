@@ -146,10 +146,7 @@ export default function InvitePartnerModal({
                     className="flex-1 select-all"
                     onClick={(e) => e.currentTarget.select()}
                   />
-                  <Button
-                    onClick={handleCopyLink}
-                    variant="secondary"
-                  >
+                  <Button onClick={handleCopyLink} variant="secondary">
                     {copied ? "Copied!" : "Copy"}
                   </Button>
                 </div>

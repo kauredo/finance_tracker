@@ -4,10 +4,14 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
-import { Card } from "@/components/ui/Card";
+import { Card, MotionCard } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Icon, { IconName } from "@/components/icons/Icon";
 import CategoryModal from "@/components/CategoryModal";
 import DeleteCategoryModal from "@/components/DeleteCategoryModal";
+import Image from "next/image";
+import { motion } from "motion/react";
 
 interface Category {
   id: string;
@@ -71,20 +75,10 @@ export default function CategoriesPage() {
   };
 
   const handleDeleteClick = async (category: Category) => {
-    // First try to delete directly to check for transactions
-    // Or we can just open the modal and let it handle the check?
-    // Actually, the modal needs the transaction count.
-    // Let's fetch the count first or try to delete and catch the error.
-
-    // Better UX: Open modal, let modal fetch count?
-    // Or fetch count here.
-
     setDeletingCategory(category);
     setIsDeleting(true);
 
     try {
-      // Check for transactions first
-      // We can use the delete endpoint which returns 400 with count
       const response = await fetch(`/api/categories/${category.id}`, {
         method: "DELETE",
       });
@@ -92,16 +86,14 @@ export default function CategoriesPage() {
       const data = await response.json();
 
       if (response.ok) {
-        showSuccess("Category deleted successfully");
+        showSuccess("Category removed from garden");
         fetchCategories();
         setDeletingCategory(null);
       } else if (
         response.status === 400 &&
         data.transactionCount !== undefined
       ) {
-        // Has transactions, show modal with count
         setTransactionCount(data.transactionCount);
-        // Keep deletingCategory set, so modal opens (we need to change how we render modal)
       } else {
         throw new Error(data.error || "Failed to delete category");
       }
@@ -119,7 +111,12 @@ export default function CategoriesPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
@@ -130,161 +127,264 @@ export default function CategoriesPage() {
   return (
     <>
       <NavBar />
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-foreground mb-2">
-                Categories
-              </h1>
-              <p className="text-muted">
-                Manage transaction categories and create custom ones
-              </p>
-            </div>
-            <button
-              onClick={handleCreate}
-              className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+      <div className="min-h-screen bg-background">
+        {/* Hero Header */}
+        <div className="bg-gradient-to-br from-sand via-cream to-primary-pale">
+          <div className="max-w-6xl mx-auto px-6 py-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
             >
-              <span className="text-xl">+</span>
-              New Category
-            </button>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl">🏷️</span>
+                  <h1 className="text-3xl font-display font-bold text-foreground">
+                    Categories
+                  </h1>
+                </div>
+                <p className="text-text-secondary">
+                  Organize your spending with custom labels
+                </p>
+              </div>
+              <Button onClick={handleCreate} variant="bloom" pill>
+                <Icon name="plus" size={18} />
+                New Category
+              </Button>
+            </motion.div>
           </div>
+        </div>
 
+        <div className="max-w-6xl mx-auto px-6 py-8">
           {loading ? (
-            <div className="text-center py-12 text-muted">
-              Loading categories...
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <div className="flex flex-col items-center gap-3 p-4">
+                    <div className="w-16 h-16 bg-sand rounded-xl" />
+                    <div className="h-5 w-20 bg-sand rounded" />
+                  </div>
+                </Card>
+              ))}
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-10">
               {/* Custom Categories */}
               {customCategories.length > 0 && (
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-4">
-                    My Categories
-                  </h2>
+                <section>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 mb-6"
+                  >
+                    <span className="text-2xl">✨</span>
+                    <h2 className="text-2xl font-display font-bold text-foreground">
+                      My Categories
+                    </h2>
+                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                      {customCategories.length} custom
+                    </span>
+                  </motion.div>
+
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {customCategories.map((category) => (
-                      <Card
+                    {customCategories.map((category, index) => (
+                      <motion.div
                         key={category.id}
-                        variant="glass"
-                        className="group hover:shadow-lg transition-all cursor-pointer"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
                       >
-                        <div className="flex flex-col items-center gap-3 p-4">
-                          <div
-                            className="w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                            style={{
-                              backgroundColor: `${category.color}20`,
-                              color: category.color,
-                            }}
-                          >
-                            <Icon name={category.icon as IconName} size={32} />
-                          </div>
-                          <h3 className="font-semibold text-foreground text-center">
-                            {category.name}
-                          </h3>
-                          <div className="flex gap-2 mt-2">
+                        <Card className="group hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
+                          {/* Edit/Delete buttons on hover */}
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                             <button
-                              onClick={() => handleEdit(category)}
-                              className="px-3 py-1 text-sm bg-primary/10 text-primary rounded hover:bg-primary/20 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(category);
+                              }}
+                              className="p-1.5 rounded-lg bg-surface hover:bg-primary-pale text-text-secondary hover:text-primary transition-colors"
                             >
-                              Edit
+                              <Icon name="edit" size={14} />
                             </button>
                             <button
-                              onClick={() => handleDeleteClick(category)}
-                              className="px-3 py-1 text-sm bg-danger/10 text-danger rounded hover:bg-danger/20 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(category);
+                              }}
+                              className="p-1.5 rounded-lg bg-surface hover:bg-expense/10 text-text-secondary hover:text-expense transition-colors"
                             >
-                              Delete
+                              <Icon name="trash" size={14} />
                             </button>
                           </div>
-                        </div>
-                      </Card>
+
+                          <div className="flex flex-col items-center gap-3 p-5">
+                            <div
+                              className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                              style={{
+                                backgroundColor: `${category.color}15`,
+                                color: category.color,
+                              }}
+                            >
+                              <Icon
+                                name={category.icon as IconName}
+                                size={28}
+                              />
+                            </div>
+                            <h3 className="font-display font-bold text-foreground text-center">
+                              {category.name}
+                            </h3>
+                            <span className="text-xs text-text-secondary bg-sand/50 px-2 py-0.5 rounded-full">
+                              Custom
+                            </span>
+                          </div>
+                        </Card>
+                      </motion.div>
                     ))}
+
+                    {/* Add New Category Card */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: customCategories.length * 0.05 }}
+                    >
+                      <div
+                        onClick={handleCreate}
+                        className="group border-2 border-dashed border-border hover:border-primary/40 rounded-3xl p-5 h-full min-h-[160px] flex flex-col items-center justify-center gap-2 transition-all cursor-pointer hover:bg-primary-pale/20"
+                      >
+                        <div className="w-14 h-14 rounded-2xl bg-sand/50 group-hover:bg-primary-pale flex items-center justify-center transition-colors">
+                          <Icon
+                            name="plus"
+                            size={24}
+                            className="text-text-secondary group-hover:text-primary transition-colors"
+                          />
+                        </div>
+                        <p className="text-sm text-text-secondary group-hover:text-primary font-medium transition-colors">
+                          Add category
+                        </p>
+                      </div>
+                    </motion.div>
                   </div>
-                </div>
+                </section>
+              )}
+
+              {/* Empty state for custom categories */}
+              {customCategories.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <EmptyState
+                    illustration="chart"
+                    title="Create your first category"
+                    description="Custom categories help you organize spending your way."
+                    action={{
+                      label: "Create Category",
+                      onClick: handleCreate,
+                      variant: "bloom",
+                    }}
+                  />
+                </motion.div>
               )}
 
               {/* Default Categories */}
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  Default Categories
-                </h2>
+              <section>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center gap-2 mb-6"
+                >
+                  <span className="text-2xl">📦</span>
+                  <h2 className="text-2xl font-display font-bold text-foreground">
+                    Default Categories
+                  </h2>
+                  <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                    {defaultCategories.length} built-in
+                  </span>
+                </motion.div>
+
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {defaultCategories.map((category) => (
-                    <Card
+                  {defaultCategories.map((category, index) => (
+                    <motion.div
                       key={category.id}
-                      variant="glass"
-                      className="group hover:shadow-lg transition-all"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 + index * 0.03 }}
                     >
-                      <div className="flex flex-col items-center gap-3 p-4">
-                        <div
-                          className="w-16 h-16 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                          style={{
-                            backgroundColor: `${category.color}20`,
-                            color: category.color,
-                          }}
-                        >
-                          <Icon name={category.icon as IconName} size={32} />
+                      <Card className="group hover:shadow-md transition-all">
+                        <div className="flex flex-col items-center gap-3 p-5">
+                          <div
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                            style={{
+                              backgroundColor: `${category.color}15`,
+                              color: category.color,
+                            }}
+                          >
+                            <Icon name={category.icon as IconName} size={28} />
+                          </div>
+                          <h3 className="font-display font-bold text-foreground text-center">
+                            {category.name}
+                          </h3>
                         </div>
-                        <h3 className="font-semibold text-foreground text-center">
-                          {category.name}
-                        </h3>
-                      </div>
-                    </Card>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
-
-              {customCategories.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted mb-4">
-                    You haven't created any custom categories yet
-                  </p>
-                  <button
-                    onClick={handleCreate}
-                    className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all"
-                  >
-                    Create Your First Category
-                  </button>
-                </div>
-              )}
+              </section>
             </div>
           )}
-
-          {/* Modals */}
-          {showModal && (
-            <CategoryModal
-              category={editingCategory || undefined}
-              onClose={() => {
-                setShowModal(false);
-                setEditingCategory(null);
-              }}
-              onSuccess={() => {
-                setShowModal(false);
-                setEditingCategory(null);
-                fetchCategories();
-              }}
-            />
-          )}
-
-          {deletingCategory && transactionCount !== null && (
-            <DeleteCategoryModal
-              category={deletingCategory}
-              transactionCount={transactionCount}
-              onClose={() => {
-                setDeletingCategory(null);
-                setTransactionCount(null);
-              }}
-              onSuccess={() => {
-                setDeletingCategory(null);
-                setTransactionCount(null);
-                showSuccess("Category deleted successfully");
-                fetchCategories();
-              }}
-            />
-          )}
         </div>
+
+        {/* Floating Add Button (Mobile) */}
+        <motion.div
+          className="fixed bottom-6 right-6 md:hidden"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5, type: "spring" }}
+        >
+          <Button
+            onClick={handleCreate}
+            variant="bloom"
+            size="lg"
+            className="w-14 h-14 rounded-full shadow-lg p-0"
+          >
+            <Icon name="plus" size={24} />
+          </Button>
+        </motion.div>
       </div>
+
+      {/* Modals */}
+      {showModal && (
+        <CategoryModal
+          category={editingCategory || undefined}
+          onClose={() => {
+            setShowModal(false);
+            setEditingCategory(null);
+          }}
+          onSuccess={() => {
+            setShowModal(false);
+            setEditingCategory(null);
+            fetchCategories();
+          }}
+        />
+      )}
+
+      {deletingCategory && transactionCount !== null && (
+        <DeleteCategoryModal
+          category={deletingCategory}
+          transactionCount={transactionCount}
+          onClose={() => {
+            setDeletingCategory(null);
+            setTransactionCount(null);
+          }}
+          onSuccess={() => {
+            setDeletingCategory(null);
+            setTransactionCount(null);
+            showSuccess("Category removed from garden");
+            fetchCategories();
+          }}
+        />
+      )}
     </>
   );
 }

@@ -62,7 +62,6 @@ A modern, intelligent personal finance tracker designed to make managing your mo
     ```
 
     You will need to provide:
-
     - `NEXT_PUBLIC_SUPABASE_URL`
     - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY`
     - `SUPABASE_SECRET_KEY` (for admin operations like household invites)

@@ -25,12 +25,12 @@ const NodeCanvasFactory = {
 
 async function testPdfConversion() {
   console.log("Testing PDF to image conversion...");
-  
+
   // Create a simple PDF buffer for testing
   // In practice, you would load a real PDF file
   console.log("✅ PDF.js and @napi-rs/canvas imports successful");
   console.log("✅ NodeCanvasFactory created successfully");
-  
+
   // Test canvas creation
   try {
     const testCanvas = NodeCanvasFactory.create(100, 100);
@@ -41,7 +41,7 @@ async function testPdfConversion() {
     console.error("❌ Canvas creation failed:", error);
     process.exit(1);
   }
-  
+
   console.log("\n✨ All tests passed! PDF conversion setup is working.");
 }
 

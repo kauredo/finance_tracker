@@ -91,7 +91,7 @@ A web application for couples to track shared finances by uploading bank stateme
 
 - [ ] Detailed spending breakdown by category (Pie charts)
 - [ ] Monthly comparison charts
-- [ ] Export data (CSV/PDF) - *Partially implemented in dependencies*
+- [ ] Export data (CSV/PDF) - _Partially implemented in dependencies_
 
 ### 2. Mobile Experience
 

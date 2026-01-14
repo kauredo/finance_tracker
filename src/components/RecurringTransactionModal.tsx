@@ -197,7 +197,9 @@ export default function RecurringTransactionModal({
                 type="button"
                 onClick={() => setType("expense")}
                 variant={type === "expense" ? "secondary" : "ghost"}
-                className={type === "expense" ? "text-danger shadow-sm" : "text-muted"}
+                className={
+                  type === "expense" ? "text-danger shadow-sm" : "text-muted"
+                }
               >
                 Expense
               </Button>
@@ -205,7 +207,9 @@ export default function RecurringTransactionModal({
                 type="button"
                 onClick={() => setType("income")}
                 variant={type === "income" ? "secondary" : "ghost"}
-                className={type === "income" ? "text-success shadow-sm" : "text-muted"}
+                className={
+                  type === "income" ? "text-success shadow-sm" : "text-muted"
+                }
               >
                 Income
               </Button>

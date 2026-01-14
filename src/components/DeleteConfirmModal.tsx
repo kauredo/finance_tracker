@@ -64,10 +64,7 @@ export default function DeleteConfirmModal({
 
           <div className="flex gap-3 pt-4">
             {isInfoOnly ? (
-              <Button
-                onClick={onCancel}
-                className="flex-1"
-              >
+              <Button onClick={onCancel} className="flex-1">
                 {confirmText || "OK"}
               </Button>
             ) : (

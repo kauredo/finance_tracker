@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { ProgressRing } from "@/components/ui/ProgressRing";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { useToast } from "@/contexts/ToastContext";
+import { motion } from "motion/react";
 
 interface Category {
   id: string;
@@ -27,6 +29,22 @@ interface BudgetCardProps {
   spent: number;
   onSave: (amount: number) => Promise<void>;
   onDelete: () => Promise<void>;
+  index?: number;
+}
+
+// Plant health status based on budget usage
+function getBudgetHealth(percentage: number): {
+  emoji: string;
+  label: string;
+  status: "thriving" | "growing" | "attention" | "wilting";
+} {
+  if (percentage <= 50)
+    return { emoji: "🌿", label: "Thriving", status: "thriving" };
+  if (percentage <= 80)
+    return { emoji: "🌱", label: "Growing", status: "growing" };
+  if (percentage <= 100)
+    return { emoji: "🍂", label: "Attention", status: "attention" };
+  return { emoji: "🥀", label: "Over budget", status: "wilting" };
 }
 
 export default function BudgetCard({
@@ -35,19 +53,24 @@ export default function BudgetCard({
   spent,
   onSave,
   onDelete,
+  index = 0,
 }: BudgetCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState(budget?.amount?.toString() || "");
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
 
-  const percentage = budget ? Math.min((spent / budget.amount) * 100, 100) : 0;
-  const isOverBudget = budget ? spent > budget.amount : false;
+  const percentage = budget ? Math.min((spent / budget.amount) * 100, 150) : 0;
+  const clampedPercentage = Math.min(percentage, 100);
+  const { emoji, label, status } = getBudgetHealth(percentage);
 
   // Color logic
-  let progressColor = "bg-success";
-  if (percentage >= 80) progressColor = "bg-warning";
-  if (percentage >= 100) progressColor = "bg-danger";
+  const getProgressColor = () => {
+    if (status === "thriving") return "growth";
+    if (status === "growing") return "primary";
+    if (status === "attention") return "warning";
+    return "danger";
+  };
 
   const handleSave = async () => {
     if (!amount || isNaN(parseFloat(amount))) return;
@@ -56,7 +79,7 @@ export default function BudgetCard({
     try {
       await onSave(parseFloat(amount));
       setIsEditing(false);
-      success("Budget saved successfully");
+      success("Budget planted successfully");
     } catch (err) {
       error("Failed to save budget");
     } finally {
@@ -71,7 +94,7 @@ export default function BudgetCard({
     try {
       await onDelete();
       setAmount("");
-      success("Budget removed");
+      success("Budget removed from garden");
     } catch (err) {
       error("Failed to remove budget");
     } finally {
@@ -79,126 +102,213 @@ export default function BudgetCard({
     }
   };
 
+  // Edit/Create mode
   if (isEditing || !budget) {
     return (
-      <Card variant="glass" className="p-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{
-              backgroundColor: `${category.color}20`,
-              color: category.color,
-            }}
-          >
-            <Icon name={category.icon as IconName} size={20} />
-          </div>
-          <h3 className="font-semibold text-foreground">{category.name}</h3>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-muted mb-1">
-              Monthly Limit
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-                €
-              </span>
-              <Input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="pl-8"
-              />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+      >
+        <Card className="group border-2 border-dashed border-border hover:border-primary/40 transition-colors">
+          <div className="flex items-center gap-3 mb-5">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{
+                backgroundColor: `${category.color}15`,
+                color: category.color,
+              }}
+            >
+              <Icon name={category.icon as IconName} size={24} />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-foreground">
+                {category.name}
+              </h3>
+              <p className="text-xs text-text-secondary">
+                {budget ? "Edit budget" : "Set a monthly limit"}
+              </p>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleSave}
-              disabled={isLoading || !amount}
-              className="flex-1"
-            >
-              Save
-            </Button>
-            {isEditing && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-text-secondary mb-2 font-medium">
+                Monthly Limit
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-mono">
+                  €
+                </span>
+                <Input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="pl-10 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
               <Button
-                onClick={() => setIsEditing(false)}
-                variant="ghost"
-                className="text-muted hover:text-foreground"
+                onClick={handleSave}
+                disabled={isLoading || !amount}
+                className="flex-1"
+                variant="bloom"
+                pill
               >
-                Cancel
+                {isLoading ? "Saving..." : budget ? "Update" : "Plant Budget"}
               </Button>
-            )}
+              {isEditing && (
+                <Button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setAmount(budget?.amount?.toString() || "");
+                  }}
+                  variant="ghost"
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </motion.div>
     );
   }
 
+  // Display mode with budget set
   return (
-    <Card variant="glass" className="p-4 group relative">
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-        <Button
-          onClick={() => setIsEditing(true)}
-          variant="ghost"
-          size="sm"
-          className="p-1.5 h-auto text-muted hover:text-primary hover:bg-surface"
-          title="Edit Budget"
-        >
-          <Icon name="edit" size={16} />
-        </Button>
-        <Button
-          onClick={handleDelete}
-          variant="ghost"
-          size="sm"
-          className="p-1.5 h-auto text-muted hover:text-danger hover:bg-surface"
-          title="Remove Budget"
-        >
-          <Icon name="trash" size={16} />
-        </Button>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <Card
+        variant={status === "wilting" ? "warm" : "default"}
+        className="group relative overflow-hidden"
+      >
+        {/* Status indicator overlay */}
+        {status === "wilting" && (
+          <div className="absolute inset-0 bg-expense/5 pointer-events-none" />
+        )}
+        {status === "thriving" && (
+          <div className="absolute inset-0 bg-growth/5 pointer-events-none" />
+        )}
 
-      <div className="flex items-center gap-3 mb-4">
-        <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center"
-          style={{
-            backgroundColor: `${category.color}20`,
-            color: category.color,
-          }}
-        >
-          <Icon name={category.icon as IconName} size={20} />
-        </div>
-        <div>
-          <h3 className="font-semibold text-foreground">{category.name}</h3>
-          <p className="text-xs text-muted">Monthly Budget</p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span
-            className={
-              isOverBudget ? "text-danger font-medium" : "text-foreground"
-            }
+        {/* Action buttons */}
+        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+          <Button
+            onClick={() => setIsEditing(true)}
+            variant="ghost"
+            size="sm"
+            className="p-2 h-auto text-text-secondary hover:text-primary hover:bg-sand"
           >
-            €{spent.toFixed(2)}
-          </span>
-          <span className="text-muted">of €{budget.amount.toFixed(2)}</span>
+            <Icon name="edit" size={16} />
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="ghost"
+            size="sm"
+            className="p-2 h-auto text-text-secondary hover:text-expense hover:bg-expense/10"
+          >
+            <Icon name="trash" size={16} />
+          </Button>
         </div>
 
-        <div className="h-2 bg-surface-alt rounded-full overflow-hidden">
-          <div
-            className={`h-full ${progressColor} transition-all duration-500`}
-            style={{ width: `${percentage}%` }}
+        <div className="flex items-start gap-4 mb-5">
+          {/* Progress Ring */}
+          <div className="relative">
+            <ProgressRing
+              progress={clampedPercentage}
+              size="lg"
+              color={getProgressColor()}
+              showPercentage={false}
+            />
+            <div
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ color: category.color }}
+            >
+              <Icon name={category.icon as IconName} size={24} />
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-display font-bold text-foreground truncate">
+                {category.name}
+              </h3>
+              <span className="text-lg">{emoji}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  status === "thriving"
+                    ? "bg-growth-pale text-growth"
+                    : status === "growing"
+                      ? "bg-primary-pale text-primary"
+                      : status === "attention"
+                        ? "bg-warning/20 text-warning"
+                        : "bg-expense/10 text-expense"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Amount display */}
+        <div className="mb-4">
+          <div className="flex items-baseline gap-2">
+            <span
+              className={`text-2xl font-bold font-mono ${
+                status === "wilting" ? "text-expense" : "text-foreground"
+              }`}
+            >
+              €{spent.toFixed(2)}
+            </span>
+            <span className="text-text-secondary text-sm">
+              / €{budget.amount.toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-3 bg-sand rounded-full overflow-hidden mb-3">
+          <motion.div
+            className={`h-full rounded-full ${
+              status === "thriving"
+                ? "bg-growth"
+                : status === "growing"
+                  ? "bg-primary"
+                  : status === "attention"
+                    ? "bg-warning"
+                    : "bg-expense"
+            }`}
+            initial={{ width: 0 }}
+            animate={{ width: `${clampedPercentage}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           />
         </div>
 
-        <div className="text-xs text-right text-muted">
-          {Math.max(0, budget.amount - spent).toFixed(2)} remaining
+        {/* Footer stats */}
+        <div className="flex justify-between text-sm">
+          <span className="text-text-secondary">
+            {clampedPercentage.toFixed(0)}% used
+          </span>
+          {budget.amount - spent > 0 ? (
+            <span className="text-foreground font-medium font-mono">
+              €{(budget.amount - spent).toFixed(2)} left
+            </span>
+          ) : (
+            <span className="text-expense font-medium font-mono">
+              €{Math.abs(budget.amount - spent).toFixed(2)} over
+            </span>
+          )}
         </div>
-      </div>
-    </Card>
+      </Card>
+    </motion.div>
   );
 }

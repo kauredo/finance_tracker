@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Card } from "@/components/ui/Card";
 import Icon from "@/components/icons/Icon";
 import { SkeletonTable } from "@/components/ui/Skeleton";
 import { Pagination } from "@/components/ui/Pagination";
+import { format, isToday, isYesterday, isThisWeek } from "date-fns";
+import { motion } from "motion/react";
 
 interface Transaction {
   id: string;
@@ -33,6 +37,33 @@ interface TransactionsListProps {
   limit?: number;
 }
 
+// Group transactions by date
+function groupTransactionsByDate(transactions: Transaction[]) {
+  const groups: { [key: string]: Transaction[] } = {};
+
+  transactions.forEach((t) => {
+    const date = new Date(t.date);
+    let label: string;
+
+    if (isToday(date)) {
+      label = "Today";
+    } else if (isYesterday(date)) {
+      label = "Yesterday";
+    } else if (isThisWeek(date)) {
+      label = format(date, "EEEE");
+    } else {
+      label = format(date, "MMMM d, yyyy");
+    }
+
+    if (!groups[label]) {
+      groups[label] = [];
+    }
+    groups[label].push(t);
+  });
+
+  return groups;
+}
+
 export default function TransactionsList({
   searchQuery = "",
   accountFilter = "all",
@@ -53,7 +84,7 @@ export default function TransactionsList({
 
   useEffect(() => {
     if (user) {
-      setCurrentPage(1); // Reset to page 1 when filters change
+      setCurrentPage(1);
       fetchTransactions();
     }
   }, [user, searchQuery, accountFilter, categoryFilter, startDate, endDate]);
@@ -68,12 +99,10 @@ export default function TransactionsList({
     try {
       const supabase = createClient();
 
-      // First, get total count
       let countQuery = supabase
         .from("transactions")
         .select("*", { count: "exact", head: true });
 
-      // Build the main query
       let query = supabase
         .from("transactions")
         .select(
@@ -89,25 +118,21 @@ export default function TransactionsList({
         )
         .order("date", { ascending: false });
 
-      // Apply search filter to both queries
       if (searchQuery) {
         query = query.ilike("description", `%${searchQuery}%`);
         countQuery = countQuery.ilike("description", `%${searchQuery}%`);
       }
 
-      // Apply account filter
       if (accountFilter && accountFilter !== "all") {
         query = query.eq("account_id", accountFilter);
         countQuery = countQuery.eq("account_id", accountFilter);
       }
 
-      // Apply category filter
       if (categoryFilter && categoryFilter !== "all") {
         query = query.eq("category_id", categoryFilter);
         countQuery = countQuery.eq("category_id", categoryFilter);
       }
 
-      // Apply date range filters
       if (startDate) {
         query = query.gte("date", startDate);
         countQuery = countQuery.gte("date", startDate);
@@ -117,12 +142,10 @@ export default function TransactionsList({
         countQuery = countQuery.lte("date", endDate);
       }
 
-      // Apply pagination
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
       query = query.range(from, to);
 
-      // Execute both queries
       const [{ data, error }, { count }] = await Promise.all([
         query,
         countQuery,
@@ -130,7 +153,6 @@ export default function TransactionsList({
 
       if (error) throw error;
 
-      // Supabase might return account as an array if not properly typed, but we know it's a single relation
       const formattedData = (data || []).map((t: any) => ({
         ...t,
         account: Array.isArray(t.account) ? t.account[0] : t.account,
@@ -146,130 +168,160 @@ export default function TransactionsList({
   };
 
   if (loading) {
-    return <SkeletonTable rows={5} columns={5} />;
-  }
-
-  if (transactions.length === 0) {
     return (
-      <div className="text-center py-12 text-muted">
-        <Icon name="memo" size={48} className="mb-4 mx-auto" />
-        <p className="text-lg font-medium">No transactions yet</p>
-        <p className="text-sm mt-2">Upload a bank statement to get started</p>
+      <div className="p-6">
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="flex items-center gap-4 p-4 bg-sand/30 rounded-2xl">
+                <div className="w-10 h-10 bg-sand rounded-full" />
+                <div className="flex-1">
+                  <div className="h-4 w-32 bg-sand rounded mb-2" />
+                  <div className="h-3 w-24 bg-sand rounded" />
+                </div>
+                <div className="h-5 w-20 bg-sand rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  return (
-    <>
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-border text-muted text-sm">
-              <th className="pb-3 font-medium">Date</th>
-              <th className="pb-3 font-medium">Description</th>
-              <th className="pb-3 font-medium">Category</th>
-              <th className="pb-3 font-medium">Account</th>
-              <th className="pb-3 font-medium text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {transactions.map((t) => (
-              <tr
-                key={t.id}
-                onClick={() => setSelectedTransactionId(t.id)}
-                className="group hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                <td className="py-4 text-sm text-muted">
-                  {new Date(t.date).toLocaleDateString()}
-                </td>
-                <td className="py-4 text-foreground font-medium">
-                  {t.description}
-                </td>
-                <td className="py-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-alt text-foreground capitalize border border-border">
-                    <Icon
-                      name={(t.category?.icon as any) || "other"}
-                      size={14}
-                      className="mr-1.5"
-                    />
-                    {t.category?.name || "Uncategorized"}
-                  </span>
-                </td>
-                <td className="py-4 text-sm text-muted">
-                  {t.account?.name || "Unknown"}
-                </td>
-                <td
-                  className={`py-4 text-right font-medium ${t.amount > 0 ? "text-success" : "text-foreground"}`}
-                >
-                  {t.amount > 0 ? "+" : ""}€{t.amount.toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  if (transactions.length === 0) {
+    return (
+      <div className="p-6">
+        <EmptyState
+          illustration="search"
+          title="No transactions found"
+          description={
+            searchQuery || accountFilter !== "all" || categoryFilter !== "all"
+              ? "Try adjusting your filters to find what you're looking for."
+              : "Add your first transaction or upload a bank statement to get started."
+          }
+        />
       </div>
+    );
+  }
 
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
-        {transactions.map((t) => (
-          <div
-            key={t.id}
-            onClick={() => setSelectedTransactionId(t.id)}
-            className="bg-surface border border-border rounded-xl p-4 active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs text-muted">
-                {new Date(t.date).toLocaleDateString()}
-              </span>
-              <span
-                className={`font-semibold ${t.amount > 0 ? "text-success" : "text-foreground"}`}
+  const groupedTransactions = groupTransactionsByDate(transactions);
+
+  return (
+    <div className="p-6">
+      {/* Grouped Transactions */}
+      <div className="space-y-6">
+        {Object.entries(groupedTransactions).map(
+          ([dateLabel, txs], groupIndex) => (
+            <div key={dateLabel}>
+              {/* Date Header */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: groupIndex * 0.05 }}
+                className="flex items-center gap-3 mb-3"
               >
-                {t.amount > 0 ? "+" : ""}€{t.amount.toFixed(2)}
-              </span>
-            </div>
+                <span className="text-sm font-medium text-text-secondary">
+                  {dateLabel}
+                </span>
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-text-secondary">
+                  {txs.length} transaction{txs.length > 1 ? "s" : ""}
+                </span>
+              </motion.div>
 
-            <h3 className="font-medium text-foreground mb-3">
-              {t.description}
-            </h3>
+              {/* Transaction Cards */}
+              <div className="space-y-2">
+                {txs.map((t, index) => (
+                  <motion.div
+                    key={t.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: (groupIndex * txs.length + index) * 0.02,
+                    }}
+                  >
+                    <div
+                      onClick={() => setSelectedTransactionId(t.id)}
+                      className="group flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-sand/50 border border-transparent hover:border-border transition-all cursor-pointer"
+                    >
+                      {/* Category Icon */}
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                        style={{
+                          backgroundColor: `${t.category?.color || "#888"}15`,
+                          color: t.category?.color || "#888",
+                        }}
+                      >
+                        <Icon
+                          name={(t.category?.icon as any) || "other"}
+                          size={20}
+                        />
+                      </div>
 
-            <div className="flex justify-between items-center">
-              <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-surface-alt text-muted-foreground border border-border/50">
-                <Icon
-                  name={(t.category?.icon as any) || "other"}
-                  size={12}
-                  className="mr-1.5"
-                />
-                {t.category?.name || "Uncategorized"}
-              </span>
-              <span className="text-xs text-muted">
-                {t.account?.name || "Unknown"}
-              </span>
-            </div>
+                      {/* Main Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-foreground truncate">
+                            {t.description}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-text-secondary">
+                            {t.category?.name || "Uncategorized"}
+                          </span>
+                          <span className="text-text-secondary">•</span>
+                          <span className="text-xs text-text-secondary">
+                            {t.account?.name || "Unknown"}
+                          </span>
+                          {t.notes && (
+                            <>
+                              <span className="text-text-secondary">•</span>
+                              <Icon
+                                name="memo"
+                                size={12}
+                                className="text-text-secondary"
+                              />
+                            </>
+                          )}
+                        </div>
+                      </div>
 
-            {t.notes && (
-              <div className="mt-2 pt-2 border-t border-border">
-                <p className="text-xs text-muted line-clamp-2">
-                  <Icon name="memo" size={12} className="inline mr-1" />
-                  {t.notes}
-                </p>
+                      {/* Amount */}
+                      <div className="text-right">
+                        <span
+                          className={`font-mono font-bold ${
+                            t.amount > 0 ? "text-growth" : "text-foreground"
+                          }`}
+                        >
+                          {t.amount > 0 ? "+" : ""}€
+                          {Math.abs(t.amount).toLocaleString("de-DE", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          ),
+        )}
       </div>
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(totalCount / itemsPerPage)}
-        totalItems={totalCount}
-        itemsPerPage={itemsPerPage}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(newItemsPerPage) => {
-          setItemsPerPage(newItemsPerPage);
-          setCurrentPage(1); // Reset to first page when changing items per page
-        }}
-      />
+      <div className="mt-6 pt-6 border-t border-border">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(totalCount / itemsPerPage)}
+          totalItems={totalCount}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(newItemsPerPage) => {
+            setItemsPerPage(newItemsPerPage);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
 
       {/* Transaction Detail Modal */}
       {selectedTransactionId && (
@@ -278,10 +330,10 @@ export default function TransactionsList({
           onClose={() => setSelectedTransactionId(null)}
           onUpdate={() => {
             setSelectedTransactionId(null);
-            fetchTransactions(); // Refresh list after edit/delete
+            fetchTransactions();
           }}
         />
       )}
-    </>
+    </div>
   );
 }

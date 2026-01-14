@@ -7,6 +7,14 @@ import NavBar from "@/components/NavBar";
 import GoalCard from "@/components/GoalCard";
 import GoalModal from "@/components/GoalModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import { Card, MotionCard } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { AmountDisplay } from "@/components/ui/AmountDisplay";
+import Icon from "@/components/icons/Icon";
+import Image from "next/image";
+import { motion } from "motion/react";
 
 interface Goal {
   id: string;
@@ -64,8 +72,6 @@ export default function GoalsPage() {
   };
 
   const handleAddMoney = (goal: Goal) => {
-    // For now, re-use edit modal but maybe pre-focus amount?
-    // Or just open edit modal is fine for MVP
     setEditingGoal(goal);
     setShowModal(true);
   };
@@ -84,7 +90,7 @@ export default function GoalsPage() {
         throw new Error(data.error || "Failed to delete goal");
       }
 
-      showSuccess("Goal deleted successfully");
+      showSuccess("Goal removed from your garden");
       fetchGoals();
       setDeletingGoal(null);
     } catch (error) {
@@ -98,102 +104,244 @@ export default function GoalsPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
 
   const totalSaved = goals.reduce((sum, g) => sum + g.current_amount, 0);
   const totalTarget = goals.reduce((sum, g) => sum + g.target_amount, 0);
+  const overallProgress =
+    totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
+
+  const activeGoals = goals.filter((g) => g.current_amount < g.target_amount);
+  const completedGoals = goals.filter(
+    (g) => g.current_amount >= g.target_amount,
+  );
 
   return (
     <>
       <NavBar />
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-foreground mb-2">
-                Savings Goals
-              </h1>
-              <p className="text-muted">
-                Track your progress towards financial targets
-              </p>
-            </div>
-            <button
-              onClick={handleCreate}
-              className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+      <div className="min-h-screen bg-background">
+        {/* Hero Header */}
+        <div className="bg-gradient-to-br from-growth-pale via-cream to-primary-pale">
+          <div className="max-w-6xl mx-auto px-6 py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col md:flex-row md:items-center justify-between gap-6"
             >
-              <span className="text-xl">+</span>
-              New Goal
-            </button>
-          </div>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <motion.span
+                    className="text-4xl"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    🌱
+                  </motion.span>
+                  <h1 className="text-4xl font-display font-bold text-foreground">
+                    Dream Garden
+                  </h1>
+                </div>
+                <p className="text-text-secondary text-lg">
+                  Plant your dreams and watch them bloom into reality
+                </p>
+              </div>
 
+              <Button onClick={handleCreate} variant="bloom" size="lg" pill>
+                <Icon name="plus" size={20} />
+                Plant a new seed
+              </Button>
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 py-8">
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-muted text-sm font-medium mb-2">
-                Total Saved
-              </h3>
-              <p className="text-3xl font-bold text-success">
-                €{totalSaved.toLocaleString()}
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-muted text-sm font-medium mb-2">
-                Total Target
-              </h3>
-              <p className="text-3xl font-bold text-foreground">
-                €{totalTarget.toLocaleString()}
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-muted text-sm font-medium mb-2">
-                Overall Progress
-              </h3>
-              <p className="text-3xl font-bold text-primary">
-                {totalTarget > 0
-                  ? ((totalSaved / totalTarget) * 100).toFixed(1)
-                  : 0}
-                %
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-16">
+            <MotionCard
+              variant="glass"
+              transition={{ delay: 0.1 }}
+              className="backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-growth-pale rounded-2xl">
+                  <Icon name="trending_up" size={24} className="text-growth" />
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary font-medium">
+                    Total Saved
+                  </p>
+                  <AmountDisplay
+                    value={totalSaved}
+                    currency="EUR"
+                    variant="income"
+                    size="md"
+                  />
+                </div>
+              </div>
+            </MotionCard>
+
+            <MotionCard
+              variant="glass"
+              transition={{ delay: 0.2 }}
+              className="backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary-pale rounded-2xl">
+                  <Icon name="flag" size={24} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary font-medium">
+                    Total Target
+                  </p>
+                  <AmountDisplay value={totalTarget} currency="EUR" size="md" />
+                </div>
+              </div>
+            </MotionCard>
+
+            <MotionCard
+              variant="glass"
+              transition={{ delay: 0.3 }}
+              className="backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <ProgressRing
+                  progress={overallProgress}
+                  size="md"
+                  color={overallProgress >= 75 ? "growth" : "primary"}
+                />
+                <div>
+                  <p className="text-sm text-text-secondary font-medium">
+                    Garden Growth
+                  </p>
+                  <p className="text-2xl font-bold text-foreground font-mono">
+                    {overallProgress.toFixed(0)}%
+                  </p>
+                </div>
+              </div>
+            </MotionCard>
           </div>
 
           {loading ? (
-            <div className="text-center py-12 text-muted">Loading goals...</div>
-          ) : goals.length === 0 ? (
-            <div className="text-center py-16 bg-surface/50 border border-border rounded-2xl border-dashed">
-              <div className="w-16 h-16 bg-surface-alt rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">🎯</span>
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                No goals yet
-              </h3>
-              <p className="text-muted mb-6">
-                Create your first savings goal to start tracking
-              </p>
-              <button
-                onClick={handleCreate}
-                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-all"
-              >
-                Create Goal
-              </button>
-            </div>
-          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {goals.map((goal) => (
-                <GoalCard
-                  key={goal.id}
-                  goal={goal}
-                  onEdit={handleEdit}
-                  onDelete={() => setDeletingGoal(goal)}
-                  onAddMoney={handleAddMoney}
-                />
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <div className="h-6 w-32 bg-sand rounded-lg mb-4" />
+                  <div className="h-8 w-48 bg-sand rounded-lg mb-4" />
+                  <div className="h-3 bg-sand rounded-full mb-4" />
+                  <div className="h-10 bg-sand rounded-2xl" />
+                </Card>
               ))}
             </div>
+          ) : goals.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <EmptyState
+                illustration="plant"
+                title="Your garden awaits"
+                description="Plant your first seed and watch your savings grow into something beautiful."
+                action={{
+                  label: "Plant your first seed",
+                  onClick: handleCreate,
+                  variant: "bloom",
+                }}
+              />
+            </motion.div>
+          ) : (
+            <div className="space-y-8">
+              {/* Active Goals */}
+              {activeGoals.length > 0 && (
+                <section>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 mb-6"
+                  >
+                    <span className="text-2xl">🌿</span>
+                    <h2 className="text-2xl font-display font-bold text-foreground">
+                      Growing
+                    </h2>
+                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                      {activeGoals.length} goal
+                      {activeGoals.length > 1 ? "s" : ""}
+                    </span>
+                  </motion.div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activeGoals.map((goal, index) => (
+                      <GoalCard
+                        key={goal.id}
+                        goal={goal}
+                        onEdit={handleEdit}
+                        onDelete={() => setDeletingGoal(goal)}
+                        onAddMoney={handleAddMoney}
+                        index={index}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Completed Goals */}
+              {completedGoals.length > 0 && (
+                <section>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center gap-2 mb-6"
+                  >
+                    <span className="text-2xl">🌸</span>
+                    <h2 className="text-2xl font-display font-bold text-foreground">
+                      Bloomed
+                    </h2>
+                    <span className="text-sm text-growth bg-growth-pale px-3 py-1 rounded-full ml-2">
+                      {completedGoals.length} achieved!
+                    </span>
+                  </motion.div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {completedGoals.map((goal, index) => (
+                      <GoalCard
+                        key={goal.id}
+                        goal={goal}
+                        onEdit={handleEdit}
+                        onDelete={() => setDeletingGoal(goal)}
+                        onAddMoney={handleAddMoney}
+                        index={index}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
           )}
+
+          {/* Floating Add Button (Mobile) */}
+          <motion.div
+            className="fixed bottom-6 right-6 md:hidden"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+          >
+            <Button
+              onClick={handleCreate}
+              variant="bloom"
+              size="lg"
+              className="w-14 h-14 rounded-full shadow-lg p-0"
+            >
+              <Icon name="plus" size={24} />
+            </Button>
+          </motion.div>
 
           {/* Modals */}
           {showModal && (
@@ -213,8 +361,8 @@ export default function GoalsPage() {
 
           {deletingGoal && (
             <DeleteConfirmModal
-              title="Delete Goal"
-              message="Are you sure you want to delete this savings goal? This action cannot be undone."
+              title="Remove from Garden"
+              message="Are you sure you want to remove this goal? All progress will be lost and cannot be recovered."
               itemName={deletingGoal.name}
               onConfirm={handleDelete}
               onCancel={() => setDeletingGoal(null)}

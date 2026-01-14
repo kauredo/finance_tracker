@@ -93,6 +93,16 @@ export const icons = {
   eye: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z",
   eye_off:
     "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21",
+  upload:
+    "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12",
+  user_plus:
+    "M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z",
+  wallet:
+    "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
+  trending_up: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
+  flag: "M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z",
+  menu: "M4 6h16M4 12h16M4 18h16",
+  arrow_left: "M10 19l-7-7m0 0l7-7m-7 7h18",
 };
 
 export type IconName =
@@ -138,7 +148,21 @@ export type IconName =
   | "gift"
   | "electronics"
   | "eye"
-  | "eye_off";
+  | "eye_off"
+  | "wallet"
+  | "personal"
+  | "joint"
+  | "user"
+  | "lock"
+  | "memo"
+  | "tip"
+  | "calendar"
+  | "cross"
+  | "expense"
+  | "trending_up"
+  | "flag"
+  | "menu"
+  | "arrow_left";
 
 // Overwriting piggy_bank with a better "Savings" icon (Piggy bank style)
 // M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z is moon

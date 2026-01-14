@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import BudgetCard from "@/components/BudgetCard";
+import { Card, MotionCard } from "@/components/ui/Card";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { AmountDisplay } from "@/components/ui/AmountDisplay";
+import { EmptyState } from "@/components/ui/EmptyState";
+import Icon from "@/components/icons/Icon";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { startOfMonth, endOfMonth, format } from "date-fns";
+import { motion } from "motion/react";
 
 interface Category {
   id: string;
@@ -21,10 +28,40 @@ interface Budget {
   period: string;
 }
 
-interface Transaction {
-  amount: number;
-  category_id: string;
-  type: string; // 'income' | 'expense' (derived)
+// Get overall budget health
+function getOverallHealth(percentage: number): {
+  emoji: string;
+  label: string;
+  description: string;
+  color: "growth" | "primary" | "warning" | "danger";
+} {
+  if (percentage <= 50)
+    return {
+      emoji: "🌿",
+      label: "Thriving",
+      description: "Your budget garden is flourishing!",
+      color: "growth",
+    };
+  if (percentage <= 80)
+    return {
+      emoji: "🌱",
+      label: "Growing",
+      description: "Good progress, keep nurturing!",
+      color: "primary",
+    };
+  if (percentage <= 100)
+    return {
+      emoji: "🍂",
+      label: "Needs attention",
+      description: "Time to tend to your spending",
+      color: "warning",
+    };
+  return {
+    emoji: "🥀",
+    label: "Over budget",
+    description: "Let's get back on track",
+    color: "danger",
+  };
 }
 
 export default function BudgetsPage() {
@@ -93,7 +130,7 @@ export default function BudgetsPage() {
       });
 
       if (res.ok) {
-        fetchData(); // Refresh data
+        fetchData();
       }
     } catch (error) {
       console.error("Error saving budget:", error);
@@ -107,7 +144,7 @@ export default function BudgetsPage() {
       });
 
       if (res.ok) {
-        fetchData(); // Refresh data
+        fetchData();
       }
     } catch (error) {
       console.error("Error deleting budget:", error);
@@ -117,7 +154,12 @@ export default function BudgetsPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
@@ -131,85 +173,233 @@ export default function BudgetsPage() {
     return a.name.localeCompare(b.name);
   });
 
+  const categoriesWithBudgets = sortedCategories.filter((c) =>
+    budgets.some((b) => b.category_id === c.id),
+  );
+  const categoriesWithoutBudgets = sortedCategories.filter(
+    (c) => !budgets.some((b) => b.category_id === c.id),
+  );
+
   const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
   const totalSpent = Object.values(spending).reduce((sum, val) => sum + val, 0);
-  const totalProgress =
-    totalBudget > 0 ? Math.min((totalSpent / totalBudget) * 100, 100) : 0;
+  const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const remaining = totalBudget - totalSpent;
+
+  const health = getOverallHealth(totalProgress);
 
   return (
     <>
       <NavBar />
-      <div className="min-h-screen bg-background p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-2">
-              Monthly Budgets
-            </h1>
-            <p className="text-muted">
-              Set limits and track your spending for{" "}
-              {format(new Date(), "MMMM yyyy")}
-            </p>
-          </div>
-
-          {/* Summary Card */}
-          <div className="bg-surface border border-border rounded-xl p-6 mb-8 shadow-sm">
-            <div className="flex justify-between items-end mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">
-                  Total Budget
-                </h2>
-                <div className="text-3xl font-bold text-foreground mt-1">
-                  €{totalSpent.toFixed(2)}{" "}
-                  <span className="text-muted text-lg font-normal">
-                    / €{totalBudget.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div
-                  className={`text-lg font-bold ${totalSpent > totalBudget ? "text-danger" : "text-success"}`}
+      <div className="min-h-screen bg-background">
+        {/* Hero Header */}
+        <div className="bg-gradient-to-br from-primary-pale via-cream to-growth-pale">
+          <div className="max-w-6xl mx-auto px-6 py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <motion.span
+                  className="text-4xl"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                 >
-                  {totalBudget > 0
-                    ? ((totalSpent / totalBudget) * 100).toFixed(0)
-                    : 0}
-                  %
-                </div>
-                <div className="text-sm text-muted">Used</div>
+                  🌻
+                </motion.span>
+                <h1 className="text-4xl font-display font-bold text-foreground">
+                  Budget Garden
+                </h1>
               </div>
-            </div>
-            <div className="h-4 bg-surface-alt rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ${totalSpent > totalBudget ? "bg-danger" : "bg-success"}`}
-                style={{ width: `${totalProgress}%` }}
-              />
-            </div>
+              <p className="text-text-secondary text-lg">
+                Nurture your spending habits for{" "}
+                {format(new Date(), "MMMM yyyy")}
+              </p>
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-16">
+            {/* Total Spent */}
+            <MotionCard
+              variant="glass"
+              transition={{ delay: 0.1 }}
+              className="backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <ProgressRing
+                  progress={Math.min(totalProgress, 100)}
+                  size="lg"
+                  color={health.color}
+                />
+                <div>
+                  <p className="text-sm text-text-secondary font-medium">
+                    Spent this month
+                  </p>
+                  <AmountDisplay
+                    value={totalSpent}
+                    currency="EUR"
+                    size="md"
+                    variant={totalSpent > totalBudget ? "expense" : "default"}
+                  />
+                </div>
+              </div>
+            </MotionCard>
+
+            {/* Total Budget */}
+            <MotionCard
+              variant="glass"
+              transition={{ delay: 0.2 }}
+              className="backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary-pale rounded-2xl">
+                  <Icon name="flag" size={24} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-text-secondary font-medium">
+                    Total Budget
+                  </p>
+                  <AmountDisplay value={totalBudget} currency="EUR" size="md" />
+                </div>
+              </div>
+            </MotionCard>
+
+            {/* Health Status */}
+            <MotionCard
+              variant="glass"
+              transition={{ delay: 0.3 }}
+              className="backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="text-4xl">{health.emoji}</div>
+                <div>
+                  <p className="text-sm text-text-secondary font-medium">
+                    Garden Status
+                  </p>
+                  <p className="text-lg font-display font-bold text-foreground">
+                    {health.label}
+                  </p>
+                  <p className="text-xs text-text-secondary">
+                    {remaining > 0
+                      ? `€${remaining.toFixed(2)} remaining`
+                      : `€${Math.abs(remaining).toFixed(2)} over budget`}
+                  </p>
+                </div>
+              </div>
+            </MotionCard>
           </div>
 
-          {/* Budget Grid */}
           {loading ? (
-            <div className="text-center py-12 text-muted">
-              Loading budgets...
-            </div>
-          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedCategories.map((category) => {
-                const budget = budgets.find(
-                  (b) => b.category_id === category.id,
-                );
-                const spent = spending[category.id] || 0;
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 bg-sand rounded-full" />
+                    <div className="flex-1">
+                      <div className="h-5 w-24 bg-sand rounded mb-2" />
+                      <div className="h-4 w-16 bg-sand rounded" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-sand rounded-full mb-3" />
+                  <div className="h-4 w-full bg-sand rounded" />
+                </Card>
+              ))}
+            </div>
+          ) : budgets.length === 0 && categories.length === 0 ? (
+            <EmptyState
+              illustration="chart"
+              title="No categories yet"
+              description="Create some spending categories first, then set budgets to track your spending."
+              action={{
+                label: "Go to Categories",
+                onClick: () => (window.location.href = "/categories"),
+              }}
+            />
+          ) : (
+            <div className="space-y-10">
+              {/* Active Budgets */}
+              {categoriesWithBudgets.length > 0 && (
+                <section>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 mb-6"
+                  >
+                    <span className="text-2xl">🌱</span>
+                    <h2 className="text-2xl font-display font-bold text-foreground">
+                      Active Budgets
+                    </h2>
+                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                      {categoriesWithBudgets.length} planted
+                    </span>
+                  </motion.div>
 
-                return (
-                  <BudgetCard
-                    key={category.id}
-                    category={category}
-                    budget={budget}
-                    spent={spent}
-                    onSave={(amount) => handleSaveBudget(category.id, amount)}
-                    onDelete={() => handleDeleteBudget(budget!.id)}
-                  />
-                );
-              })}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoriesWithBudgets.map((category, index) => {
+                      const budget = budgets.find(
+                        (b) => b.category_id === category.id,
+                      );
+                      const spent = spending[category.id] || 0;
+
+                      return (
+                        <BudgetCard
+                          key={category.id}
+                          category={category}
+                          budget={budget}
+                          spent={spent}
+                          onSave={(amount) =>
+                            handleSaveBudget(category.id, amount)
+                          }
+                          onDelete={() => handleDeleteBudget(budget!.id)}
+                          index={index}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {/* Categories without budgets */}
+              {categoriesWithoutBudgets.length > 0 && (
+                <section>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center gap-2 mb-6"
+                  >
+                    <span className="text-2xl">🌰</span>
+                    <h2 className="text-2xl font-display font-bold text-foreground">
+                      Ready to Plant
+                    </h2>
+                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                      {categoriesWithoutBudgets.length} available
+                    </span>
+                  </motion.div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoriesWithoutBudgets.map((category, index) => {
+                      const spent = spending[category.id] || 0;
+
+                      return (
+                        <BudgetCard
+                          key={category.id}
+                          category={category}
+                          budget={undefined}
+                          spent={spent}
+                          onSave={(amount) =>
+                            handleSaveBudget(category.id, amount)
+                          }
+                          onDelete={async () => {}}
+                          index={index}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
             </div>
           )}
         </div>

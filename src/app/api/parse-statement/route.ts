@@ -25,7 +25,6 @@ const NodeCanvasFactory = {
   },
 };
 
-
 export async function POST(req: NextRequest) {
   try {
     // 1. Check authentication
@@ -178,7 +177,7 @@ export async function POST(req: NextRequest) {
           // Process each page
           for (let pageNum = 1; pageNum <= numPages; pageNum++) {
             const page = await pdfDocument.getPage(pageNum);
-            
+
             // Use a high scale for better quality
             const scale = 2.0;
             const viewport = page.getViewport({ scale });
@@ -219,12 +218,11 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      console.log(`Calling vision API with ${base64Images.length} PDF page(s)...`);
-      const pdfTransactions = await parseStatementWithVision(base64Images);
       console.log(
-        "Extracted transactions from PDF:",
-        pdfTransactions.length,
+        `Calling vision API with ${base64Images.length} PDF page(s)...`,
       );
+      const pdfTransactions = await parseStatementWithVision(base64Images);
+      console.log("Extracted transactions from PDF:", pdfTransactions.length);
       transactions.push(...pdfTransactions);
     }
 
@@ -248,7 +246,7 @@ export async function POST(req: NextRequest) {
         }
 
         console.log(`Processing text file ${file.filePath}`);
-        
+
         // Get raw buffer
         const arrayBuffer = await fileData.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
@@ -256,7 +254,9 @@ export async function POST(req: NextRequest) {
         // Detect encoding
         const detected = jschardet.detect(buffer);
         const encoding = detected.encoding || "utf-8";
-        console.log(`Detected encoding for ${file.filePath}: ${encoding} (confidence: ${detected.confidence})`);
+        console.log(
+          `Detected encoding for ${file.filePath}: ${encoding} (confidence: ${detected.confidence})`,
+        );
 
         // Decode content
         let fileContent = iconv.decode(buffer, encoding);
@@ -268,21 +268,26 @@ export async function POST(req: NextRequest) {
 
         // Parse CSV/TSV to JSON if possible
         if (fileType === "csv" || file.filePath.endsWith(".tsv")) {
-           const parseResult = Papa.parse(fileContent, {
-             header: true,
-             skipEmptyLines: true,
-           });
-           
-           if (parseResult.errors.length > 0) {
-             console.warn(`CSV parsing warnings for ${file.filePath}:`, parseResult.errors);
-           }
-           
-           // If parsing was successful and we have data, use the JSON string
-           if (parseResult.data && parseResult.data.length > 0) {
-             console.log(`Successfully parsed ${parseResult.data.length} rows from CSV`);
-             fileContent = JSON.stringify(parseResult.data, null, 2);
-             console.log(fileContent);
-           }
+          const parseResult = Papa.parse(fileContent, {
+            header: true,
+            skipEmptyLines: true,
+          });
+
+          if (parseResult.errors.length > 0) {
+            console.warn(
+              `CSV parsing warnings for ${file.filePath}:`,
+              parseResult.errors,
+            );
+          }
+
+          // If parsing was successful and we have data, use the JSON string
+          if (parseResult.data && parseResult.data.length > 0) {
+            console.log(
+              `Successfully parsed ${parseResult.data.length} rows from CSV`,
+            );
+            fileContent = JSON.stringify(parseResult.data, null, 2);
+            console.log(fileContent);
+          }
         }
 
         const textTransactions = await parseStatementWithAI(

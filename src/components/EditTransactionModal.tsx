@@ -183,8 +183,14 @@ export default function EditTransactionModal({
                     transactionType: "expense",
                   }))
                 }
-                variant={formData.transactionType === "expense" ? "danger" : "secondary"}
-                className={formData.transactionType === "expense" ? "shadow-lg" : ""}
+                variant={
+                  formData.transactionType === "expense"
+                    ? "danger"
+                    : "secondary"
+                }
+                className={
+                  formData.transactionType === "expense" ? "shadow-lg" : ""
+                }
               >
                 <Icon name="expense" size={16} />
                 Expense
@@ -197,8 +203,16 @@ export default function EditTransactionModal({
                     transactionType: "income",
                   }))
                 }
-                variant={formData.transactionType === "income" ? "primary" : "secondary"}
-                className={formData.transactionType === "income" ? "bg-success hover:bg-success/90 shadow-lg" : ""}
+                variant={
+                  formData.transactionType === "income"
+                    ? "primary"
+                    : "secondary"
+                }
+                className={
+                  formData.transactionType === "income"
+                    ? "bg-success hover:bg-success/90 shadow-lg"
+                    : ""
+                }
               >
                 <Icon name="income" size={16} />
                 Income

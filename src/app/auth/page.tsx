@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -55,7 +56,12 @@ export default function AuthPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted">Loading...</div>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Image src="/logo.png" alt="Loading" width={48} height={48} />
+        </motion.div>
       </div>
     );
   }
@@ -65,163 +71,311 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-block mb-6">
+    <div className="min-h-screen flex bg-background">
+      {/* Left side - Decorative */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-pale via-cream to-growth-pale relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <pattern
+              id="pattern"
+              x="0"
+              y="0"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle
+                cx="20"
+                cy="20"
+                r="2"
+                fill="currentColor"
+                className="text-primary/20"
+              />
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#pattern)" />
+          </svg>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+            className="mb-8"
+          >
             <Image
               src="/logo.png"
               alt="Wallet Joy"
-              width={120}
-              height={120}
-              priority
+              width={180}
+              height={180}
+              className="drop-shadow-lg"
             />
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Wallet Joy
-          </h1>
-          <p className="text-muted text-sm">Manage your finances together</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-center max-w-md"
+          >
+            <h1 className="text-4xl font-display font-bold text-foreground mb-4">
+              Grow Your Savings
+            </h1>
+            <p className="text-lg text-text-secondary">
+              Plant the seeds of financial wellness. Track expenses, set goals,
+              and watch your wealth bloom.
+            </p>
+          </motion.div>
+
+          {/* Floating elements */}
+          <motion.div
+            className="absolute top-20 left-20 text-4xl"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            🌱
+          </motion.div>
+          <motion.div
+            className="absolute bottom-32 right-24 text-4xl"
+            animate={{ y: [0, -15, 0] }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1,
+            }}
+          >
+            🌸
+          </motion.div>
+          <motion.div
+            className="absolute top-1/3 right-16 text-3xl"
+            animate={{ y: [0, -8, 0] }}
+            transition={{
+              duration: 3.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5,
+            }}
+          >
+            💰
+          </motion.div>
         </div>
+      </div>
 
-        <Card>
-          <CardContent className="p-8">
-            {signupSuccess ? (
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-success-light rounded-full flex items-center justify-center mb-4">
-                  <svg
-                    className="w-8 h-8 text-success"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">
-                  Check your email
-                </h3>
-                <p className="text-muted text-sm">
-                  We've sent you a confirmation link. Please check your inbox.
-                </p>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setSignupSuccess(false);
-                    setIsLogin(true);
-                  }}
-                  className="mt-4"
-                >
-                  Back to login
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Simple Tab Switcher */}
-                <div className="flex border-b border-border mb-6">
-                  <button
-                    onClick={() => {
-                      setIsLogin(true);
-                      setError("");
-                    }}
-                    className={`flex-1 pb-3 text-sm font-medium transition-colors border-b-2 ${
-                      isLogin
-                        ? "border-primary text-foreground"
-                        : "border-transparent text-muted hover:text-foreground"
-                    }`}
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsLogin(false);
-                      setError("");
-                    }}
-                    className={`flex-1 pb-3 text-sm font-medium transition-colors border-b-2 ${
-                      !isLogin
-                        ? "border-primary text-foreground"
-                        : "border-transparent text-muted hover:text-foreground"
-                    }`}
-                  >
-                    Sign Up
-                  </button>
-                </div>
+      {/* Right side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center mb-8 lg:hidden"
+          >
+            <Image
+              src="/logo.png"
+              alt="Wallet Joy"
+              width={100}
+              height={100}
+              className="mx-auto mb-4"
+            />
+            <h1 className="text-2xl font-display font-bold text-foreground">
+              Wallet Joy
+            </h1>
+          </motion.div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {!isLogin && (
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Full Name
-                      </label>
-                      <Input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="John Doe"
-                        required={!isLogin}
-                      />
+          {/* Desktop heading */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="hidden lg:block mb-8"
+          >
+            <h2 className="text-3xl font-display font-bold text-foreground mb-2">
+              {isLogin ? "Welcome back!" : "Start your journey"}
+            </h2>
+            <p className="text-text-secondary">
+              {isLogin
+                ? "Sign in to continue nurturing your finances"
+                : "Create an account and plant the seeds of your financial future"}
+            </p>
+          </motion.div>
+
+          <Card className="border-0 shadow-xl">
+            <CardContent className="p-8">
+              <AnimatePresence mode="wait">
+                {signupSuccess ? (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="text-center space-y-4"
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{
+                        delay: 0.2,
+                        type: "spring",
+                        stiffness: 200,
+                      }}
+                      className="w-20 h-20 mx-auto bg-growth-pale rounded-full flex items-center justify-center mb-4"
+                    >
+                      <span className="text-4xl">🌱</span>
+                    </motion.div>
+                    <h3 className="text-xl font-display font-bold text-foreground">
+                      Seed planted!
+                    </h3>
+                    <p className="text-text-secondary">
+                      Check your email to confirm your account and start growing
+                      your financial garden.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSignupSuccess(false);
+                        setIsLogin(true);
+                      }}
+                      className="mt-4"
+                    >
+                      Back to login
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    {/* Tab Switcher */}
+                    <div className="flex bg-sand rounded-2xl p-1 mb-8">
+                      <button
+                        onClick={() => {
+                          setIsLogin(true);
+                          setError("");
+                        }}
+                        className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
+                          isLogin
+                            ? "bg-surface text-foreground shadow-sm"
+                            : "text-text-secondary hover:text-foreground"
+                        }`}
+                      >
+                        Sign In
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsLogin(false);
+                          setError("");
+                        }}
+                        className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${
+                          !isLogin
+                            ? "bg-surface text-foreground shadow-sm"
+                            : "text-text-secondary hover:text-foreground"
+                        }`}
+                      >
+                        Sign Up
+                      </button>
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Email
-                    </label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      error={!!error}
-                    />
-                  </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <AnimatePresence mode="wait">
+                        {!isLogin && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Input
+                              label="Full Name"
+                              type="text"
+                              value={fullName}
+                              onChange={(e) => setFullName(e.target.value)}
+                              placeholder="Your name"
+                              required={!isLogin}
+                              icon={<Icon name="user" size={20} />}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Password
-                    </label>
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
-                      required
-                      error={!!error}
-                      helperText={error}
-                      endIcon={
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="focus:outline-none hover:text-foreground transition-colors"
-                        >
-                          <Icon
-                            name={showPassword ? "eye_off" : "eye"}
-                            size={20}
-                          />
-                        </button>
-                      }
-                    />
-                  </div>
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        required
+                        error={!!error}
+                      />
 
-                  <Button
-                    type="submit"
-                    isLoading={loading}
-                    className="w-full mt-6"
-                    size="lg"
-                  >
-                    {isLogin ? "Sign In" : "Create Account"}
-                  </Button>
-                </form>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                      <Input
+                        label="Password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        required
+                        error={!!error}
+                        helperText={error}
+                        icon={<Icon name="lock" size={20} />}
+                        endIcon={
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="focus:outline-none hover:text-foreground transition-colors"
+                          >
+                            <Icon
+                              name={showPassword ? "eye_off" : "eye"}
+                              size={20}
+                            />
+                          </button>
+                        }
+                      />
+
+                      <Button
+                        type="submit"
+                        isLoading={loading}
+                        className="w-full mt-2"
+                        size="lg"
+                        pill
+                      >
+                        {isLogin ? "Sign In" : "Create Account"}
+                      </Button>
+                    </form>
+
+                    {/* Footer text */}
+                    <p className="text-center text-sm text-text-secondary mt-6">
+                      {isLogin ? (
+                        <>
+                          New to Wallet Joy?{" "}
+                          <button
+                            onClick={() => setIsLogin(false)}
+                            className="text-primary font-medium hover:underline"
+                          >
+                            Create an account
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          Already have an account?{" "}
+                          <button
+                            onClick={() => setIsLogin(true)}
+                            className="text-primary font-medium hover:underline"
+                          >
+                            Sign in
+                          </button>
+                        </>
+                      )}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

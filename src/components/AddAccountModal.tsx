@@ -109,7 +109,11 @@ export default function AddAccountModal({
                 type="button"
                 onClick={() => setAccountType("personal")}
                 variant={accountType === "personal" ? "primary" : "secondary"}
-                className={accountType === "personal" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : ""}
+                className={
+                  accountType === "personal"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                    : ""
+                }
               >
                 <Icon name="personal" size={20} />
                 Personal
@@ -118,7 +122,11 @@ export default function AddAccountModal({
                 type="button"
                 onClick={() => setAccountType("joint")}
                 variant={accountType === "joint" ? "primary" : "secondary"}
-                className={accountType === "joint" ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" : ""}
+                className={
+                  accountType === "joint"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                    : ""
+                }
               >
                 <Icon name="joint" size={20} />
                 Joint

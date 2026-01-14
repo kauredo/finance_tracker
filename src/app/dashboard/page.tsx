@@ -11,11 +11,21 @@ import AddAccountModal from "@/components/AddAccountModal";
 import InvitePartnerModal from "@/components/InvitePartnerModal";
 import TransactionsList from "@/components/TransactionsList";
 import { Button } from "@/components/ui/Button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  MotionCard,
+} from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import GoalsWidget from "@/components/dashboard/GoalsWidget";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { motion } from "motion/react";
+import Icon from "@/components/icons/Icon";
 
 import { createClient } from "@/utils/supabase/client";
 
@@ -25,6 +35,14 @@ interface DashboardStats {
   savings: number;
   totalBudget: number;
   budgetSpent: number;
+  totalIncome: number;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function DashboardPage() {
@@ -35,6 +53,7 @@ export default function DashboardPage() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const [userName, setUserName] = useState("");
 
   // Filters
   const [dateRange, setDateRange] = useState({
@@ -49,6 +68,7 @@ export default function DashboardPage() {
     savings: 0,
     totalBudget: 0,
     budgetSpent: 0,
+    totalIncome: 0,
   });
 
   useEffect(() => {
@@ -57,8 +77,26 @@ export default function DashboardPage() {
     } else if (user) {
       fetchDashboardData();
       checkWelcomeTour();
+      fetchUserProfile();
     }
   }, [user, loading, router, dateRange, selectedAccount]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const supabase = createClient();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user!.id)
+        .single();
+
+      if (profile?.full_name) {
+        setUserName(profile.full_name.split(" ")[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   const checkWelcomeTour = async () => {
     try {
@@ -105,7 +143,7 @@ export default function DashboardPage() {
         .then((res) => res.json())
         .then((data) => {
           if (data.processed > 0) {
-            fetchDashboardData(); // Refresh if new transactions were created
+            fetchDashboardData();
           }
         })
         .catch((err) => console.error("Error processing recurring:", err));
@@ -125,22 +163,18 @@ export default function DashboardPage() {
           const amount = curr.amount;
           const date = new Date(curr.date);
 
-          // Total Expenses (negative amounts)
           if (amount < 0) {
             acc.totalExpenses += Math.abs(amount);
-
-            // Monthly Expenses
             if (
               date.getMonth() === currentMonth &&
               date.getFullYear() === currentYear
             ) {
               acc.monthlyExpenses += Math.abs(amount);
             }
+          } else {
+            acc.totalIncome += amount;
           }
-
-          // Savings (Income - Expenses)
           acc.savings += amount;
-
           return acc;
         },
         {
@@ -149,6 +183,7 @@ export default function DashboardPage() {
           savings: 0,
           totalBudget: 0,
           budgetSpent: 0,
+          totalIncome: 0,
         },
       );
 
@@ -157,7 +192,6 @@ export default function DashboardPage() {
 
       if (budgets) {
         newStats.totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
-        // We already calculated monthly expenses, which is essentially budget spent
         newStats.budgetSpent = newStats.monthlyExpenses;
       }
 
@@ -172,6 +206,10 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background">
         <NavBar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <Skeleton variant="text" className="w-48 h-8 mb-2" />
+            <Skeleton variant="text" className="w-64 h-6" />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
@@ -182,186 +220,377 @@ export default function DashboardPage() {
               </Card>
             ))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <Card className="h-full">
-              <CardContent className="pt-6">
-                <Skeleton variant="text" className="w-32 h-6 mb-4" />
-                <Skeleton
-                  variant="rectangle"
-                  className="w-full h-4 rounded-full"
-                />
-              </CardContent>
-            </Card>
-            <Card className="h-full">
-              <CardContent className="pt-6">
-                <Skeleton variant="text" className="w-32 h-6 mb-4" />
-                <Skeleton
-                  variant="rectangle"
-                  className="w-full h-32 rounded-lg"
-                />
-              </CardContent>
-            </Card>
-          </div>
         </main>
       </div>
     );
   }
 
+  const budgetPercentage =
+    stats.totalBudget > 0
+      ? Math.min((stats.budgetSpent / stats.totalBudget) * 100, 100)
+      : 0;
+  const budgetColor =
+    budgetPercentage > 90
+      ? "danger"
+      : budgetPercentage > 70
+        ? "warning"
+        : "growth";
+
   return (
     <div key={pathname} className="min-h-screen bg-background">
       <NavBar />
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent>
-              <div className="text-muted text-sm font-medium mb-2">
-                Total Expenses
-              </div>
-              <div className="text-3xl font-bold text-foreground">
-                €{stats.totalExpenses.toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent>
-              <div className="text-muted text-sm font-medium mb-2">
-                This Month
-              </div>
-              <div className="text-3xl font-bold text-foreground">
-                €{stats.monthlyExpenses.toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent>
-              <div className="text-muted text-sm font-medium mb-2">Savings</div>
-              <div
-                className={`text-3xl font-bold ${stats.savings >= 0 ? "text-success" : "text-red-500"}`}
-              >
-                €{stats.savings.toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Header with greeting */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+            {getGreeting()}
+            {userName ? `, ${userName}` : ""}!
+          </h1>
+          <p className="text-text-secondary mt-2">
+            Here&apos;s how your finances are growing today.
+          </p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Budget Overview */}
-          <Card className="h-full">
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-end mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    Monthly Budget
-                  </h2>
-                  <div className="text-3xl font-bold text-foreground mt-1">
-                    €{stats.budgetSpent.toFixed(2)}{" "}
-                    <span className="text-muted text-lg font-normal">
-                      / €{stats.totalBudget.toFixed(2)}
+        {/* Hero Balance Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <Card variant="growing" className="p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div>
+                <p className="text-sm text-text-secondary font-medium uppercase tracking-wide mb-2">
+                  Net Balance
+                </p>
+                <AmountDisplay
+                  value={stats.savings}
+                  size="hero"
+                  variant={stats.savings >= 0 ? "income" : "expense"}
+                  animated
+                />
+                <div className="flex items-center gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-growth" />
+                    <span className="text-sm text-text-secondary">
+                      Income:{" "}
+                      <span className="text-growth font-medium">
+                        €{stats.totalIncome.toFixed(0)}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-expense" />
+                    <span className="text-sm text-text-secondary">
+                      Expenses:{" "}
+                      <span className="text-expense font-medium">
+                        €{stats.totalExpenses.toFixed(0)}
+                      </span>
                     </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div
-                    className={`text-lg font-bold ${stats.budgetSpent > stats.totalBudget ? "text-danger" : "text-success"}`}
-                  >
-                    {stats.totalBudget > 0
-                      ? ((stats.budgetSpent / stats.totalBudget) * 100).toFixed(
-                          0,
-                        )
-                      : 0}
-                    %
-                  </div>
-                  <div className="text-sm text-muted">Used</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="bloom"
+                  pill
+                  onClick={() => setShowUpload(true)}
+                >
+                  <Icon name="plus" size={18} />
+                  Add Transaction
+                </Button>
+                <Button
+                  variant="soft"
+                  pill
+                  onClick={() => router.push("/reports")}
+                >
+                  View Reports
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <MotionCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <CardContent>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary font-medium mb-2">
+                    This Month&apos;s Spending
+                  </p>
+                  <AmountDisplay
+                    value={stats.monthlyExpenses}
+                    size="lg"
+                    animated
+                  />
+                </div>
+                <div className="p-3 rounded-2xl bg-primary-pale">
+                  <Icon
+                    name="transactions"
+                    size={24}
+                    className="text-primary"
+                  />
                 </div>
               </div>
-              <div className="h-4 bg-surface-alt rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${stats.budgetSpent > stats.totalBudget ? "bg-danger" : "bg-success"}`}
-                  style={{
-                    width: `${stats.totalBudget > 0 ? Math.min((stats.budgetSpent / stats.totalBudget) * 100, 100) : 0}%`,
-                  }}
+            </CardContent>
+          </MotionCard>
+
+          <MotionCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <CardContent>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary font-medium mb-2">
+                    Budget Status
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <AmountDisplay
+                      value={stats.budgetSpent}
+                      size="lg"
+                      animated
+                    />
+                    <span className="text-text-secondary text-sm">
+                      / €{stats.totalBudget.toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+                <ProgressRing
+                  progress={budgetPercentage}
+                  size="sm"
+                  color={budgetColor}
                 />
               </div>
             </CardContent>
-          </Card>
+          </MotionCard>
+
+          <MotionCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            variant="warm"
+          >
+            <CardContent>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary font-medium mb-2">
+                    Total Saved
+                  </p>
+                  <AmountDisplay
+                    value={Math.max(0, stats.savings)}
+                    size="lg"
+                    variant="income"
+                    animated
+                  />
+                </div>
+                <div className="p-3 rounded-2xl bg-growth-pale">
+                  <Icon name="savings" size={24} className="text-growth" />
+                </div>
+              </div>
+            </CardContent>
+          </MotionCard>
+        </div>
+
+        {/* Two column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Budget Overview */}
+          <MotionCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="h-full"
+          >
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Monthly Budget</CardTitle>
+                <Link
+                  href="/budgets"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Manage
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6">
+                <ProgressRing
+                  progress={budgetPercentage}
+                  size="lg"
+                  color={budgetColor}
+                  label="spent"
+                />
+                <div className="flex-1">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Spent</span>
+                      <span className="font-medium">
+                        €{stats.budgetSpent.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Budget</span>
+                      <span className="font-medium">
+                        €{stats.totalBudget.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="pt-3 border-t border-border">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Remaining</span>
+                        <span
+                          className={`font-bold ${stats.totalBudget - stats.budgetSpent >= 0 ? "text-growth" : "text-expense"}`}
+                        >
+                          €{(stats.totalBudget - stats.budgetSpent).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </MotionCard>
 
           {/* Goals Widget */}
-          <GoalsWidget />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <GoalsWidget />
+          </motion.div>
         </div>
 
         {/* Quick Actions */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {showUpload ? (
-              <div className="bg-background p-6 rounded-xl border border-border">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-foreground font-medium">
-                    Upload Bank Statement
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowUpload(false)}
-                  >
-                    Close
-                  </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {showUpload ? (
+                <div className="bg-sand/50 p-6 rounded-2xl border border-border">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-foreground font-medium font-display">
+                      Upload Bank Statement
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowUpload(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                  <FileUpload onUploadComplete={() => setShowUpload(false)} />
                 </div>
-                <FileUpload onUploadComplete={() => setShowUpload(false)} />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Tooltip content="Upload a bank statement (Press 'n')">
-                  <Button className="w-full" onClick={() => setShowUpload(true)}>
-                    Upload Statement
-                  </Button>
-                </Tooltip>
-                <Tooltip content="Create a new account">
-                  <Button
-                    className="w-full"
-                    variant="secondary"
-                    onClick={() => setShowAccountModal(true)}
-                  >
-                    Add Account
-                  </Button>
-                </Tooltip>
-                <Tooltip content="Invite a partner to your household">
-                  <Button
-                    className="w-full"
-                    variant="secondary"
-                    onClick={() => setShowInviteModal(true)}
-                  >
-                    Invite Partner
-                  </Button>
-                </Tooltip>
-                <Tooltip content="View detailed analytics and reports">
-                  <Button
-                    className="w-full"
-                    variant="secondary"
-                    onClick={() => router.push("/reports")}
-                  >
-                    View Reports
-                  </Button>
-                </Tooltip>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Tooltip content="Upload a bank statement (Press 'n')">
+                    <button
+                      onClick={() => setShowUpload(true)}
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group"
+                    >
+                      <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <Icon
+                          name="upload"
+                          size={24}
+                          className="text-primary"
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        Upload Statement
+                      </span>
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Create a new account">
+                    <button
+                      onClick={() => setShowAccountModal(true)}
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group"
+                    >
+                      <div className="p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
+                        <Icon name="wallet" size={24} className="text-growth" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        Add Account
+                      </span>
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Invite a partner to your household">
+                    <button
+                      onClick={() => setShowInviteModal(true)}
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-info-light hover:bg-info/20 transition-all group"
+                    >
+                      <div className="p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
+                        <Icon name="joint" size={24} className="text-info" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        Invite Partner
+                      </span>
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="View detailed analytics and reports">
+                    <button
+                      onClick={() => router.push("/reports")}
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-warning-light hover:bg-warning/20 transition-all group"
+                    >
+                      <div className="p-3 rounded-xl bg-warning/10 group-hover:bg-warning/20 transition-colors">
+                        <Icon
+                          name="reports"
+                          size={24}
+                          className="text-warning"
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        View Reports
+                      </span>
+                    </button>
+                  </Tooltip>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransactionsList />
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Recent Transactions</CardTitle>
+                <Link
+                  href="/transactions"
+                  className="text-sm text-primary hover:underline"
+                >
+                  View all
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TransactionsList />
+            </CardContent>
+          </Card>
+        </motion.div>
       </main>
 
       {/* Modals */}
@@ -369,7 +598,6 @@ export default function DashboardPage() {
         <AddAccountModal
           onClose={() => setShowAccountModal(false)}
           onSuccess={() => {
-            // Refresh accounts list when implemented
             console.log("Account created successfully!");
           }}
         />

@@ -2,39 +2,73 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Primary (Brand) Colors */
+  /* Primary (Brand) Colors - Soft Pink from Piggy */
   --primary: #ff8fab;
   --primary-light: #ffc2d1;
-  --primary-dark: #fb6f92;
-  --primary-pale: #fff0f4;
+  --primary-dark: #e86f8a;
+  --primary-pale: #fff5f7;
 
-  /* Neutral Colors */
-  --background: #ffffff;
-  --surface: #f8fafc;
-  --surface-alt: #f1f5f9;
-  --foreground: #1e293b;
-  --text-secondary: #64748b;
-  --muted: #94a3b8;
-  --border: #e2e8f0;
-  --border-light: #f1f5f9;
+  /* Growth Green - From the Leaf */
+  --growth: #7cb482;
+  --growth-light: #c8e6c9;
+  --growth-dark: #5a9a5f;
+  --growth-pale: #f1f8f2;
 
-  /* Functional Colors */
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --danger: #ef4444;
-  --danger-light: #fee2e2;
-  --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --info: #3b82f6;
-  --info-light: #dbeafe;
+  /* Warm Neutrals */
+  --cream: #fefcf9;
+  --sand: #f5f0e8;
+  --clay: #e8dfd3;
+  --bark: #8b7355;
+  --soil: #5c4a3d;
 
-  /* Shadow tokens */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+  /* Neutral Colors - Warmer tones */
+  --background: #fefcf9;
+  --surface: #ffffff;
+  --surface-alt: #f5f0e8;
+  --foreground: #3d3530;
+  --text-secondary: #8b7355;
+  --muted: #a89b8c;
+  --border: #e8dfd3;
+  --border-light: #f5f0e8;
+
+  /* Functional Colors - Warmer versions */
+  --success: #7cb482;
+  --success-light: #e8f5e9;
+  --income: #7cb482;
+  --income-light: #c8e6c9;
+  --danger: #e57373;
+  --danger-light: #ffebee;
+  --expense: #e57373;
+  --expense-light: #ffcdd2;
+  --warning: #ffb74d;
+  --warning-light: #fff3e0;
+  --info: #64b5f6;
+  --info-light: #e3f2fd;
+
+  /* Shadow tokens - Softer, warmer */
+  --shadow-xs: 0 1px 2px rgba(93, 74, 61, 0.04);
+  --shadow-sm:
+    0 1px 3px rgba(93, 74, 61, 0.08), 0 1px 2px rgba(93, 74, 61, 0.04);
+  --shadow-md:
+    0 4px 6px rgba(93, 74, 61, 0.06), 0 2px 4px rgba(93, 74, 61, 0.04);
+  --shadow-lg:
+    0 10px 15px rgba(93, 74, 61, 0.08), 0 4px 6px rgba(93, 74, 61, 0.04);
+  --shadow-xl:
+    0 20px 25px rgba(93, 74, 61, 0.1), 0 10px 10px rgba(93, 74, 61, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(93, 74, 61, 0.18);
+
+  /* Glow shadows for interactive elements */
+  --shadow-glow-primary: 0 0 20px rgba(255, 143, 171, 0.3);
+  --shadow-glow-growth: 0 0 20px rgba(124, 180, 130, 0.3);
+
+  /* Border radius tokens */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-full: 9999px;
 }
 
 @theme inline {
@@ -48,23 +82,43 @@
   --color-border: var(--border);
   --color-border-light: var(--border-light);
 
+  /* Brand colors */
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
   --color-primary-pale: var(--primary-pale);
 
+  /* Growth colors */
+  --color-growth: var(--growth);
+  --color-growth-light: var(--growth-light);
+  --color-growth-dark: var(--growth-dark);
+  --color-growth-pale: var(--growth-pale);
+
+  /* Warm neutrals */
+  --color-cream: var(--cream);
+  --color-sand: var(--sand);
+  --color-clay: var(--clay);
+  --color-bark: var(--bark);
+  --color-soil: var(--soil);
+
+  /* Functional colors */
   --color-success: var(--success);
   --color-success-light: var(--success-light);
+  --color-income: var(--income);
+  --color-income-light: var(--income-light);
   --color-danger: var(--danger);
   --color-danger-light: var(--danger-light);
+  --color-expense: var(--expense);
+  --color-expense-light: var(--expense-light);
   --color-warning: var(--warning);
   --color-warning-light: var(--warning-light);
   --color-info: var(--info);
   --color-info-light: var(--info-light);
 
   /* Font families */
-  --font-sans: var(--font-inter);
-  --font-mono: monospace;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
 
   /* Shadow utilities */
   --shadow-xs: var(--shadow-xs);
@@ -75,41 +129,85 @@
   --shadow-2xl: var(--shadow-2xl);
 }
 
-/* Dark mode - using .dark class for manual control */
+/* Dark mode - "Evening Garden" - warm browns */
 .dark {
-  --background: #0f172a;
-  --surface: #1e293b;
-  --surface-alt: #273549;
-  --foreground: #f8fafc;
-  --text-secondary: #94a3b8;
-  --muted: #64748b;
-  --border: #334155;
-  --border-light: #1e293b;
+  --background: #1a1512;
+  --surface: #2d2520;
+  --surface-alt: #3d3530;
+  --foreground: #f5f0e8;
+  --text-secondary: #c4b5a5;
+  --muted: #8b7355;
+  --border: #4d433a;
+  --border-light: #3d3530;
 
-  /* Keep brand colors vibrant in dark mode */
-  --primary: #ff8fab;
+  /* Warm neutrals for dark mode */
+  --cream: #2d2520;
+  --sand: #3d3530;
+  --clay: #4d433a;
+  --bark: #c4b5a5;
+  --soil: #f5f0e8;
+
+  /* Keep brand colors vibrant but slightly softer in dark mode */
+  --primary: #ff9fb8;
   --primary-light: #ffc2d1;
-  --primary-dark: #fb6f92;
-  --primary-pale: #2d1a21;
+  --primary-dark: #e86f8a;
+  --primary-pale: #3d2a2f;
 
-  /* Reduce shadow opacity for dark mode */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.24);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4), 0 10px 10px rgba(0, 0, 0, 0.16);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.5);
+  /* Growth colors - slightly more vibrant for dark contrast */
+  --growth: #8bc490;
+  --growth-light: #a8d5ac;
+  --growth-dark: #6ba870;
+  --growth-pale: #2a3d2c;
+
+  /* Functional colors adjusted for dark mode */
+  --success: #8bc490;
+  --success-light: #2a3d2c;
+  --income: #8bc490;
+  --income-light: #2a3d2c;
+  --danger: #ef8080;
+  --danger-light: #3d2a2a;
+  --expense: #ef8080;
+  --expense-light: #3d2a2a;
+  --warning: #ffc570;
+  --warning-light: #3d3525;
+  --info: #7ec4f8;
+  --info-light: #25303d;
+
+  /* Softer shadows for dark mode */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.35), 0 10px 10px rgba(0, 0, 0, 0.15);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.4);
+
+  /* Glow shadows for dark mode */
+  --shadow-glow-primary: 0 0 25px rgba(255, 159, 184, 0.25);
+  --shadow-glow-growth: 0 0 25px rgba(139, 196, 144, 0.25);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition:
-    background-color 200ms ease-in-out,
-    color 200ms ease-in-out;
+    background-color 300ms ease-in-out,
+    color 300ms ease-in-out;
+}
+
+/* Typography utilities */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.font-body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
 }
 
 /* Utility classes for animations */
@@ -123,23 +221,29 @@ body {
     background-color 150ms ease-out;
 }
 
-/* Custom scrollbar */
+.transition-transform-smooth {
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Custom scrollbar - warmer */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--muted);
+  background: var(--surface-alt);
   border-radius: 5px;
 }
 
+::-webkit-scrollbar-thumb {
+  background: var(--clay);
+  border-radius: 5px;
+  border: 2px solid var(--surface-alt);
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: var(--bark);
 }
 
 /* Animations */
@@ -154,13 +258,14 @@ body {
   }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
   }
-  50% {
-    opacity: 0.5;
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -175,14 +280,233 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+}
+
+@keyframes bloom {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Animation utilities */
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.animate-slide-down {
-  animation: slide-down 0.2s ease-out;
+.animate-bounce-soft {
+  animation: bounce-soft 1s ease-in-out infinite;
+}
+
+.animate-grow {
+  animation: grow 0.6s ease-out;
+}
+
+.animate-bloom {
+  animation: bloom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-wiggle {
+  animation: wiggle 0.4s ease-in-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-alt) 0%,
+    var(--surface) 50%,
+    var(--surface-alt) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Stagger animation delays */
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+.stagger-6 {
+  animation-delay: 0.3s;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-warm {
+  background: linear-gradient(
+    135deg,
+    var(--cream) 0%,
+    var(--primary-pale) 100%
+  );
+}
+
+.bg-gradient-growth {
+  background: linear-gradient(
+    135deg,
+    var(--growth-pale) 0%,
+    var(--growth-light) 100%
+  );
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-dark) 100%
+  );
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(45, 37, 32, 0.8);
+}
+
+/* Focus ring utilities */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--primary-light);
+  color: var(--soil);
+}
+
+/* Subtle texture overlay (optional) */
+.texture-paper {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-blend-mode: overlay;
+  opacity: 0.03;
 }

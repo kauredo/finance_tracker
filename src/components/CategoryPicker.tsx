@@ -163,7 +163,9 @@ export default function CategoryPicker({
                     >
                       <Icon name={category.icon as IconName} size={20} />
                     </div>
-                    <span className="text-sm font-medium flex-1 text-left">{category.name}</span>
+                    <span className="text-sm font-medium flex-1 text-left">
+                      {category.name}
+                    </span>
                     {value === category.id && (
                       <svg
                         className="w-5 h-5 ml-auto"
