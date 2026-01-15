@@ -424,8 +424,16 @@ export default function DashboardPage() {
                     className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
                   >
                     <div className="p-2 sm:p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <Icon name="plus" size={20} className="text-primary sm:hidden" />
-                      <Icon name="plus" size={24} className="text-primary hidden sm:block" />
+                      <Icon
+                        name="plus"
+                        size={20}
+                        className="text-primary sm:hidden"
+                      />
+                      <Icon
+                        name="plus"
+                        size={24}
+                        className="text-primary hidden sm:block"
+                      />
                     </div>
                     <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                       Add Transaction
@@ -439,8 +447,16 @@ export default function DashboardPage() {
                     className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
                   >
                     <div className="p-2 sm:p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
-                      <Icon name="upload" size={20} className="text-growth sm:hidden" />
-                      <Icon name="upload" size={24} className="text-growth hidden sm:block" />
+                      <Icon
+                        name="upload"
+                        size={20}
+                        className="text-growth sm:hidden"
+                      />
+                      <Icon
+                        name="upload"
+                        size={24}
+                        className="text-growth hidden sm:block"
+                      />
                     </div>
                     <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                       Upload Statement
@@ -454,8 +470,16 @@ export default function DashboardPage() {
                     className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
                   >
                     <div className="p-2 sm:p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
-                      <Icon name="wallet" size={20} className="text-info sm:hidden" />
-                      <Icon name="wallet" size={24} className="text-info hidden sm:block" />
+                      <Icon
+                        name="wallet"
+                        size={20}
+                        className="text-info sm:hidden"
+                      />
+                      <Icon
+                        name="wallet"
+                        size={24}
+                        className="text-info hidden sm:block"
+                      />
                     </div>
                     <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                       Add Account

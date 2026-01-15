@@ -122,11 +122,7 @@ export default function AddAccountModal({
           </ModalBody>
 
           <ModalFooter>
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="ghost"
-            >
+            <Button type="button" onClick={onClose} variant="ghost">
               Cancel
             </Button>
             <Button

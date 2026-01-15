@@ -124,11 +124,7 @@ ModalContent.displayName = "ModalContent";
 // Header
 const ModalHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn("px-6 pt-6 pb-4", className)}
-      {...props}
-    />
+    <div ref={ref} className={cn("px-6 pt-6 pb-4", className)} {...props} />
   ),
 );
 ModalHeader.displayName = "ModalHeader";
@@ -140,10 +136,7 @@ const ModalTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      "text-2xl font-display font-bold text-foreground",
-      className,
-    )}
+    className={cn("text-2xl font-display font-bold text-foreground", className)}
     {...props}
   />
 ));
@@ -221,7 +214,9 @@ function ConfirmModal({
           <ModalContent size="sm" showCloseButton={false}>
             <ModalHeader>
               <ModalTitle>{title}</ModalTitle>
-              {description && <ModalDescription>{description}</ModalDescription>}
+              {description && (
+                <ModalDescription>{description}</ModalDescription>
+              )}
             </ModalHeader>
             <ModalFooter>
               <button

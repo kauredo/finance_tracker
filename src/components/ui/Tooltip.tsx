@@ -98,9 +98,7 @@ export function Tooltip({
               )}
               style={{
                 borderTopColor:
-                  variant === "default"
-                    ? "var(--soil)"
-                    : "var(--surface)",
+                  variant === "default" ? "var(--soil)" : "var(--surface)",
               }}
             />
           </motion.div>

@@ -45,10 +45,7 @@ export default function UserMenu() {
         className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-full transition-transform hover:scale-105"
         aria-label="User menu"
       >
-        <Avatar
-          name={user.fullName || user.email || "User"}
-          size="sm"
-        />
+        <Avatar name={user.fullName || user.email || "User"} size="sm" />
       </button>
 
       {isOpen && (

@@ -227,7 +227,9 @@ export default function HouseholdPage() {
                     >
                       <div className="flex items-center gap-4">
                         <Avatar
-                          name={memberUser?.fullName || memberUser?.email || "?"}
+                          name={
+                            memberUser?.fullName || memberUser?.email || "?"
+                          }
                           size="md"
                           status={memberIsOwner ? "online" : undefined}
                         />

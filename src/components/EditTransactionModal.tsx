@@ -176,7 +176,10 @@ export default function EditTransactionModal({
               <Select
                 value={formData.accountId}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, accountId: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    accountId: e.target.value,
+                  }))
                 }
                 required
               >

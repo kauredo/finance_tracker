@@ -73,7 +73,7 @@ export default function UploadStatementModal({
       const fileExt = file.name.split(".").pop()?.toLowerCase();
       if (!fileExt || !validExtensions.includes(fileExt)) {
         setError(
-          `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`
+          `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`,
         );
         return;
       }
@@ -113,14 +113,16 @@ export default function UploadStatementModal({
         // Success!
         setTransactionCount(result.transactionCount);
         setStep("complete");
-        toast.success(`Successfully imported ${result.transactionCount} transactions!`);
+        toast.success(
+          `Successfully imported ${result.transactionCount} transactions!`,
+        );
       } catch (err: any) {
         console.error("Error processing statement:", err);
         setError(err.message || "Failed to process statement");
         setStep("error");
       }
     },
-    [selectedAccountId, generateUploadUrl, processStatement, toast]
+    [selectedAccountId, generateUploadUrl, processStatement, toast],
   );
 
   const handleDrop = useCallback(
@@ -133,7 +135,7 @@ export default function UploadStatementModal({
         await processFile(file);
       }
     },
-    [processFile]
+    [processFile],
   );
 
   const handleFileUpload = useCallback(
@@ -145,7 +147,7 @@ export default function UploadStatementModal({
       const file = e.target.files[0];
       await processFile(file);
     },
-    [processFile]
+    [processFile],
   );
 
   const handleClose = () => {
@@ -197,8 +199,8 @@ export default function UploadStatementModal({
                 Import Successful!
               </h3>
               <p className="text-text-secondary">
-                {transactionCount} transaction{transactionCount !== 1 ? "s" : ""}{" "}
-                imported successfully.
+                {transactionCount} transaction
+                {transactionCount !== 1 ? "s" : ""} imported successfully.
               </p>
             </div>
           ) : step === "error" ? (
@@ -222,7 +224,9 @@ export default function UploadStatementModal({
                 <div className="animate-spin h-10 w-10 border-3 border-primary border-t-transparent rounded-full" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                {step === "uploading" ? "Uploading file..." : "Analyzing with AI..."}
+                {step === "uploading"
+                  ? "Uploading file..."
+                  : "Analyzing with AI..."}
               </h3>
               <p className="text-text-secondary text-sm">
                 {step === "uploading"
@@ -257,7 +261,7 @@ export default function UploadStatementModal({
                     "flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
                     isDragging
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50 hover:bg-sand/50 bg-surface"
+                      : "border-border hover:border-primary/50 hover:bg-sand/50 bg-surface",
                   )}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -269,7 +273,7 @@ export default function UploadStatementModal({
                         "p-3 rounded-full mb-3 transition-colors",
                         isDragging
                           ? "bg-primary/10 text-primary"
-                          : "bg-sand text-text-secondary"
+                          : "bg-sand text-text-secondary",
                       )}
                     >
                       <Icon name="upload" size={32} />

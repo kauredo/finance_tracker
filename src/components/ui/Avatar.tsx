@@ -104,7 +104,8 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
         className={cn(
           "relative inline-flex items-center justify-center flex-shrink-0 overflow-hidden",
           variant === "circle" ? "rounded-full" : "rounded-xl",
-          showBorder && "ring-2 ring-surface ring-offset-2 ring-offset-background",
+          showBorder &&
+            "ring-2 ring-surface ring-offset-2 ring-offset-background",
           className,
         )}
         style={{
@@ -173,11 +174,7 @@ const AvatarGroup = forwardRef<HTMLDivElement, AvatarGroupProps>(
     };
 
     return (
-      <div
-        ref={ref}
-        className={cn("flex items-center", className)}
-        {...props}
-      >
+      <div ref={ref} className={cn("flex items-center", className)} {...props}>
         {visibleAvatars.map((avatar, index) => (
           <Avatar
             key={index}

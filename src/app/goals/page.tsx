@@ -249,7 +249,8 @@ export default function GoalsPage() {
                       Growing
                     </h2>
                     <Badge variant="default" pill className="ml-2">
-                      {activeGoals.length} goal{activeGoals.length > 1 ? "s" : ""}
+                      {activeGoals.length} goal
+                      {activeGoals.length > 1 ? "s" : ""}
                     </Badge>
                   </motion.div>
 

@@ -110,7 +110,9 @@ export default function TransactionDetailModal({
 
             {/* Description */}
             <div>
-              <div className="text-sm text-text-secondary mb-1">Description</div>
+              <div className="text-sm text-text-secondary mb-1">
+                Description
+              </div>
               <div className="text-foreground font-medium">
                 {transaction.description}
               </div>

@@ -78,8 +78,8 @@ export default function InvitePartnerModal({
           ) : (
             <>
               <p className="text-foreground text-sm mb-6">
-                Share this link with your partner so they can join your household
-                and access joint accounts.
+                Share this link with your partner so they can join your
+                household and access joint accounts.
               </p>
 
               <div className="space-y-4">
