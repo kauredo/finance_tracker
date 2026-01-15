@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -20,32 +19,33 @@ function JoinContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const householdId = searchParams?.get("household") as Id<"households"> | null;
+  const inviteCode = searchParams?.get("code");
 
-  // Fetch household info from Convex
-  const household = useQuery(
-    api.households.getInfo,
-    householdId ? { id: householdId } : "skip",
+  // Fetch invite info by code
+  const invite = useQuery(
+    api.households.getInviteByCode,
+    inviteCode ? { code: inviteCode } : "skip",
   );
-  const joinHousehold = useMutation(api.households.joinByHouseholdId);
+  const acceptInvite = useMutation(api.households.acceptInvite);
 
-  const loading = household === undefined && householdId !== null;
+  const loading = invite === undefined && inviteCode !== null;
+  const inviteError = invite === null;
 
   useEffect(() => {
-    if (!authLoading && !user && householdId) {
+    if (!authLoading && !user && inviteCode) {
       // Redirect to auth with return URL
-      router.push(`/auth?redirect=/join?household=${householdId}`);
+      router.push(`/auth?redirect=/join?code=${inviteCode}`);
     }
-  }, [user, authLoading, householdId, router]);
+  }, [user, authLoading, inviteCode, router]);
 
   const handleJoin = async () => {
-    if (!user || !householdId) return;
+    if (!user || !inviteCode) return;
 
     setJoining(true);
     setError(null);
 
     try {
-      await joinHousehold({ householdId });
+      await acceptInvite({ code: inviteCode });
       setSuccess(true);
       setTimeout(() => router.push("/dashboard"), 2000);
     } catch (err: any) {
@@ -64,6 +64,35 @@ function JoinContent() {
         >
           <Image src="/logo.png" alt="Loading" width={48} height={48} />
         </motion.div>
+      </div>
+    );
+  }
+
+  // No invite code provided
+  if (!inviteCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream via-surface to-primary-pale p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-8 text-center">
+            <div className="w-20 h-20 bg-sand rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">🔗</span>
+            </div>
+            <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+              No Invite Code
+            </h2>
+            <p className="text-text-secondary mb-6">
+              You need an invite code to join a household. Ask your partner to
+              share their invite link with you.
+            </p>
+            <Button
+              onClick={() => router.push("/dashboard")}
+              variant="secondary"
+              className="w-full"
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -131,7 +160,7 @@ function JoinContent() {
                   🎉
                 </motion.div>
               </motion.div>
-            ) : error ? (
+            ) : error || inviteError ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -143,7 +172,9 @@ function JoinContent() {
                 <h2 className="text-2xl font-display font-bold text-foreground mb-2">
                   Oops!
                 </h2>
-                <p className="text-text-secondary mb-6">{error}</p>
+                <p className="text-text-secondary mb-6">
+                  {error || "This invite is invalid, expired, or has already been used."}
+                </p>
                 <Button
                   onClick={() => router.push("/dashboard")}
                   variant="secondary"
@@ -152,7 +183,7 @@ function JoinContent() {
                   Go to Dashboard
                 </Button>
               </motion.div>
-            ) : household ? (
+            ) : invite?.household ? (
               <div>
                 <div className="text-center mb-8">
                   <motion.div
@@ -163,19 +194,19 @@ function JoinContent() {
                     <span className="text-4xl">👨‍👩‍👧‍👦</span>
                   </motion.div>
                   <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                    Join {household.name}
+                    Join {invite.household.name}
                   </h2>
                   <p className="text-text-secondary">
                     You've been invited to grow together 🌱
                   </p>
                 </div>
 
-                {household.memberCount > 0 && (
+                {/* Invited by info */}
+                {invite.invitedBy && (
                   <div className="bg-sand/30 rounded-2xl p-4 mb-6">
                     <p className="text-sm text-text-secondary flex items-center gap-2">
                       <Icon name="user" size={16} />
-                      {household.memberCount} garden partner
-                      {household.memberCount > 1 ? "s" : ""} in this household
+                      Invited by {invite.invitedBy.fullName || invite.invitedBy.email}
                     </p>
                   </div>
                 )}
