@@ -7,9 +7,10 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
-import FileUpload from "@/components/FileUpload";
 import WelcomeTour from "@/components/WelcomeTour";
 import AddAccountModal from "@/components/AddAccountModal";
+import AddTransactionModal from "@/components/AddTransactionModal";
+import UploadStatementModal from "@/components/UploadStatementModal";
 import InvitePartnerModal from "@/components/InvitePartnerModal";
 import TransactionsList from "@/components/TransactionsList";
 import { Button } from "@/components/ui/Button";
@@ -40,7 +41,8 @@ export default function DashboardPage() {
   const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [showUpload, setShowUpload] = useState(false);
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [showUploadStatement, setShowUploadStatement] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
@@ -107,13 +109,19 @@ export default function DashboardPage() {
   useKeyboardShortcuts([
     {
       key: "n",
-      handler: () => setShowUpload(true),
-      description: "Upload new statement",
+      handler: () => setShowAddTransaction(true),
+      description: "Add new transaction",
+    },
+    {
+      key: "u",
+      handler: () => setShowUploadStatement(true),
+      description: "Upload statement",
     },
     {
       key: "Escape",
       handler: () => {
-        if (showUpload) setShowUpload(false);
+        if (showAddTransaction) setShowAddTransaction(false);
+        if (showUploadStatement) setShowUploadStatement(false);
         if (showAccountModal) setShowAccountModal(false);
         if (showInviteModal) setShowInviteModal(false);
         if (showWelcomeTour) setShowWelcomeTour(false);
@@ -217,11 +225,11 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <Button
                   variant="bloom"
                   pill
-                  onClick={() => setShowUpload(true)}
+                  onClick={() => setShowAddTransaction(true)}
                 >
                   <Icon name="plus" size={18} />
                   Add Transaction
@@ -229,9 +237,10 @@ export default function DashboardPage() {
                 <Button
                   variant="soft"
                   pill
-                  onClick={() => router.push("/reports")}
+                  onClick={() => setShowUploadStatement(true)}
                 >
-                  View Reports
+                  <Icon name="upload" size={18} />
+                  Upload Statement
                 </Button>
               </div>
             </div>
@@ -405,86 +414,50 @@ export default function DashboardPage() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              {showUpload ? (
-                <div className="bg-sand/50 p-6 rounded-2xl border border-border">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-foreground font-medium font-display">
-                      Upload Bank Statement
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowUpload(false)}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                  <FileUpload onUploadComplete={() => setShowUpload(false)} />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Tooltip content="Upload a bank statement (Press 'n')">
-                    <button
-                      onClick={() => setShowUpload(true)}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
-                    >
-                      <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <Icon
-                          name="upload"
-                          size={24}
-                          className="text-primary"
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        Upload Statement
-                      </span>
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="Create a new account">
-                    <button
-                      onClick={() => setShowAccountModal(true)}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
-                    >
-                      <div className="p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
-                        <Icon name="wallet" size={24} className="text-growth" />
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        Add Account
-                      </span>
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="Invite a partner to your household">
-                    <button
-                      onClick={() => setShowInviteModal(true)}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
-                    >
-                      <div className="p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
-                        <Icon name="joint" size={24} className="text-info" />
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        Invite Partner
-                      </span>
-                    </button>
-                  </Tooltip>
-                  <Tooltip content="View detailed analytics and reports">
-                    <button
-                      onClick={() => router.push("/reports")}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-warning-light hover:bg-warning/20 transition-all group w-full"
-                    >
-                      <div className="p-3 rounded-xl bg-warning/10 group-hover:bg-warning/20 transition-colors">
-                        <Icon
-                          name="reports"
-                          size={24}
-                          className="text-warning"
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        View Reports
-                      </span>
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <Tooltip content="Add a new transaction (Press 'n')">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowAddTransaction(true)}
+                    className="flex flex-col items-center gap-3 p-6 h-auto rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
+                  >
+                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <Icon name="plus" size={24} className="text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
+                      Add Transaction
+                    </span>
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Upload a bank statement (Press 'u')">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowUploadStatement(true)}
+                    className="flex flex-col items-center gap-3 p-6 h-auto rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
+                  >
+                    <div className="p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
+                      <Icon name="upload" size={24} className="text-growth" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
+                      Upload Statement
+                    </span>
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Create a new account">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowAccountModal(true)}
+                    className="flex flex-col items-center gap-3 p-6 h-auto rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
+                  >
+                    <div className="p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
+                      <Icon name="wallet" size={24} className="text-info" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
+                      Add Account
+                    </span>
+                  </Button>
+                </Tooltip>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -508,17 +481,29 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <TransactionsList />
+              <TransactionsList showPagination={false} />
             </CardContent>
           </Card>
         </motion.div>
       </main>
 
       {/* Modals */}
+      {showAddTransaction && (
+        <AddTransactionModal
+          onClose={() => setShowAddTransaction(false)}
+          onSuccess={() => setShowAddTransaction(false)}
+        />
+      )}
+      {showUploadStatement && (
+        <UploadStatementModal
+          onClose={() => setShowUploadStatement(false)}
+          onSuccess={() => setShowUploadStatement(false)}
+        />
+      )}
       {showAccountModal && (
         <AddAccountModal
           onClose={() => setShowAccountModal(false)}
-          onSuccess={() => {}}
+          onSuccess={() => setShowAccountModal(false)}
         />
       )}
       {showInviteModal && (

@@ -37,6 +37,7 @@ interface TransactionsListProps {
   startDate?: string;
   endDate?: string;
   limit?: number;
+  showPagination?: boolean;
 }
 
 // Group transactions by date
@@ -72,6 +73,7 @@ export default function TransactionsList({
   categoryFilter = "all",
   startDate,
   endDate,
+  showPagination = true,
 }: TransactionsListProps = {}) {
   const { isAuthenticated } = useAuth();
   const [selectedTransactionId, setSelectedTransactionId] =
@@ -245,19 +247,21 @@ export default function TransactionsList({
       </div>
 
       {/* Pagination */}
-      <div className="mt-6 pt-6 border-t border-border">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(totalCount / itemsPerPage)}
-          totalItems={totalCount}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(newItemsPerPage) => {
-            setItemsPerPage(newItemsPerPage);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
+      {showPagination && (
+        <div className="mt-6 pt-6 border-t border-border">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalCount / itemsPerPage)}
+            totalItems={totalCount}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(newItemsPerPage) => {
+              setItemsPerPage(newItemsPerPage);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+      )}
 
       {/* Transaction Detail Modal */}
       {selectedTransactionId && (

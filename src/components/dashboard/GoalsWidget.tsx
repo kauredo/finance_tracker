@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { ProgressRing } from "@/components/ui/ProgressRing";
@@ -18,6 +19,8 @@ function getGrowthStage(progress: number): { emoji: string; label: string } {
 }
 
 export default function GoalsWidget() {
+  const router = useRouter();
+
   // Fetch goals using Convex - automatically reactive
   const goals = useQuery(api.goals.list);
 
@@ -66,7 +69,7 @@ export default function GoalsWidget() {
             description="Set a savings goal and watch it grow!"
             action={{
               label: "Create Goal",
-              onClick: () => (window.location.href = "/goals"),
+              onClick: () => router.push("/goals"),
               variant: "bloom",
             }}
           />
