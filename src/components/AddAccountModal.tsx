@@ -3,9 +3,16 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import Icon from "@/components/icons/Icon";
 
 interface AddAccountModalProps {
@@ -48,85 +55,77 @@ export default function AddAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card variant="glass" className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Add Account</h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-muted hover:text-foreground text-2xl"
-          >
-            ✕
-          </Button>
-        </div>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader>
+          <ModalTitle>Add Account</ModalTitle>
+        </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-foreground text-sm font-medium mb-2">
-              Account Name
-            </label>
-            <Input
-              type="text"
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              placeholder="e.g., Main Checking, Savings"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-foreground text-sm font-medium mb-2">
-              Account Type
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                onClick={() => setAccountType("personal")}
-                variant={accountType === "personal" ? "primary" : "secondary"}
-                className={
-                  accountType === "personal"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                    : ""
-                }
-              >
-                <Icon name="personal" size={20} />
-                Personal
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setAccountType("joint")}
-                variant={accountType === "joint" ? "primary" : "secondary"}
-                className={
-                  accountType === "joint"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                    : ""
-                }
-              >
-                <Icon name="joint" size={20} />
-                Joint
-              </Button>
+        <form onSubmit={handleSubmit}>
+          <ModalBody className="space-y-4">
+            <div>
+              <label className="block text-foreground text-sm font-medium mb-2">
+                Account Name
+              </label>
+              <Input
+                type="text"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                placeholder="e.g., Main Checking, Savings"
+                required
+                autoFocus
+              />
             </div>
-            {accountType === "joint" && (
-              <p className="mt-2 text-xs text-muted">
-                Note: Joint accounts are shared with your household members
-              </p>
+
+            <div>
+              <label className="block text-foreground text-sm font-medium mb-2">
+                Account Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAccountType("personal")}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                    accountType === "personal"
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-surface text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <Icon name="personal" size={20} />
+                  Personal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType("joint")}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                    accountType === "joint"
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-surface text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  <Icon name="joint" size={20} />
+                  Joint
+                </button>
+              </div>
+              {accountType === "joint" && (
+                <p className="mt-2 text-xs text-text-secondary">
+                  Note: Joint accounts are shared with your household members
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
             )}
-          </div>
+          </ModalBody>
 
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="flex gap-3 pt-4">
+          <ModalFooter>
             <Button
               type="button"
               onClick={onClose}
-              variant="secondary"
-              className="flex-1"
+              variant="ghost"
             >
               Cancel
             </Button>
@@ -134,14 +133,13 @@ export default function AddAccountModal({
               type="submit"
               disabled={loading}
               isLoading={loading}
-              variant="primary"
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl"
+              variant="bloom"
             >
-              {loading ? "Creating..." : "Create Account"}
+              Create Account
             </Button>
-          </div>
+          </ModalFooter>
         </form>
-      </Card>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }

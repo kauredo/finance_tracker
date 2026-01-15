@@ -6,7 +6,15 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input, Select } from "@/components/ui/Input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import Icon from "@/components/icons/Icon";
 
 interface RecurringTransactionModalProps {
@@ -142,78 +150,78 @@ export default function RecurringTransactionModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-surface border border-border rounded-xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">
+    <Modal open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="md">
+        <ModalHeader>
+          <ModalTitle>
             {editId
               ? "Edit Recurring Transaction"
               : "New Recurring Transaction"}
-          </h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-muted hover:text-foreground"
-          >
-            <Icon name="close" size={20} />
-          </Button>
-        </div>
+          </ModalTitle>
+        </ModalHeader>
 
         {fetching ? (
-          <div className="p-8 text-center text-muted">Loading...</div>
+          <ModalBody>
+            <div className="text-center py-8 text-text-secondary">
+              Loading...
+            </div>
+          </ModalBody>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* Type Selection */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-surface-alt rounded-lg">
-              <Button
-                type="button"
-                onClick={() => setType("expense")}
-                variant={type === "expense" ? "secondary" : "ghost"}
-                className={
-                  type === "expense" ? "text-danger shadow-sm" : "text-muted"
-                }
-              >
-                Expense
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setType("income")}
-                variant={type === "income" ? "secondary" : "ghost"}
-                className={
-                  type === "income" ? "text-success shadow-sm" : "text-muted"
-                }
-              >
-                Income
-              </Button>
-            </div>
+          <form onSubmit={handleSubmit}>
+            <ModalBody className="space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Transaction Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setType("expense")}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                      type === "expense"
+                        ? "border-expense bg-expense text-white"
+                        : "border-border bg-surface text-foreground hover:border-expense/50"
+                    }`}
+                  >
+                    <Icon name="expense" size={16} />
+                    Expense
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setType("income")}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                      type === "income"
+                        ? "border-growth bg-growth text-white"
+                        : "border-border bg-surface text-foreground hover:border-growth/50"
+                    }`}
+                  >
+                    <Icon name="income" size={16} />
+                    Income
+                  </button>
+                </div>
+              </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Description
-              </label>
-              <Input
-                type="text"
-                required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Monthly Rent"
-              />
-            </div>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Description *
+                </label>
+                <Input
+                  type="text"
+                  required
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="e.g., Monthly Rent"
+                />
+              </div>
 
-            {/* Amount */}
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-                  €
-                </span>
+              {/* Amount */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Amount (€) *
+                </label>
                 <Input
                   type="number"
                   required
@@ -221,95 +229,90 @@ export default function RecurringTransactionModal({
                   min="0"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="pl-8"
                   placeholder="0.00"
                 />
               </div>
-            </div>
 
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Category
-              </label>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
-              >
-                <option value="">Select Category</option>
-                {categories?.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Account */}
-            <div>
-              <label className="block text-sm font-medium text-muted mb-1">
-                Account
-              </label>
-              <select
-                required
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
-              >
-                <option value="">Select Account</option>
-                {accounts?.map((acc) => (
-                  <option key={acc._id} value={acc._id}>
-                    {acc.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Interval & Date */}
-            <div className="grid grid-cols-2 gap-4">
+              {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-muted mb-1">
-                  Frequency
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Category
                 </label>
-                <select
-                  required
-                  value={interval}
-                  onChange={(e) =>
-                    setInterval(
-                      e.target.value as
-                        | "daily"
-                        | "weekly"
-                        | "monthly"
-                        | "yearly",
-                    )
-                  }
-                  className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
+                <Select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
                 >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
+                  <option value="">Select Category</option>
+                  {categories?.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-muted mb-1">
-                  Next Due Date
-                </label>
-                <Input
-                  type="date"
-                  required
-                  value={nextRunDate}
-                  onChange={(e) => setNextRunDate(e.target.value)}
-                />
-              </div>
-            </div>
 
-            <div className="pt-4 flex gap-3">
+              {/* Account */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Account *
+                </label>
+                <Select
+                  required
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                >
+                  <option value="">Select Account</option>
+                  {accounts?.map((acc) => (
+                    <option key={acc._id} value={acc._id}>
+                      {acc.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Interval & Date */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Frequency *
+                  </label>
+                  <Select
+                    required
+                    value={interval}
+                    onChange={(e) =>
+                      setInterval(
+                        e.target.value as
+                          | "daily"
+                          | "weekly"
+                          | "monthly"
+                          | "yearly",
+                      )
+                    }
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Next Due Date *
+                  </label>
+                  <Input
+                    type="date"
+                    required
+                    value={nextRunDate}
+                    onChange={(e) => setNextRunDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            </ModalBody>
+
+            <ModalFooter>
               <Button
                 type="button"
                 variant="ghost"
-                className="flex-1"
                 onClick={onClose}
                 disabled={loading}
               >
@@ -317,16 +320,16 @@ export default function RecurringTransactionModal({
               </Button>
               <Button
                 type="submit"
-                variant="primary"
-                className="flex-1"
+                variant="bloom"
                 disabled={loading}
+                isLoading={loading}
               >
-                {loading ? "Saving..." : "Save"}
+                Save
               </Button>
-            </div>
+            </ModalFooter>
           </form>
         )}
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }

@@ -5,9 +5,16 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input, Select, Textarea } from "@/components/ui/Input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import Icon from "@/components/icons/Icon";
 
 interface AddTransactionModalProps {
@@ -91,222 +98,197 @@ export default function AddTransactionModal({
   // Loading state
   if (accounts === undefined || categories === undefined) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <Card variant="glass" className="w-full max-w-md">
-          <div className="text-center py-8 text-muted">Loading...</div>
-        </Card>
-      </div>
+      <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+        <ModalContent size="md">
+          <ModalBody>
+            <div className="text-center py-8 text-text-secondary">
+              Loading...
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card
-        variant="glass"
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto"
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
-            Add Transaction
-          </h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-muted hover:text-foreground text-2xl"
-          >
-            ✕
-          </Button>
-        </div>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="md">
+        <ModalHeader>
+          <ModalTitle>Add Transaction</ModalTitle>
+        </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Transaction Type Toggle */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Transaction Type
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    transactionType: "expense",
-                  }))
-                }
-                variant={
-                  formData.transactionType === "expense"
-                    ? "danger"
-                    : "secondary"
-                }
-                className={
-                  formData.transactionType === "expense" ? "shadow-lg" : ""
-                }
-              >
-                <Icon name="expense" size={16} />
-                Expense
-              </Button>
-              <Button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    transactionType: "income",
-                  }))
-                }
-                variant={
-                  formData.transactionType === "income"
-                    ? "primary"
-                    : "secondary"
-                }
-                className={
-                  formData.transactionType === "income"
-                    ? "bg-success hover:bg-success/90 shadow-lg"
-                    : ""
-                }
-              >
-                <Icon name="income" size={16} />
-                Income
-              </Button>
+        <form onSubmit={handleSubmit}>
+          <ModalBody className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {/* Transaction Type Toggle */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Transaction Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      transactionType: "expense",
+                    }))
+                  }
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                    formData.transactionType === "expense"
+                      ? "border-expense bg-expense text-white"
+                      : "border-border bg-surface text-foreground hover:border-expense/50"
+                  }`}
+                >
+                  <Icon name="expense" size={16} />
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      transactionType: "income",
+                    }))
+                  }
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                    formData.transactionType === "income"
+                      ? "border-growth bg-growth text-white"
+                      : "border-border bg-surface text-foreground hover:border-growth/50"
+                  }`}
+                >
+                  <Icon name="income" size={16} />
+                  Income
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Account */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Account *
-            </label>
-            <select
-              value={formData.accountId}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, accountId: e.target.value }))
-              }
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              required
-            >
-              <option value="">Select account</option>
-              {accounts.map((account) => (
-                <option key={account._id} value={account._id}>
-                  {account.name} ({account.type})
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Account */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Account *
+              </label>
+              <Select
+                value={formData.accountId}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, accountId: e.target.value }))
+                }
+                required
+              >
+                <option value="">Select account</option>
+                {accounts.map((account) => (
+                  <option key={account._id} value={account._id}>
+                    {account.name} ({account.type})
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          {/* Date */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Date *
-            </label>
-            <Input
-              type="date"
-              value={formData.date}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, date: e.target.value }))
-              }
-              required
-            />
-          </div>
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Date *
+              </label>
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, date: e.target.value }))
+                }
+                required
+              />
+            </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Description *
-            </label>
-            <Input
-              type="text"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              placeholder="e.g., Grocery shopping, Salary"
-              required
-            />
-          </div>
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Description *
+              </label>
+              <Input
+                type="text"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                placeholder="e.g., Grocery shopping, Salary"
+                required
+              />
+            </div>
 
-          {/* Amount */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Amount (€) *
-            </label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.amount}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, amount: e.target.value }))
-              }
-              placeholder="0.00"
-              required
-            />
-          </div>
+            {/* Amount */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Amount (€) *
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.amount}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, amount: e.target.value }))
+                }
+                placeholder="0.00"
+                required
+              />
+            </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Category
-            </label>
-            <select
-              value={formData.categoryId}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  categoryId: e.target.value,
-                }))
-              }
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="">Uncategorized</option>
-              {categories.map((category) => (
-                <option key={category._id} value={category._id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Category
+              </label>
+              <Select
+                value={formData.categoryId}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    categoryId: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Uncategorized</option>
+                {categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Notes (Optional)
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, notes: e.target.value }))
-              }
-              placeholder="Add any additional details..."
-              rows={3}
-              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            />
-          </div>
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Notes (Optional)
+              </label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                }
+                placeholder="Add any additional details..."
+                rows={3}
+              />
+            </div>
+          </ModalBody>
 
-          {/* Submit */}
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="secondary"
-              className="flex-1"
-            >
+          <ModalFooter>
+            <Button type="button" onClick={onClose} variant="ghost">
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
               isLoading={loading}
-              variant="primary"
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl"
+              variant="bloom"
             >
-              {loading ? "Creating..." : "Create Transaction"}
+              Create Transaction
             </Button>
-          </div>
+          </ModalFooter>
         </form>
-      </Card>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }

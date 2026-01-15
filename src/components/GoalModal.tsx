@@ -4,9 +4,16 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import { useToast } from "@/contexts/ToastContext";
 import Icon, { IconName } from "@/components/icons/Icon";
 
@@ -124,160 +131,146 @@ export default function GoalModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card
-        variant="glass"
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto"
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
-            {isEdit ? "Edit Goal" : "New Savings Goal"}
-          </h2>
-          <Button
-            onClick={onClose}
-            disabled={loading}
-            variant="ghost"
-            size="sm"
-            className="text-muted hover:text-foreground text-2xl"
-          >
-            ✕
-          </Button>
-        </div>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="md">
+        <ModalHeader>
+          <ModalTitle>{isEdit ? "Edit Goal" : "New Savings Goal"}</ModalTitle>
+        </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">
-              Goal Name *
-            </label>
-            <Input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="e.g., New Car"
-              required
-            />
-          </div>
-
-          {/* Amounts */}
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit}>
+          <ModalBody className="space-y-6 max-h-[60vh] overflow-y-auto">
+            {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-muted mb-2">
-                Target Amount *
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Goal Name *
               </label>
               <Input
-                type="number"
-                value={formData.targetAmount}
+                type="text"
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData({ ...formData, targetAmount: e.target.value })
+                  setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="0.00"
-                min="0"
-                step="0.01"
+                placeholder="e.g., New Car"
                 required
+                autoFocus
               />
             </div>
+
+            {/* Amounts */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Target Amount *
+                </label>
+                <Input
+                  type="number"
+                  value={formData.targetAmount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, targetAmount: e.target.value })
+                  }
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Current Saved
+                </label>
+                <Input
+                  type="number"
+                  value={formData.currentAmount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, currentAmount: e.target.value })
+                  }
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Target Date */}
             <div>
-              <label className="block text-sm font-medium text-muted mb-2">
-                Current Saved
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Target Date (Optional)
               </label>
               <Input
-                type="number"
-                value={formData.currentAmount}
+                type="date"
+                value={formData.targetDate || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, currentAmount: e.target.value })
+                  setFormData({ ...formData, targetDate: e.target.value })
                 }
-                placeholder="0.00"
-                min="0"
-                step="0.01"
               />
             </div>
-          </div>
 
-          {/* Target Date */}
-          <div>
-            <label className="block text-sm font-medium text-muted mb-2">
-              Target Date (Optional)
-            </label>
-            <Input
-              type="date"
-              value={formData.targetDate || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, targetDate: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Icon */}
-          <div>
-            <label className="block text-sm font-medium text-muted mb-3">
-              Icon
-            </label>
-            <div className="grid grid-cols-5 gap-2">
-              {ICON_OPTIONS.map((iconName) => (
-                <Button
-                  key={iconName}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, icon: iconName })}
-                  variant="ghost"
-                  className={`p-3 rounded-lg border-2 hover:scale-110 h-auto ${
-                    formData.icon === iconName
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-surface hover:border-primary/50"
-                  }`}
-                >
-                  <Icon name={iconName as IconName} size={24} />
-                </Button>
-              ))}
+            {/* Icon */}
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-3">
+                Icon
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {ICON_OPTIONS.map((iconName) => (
+                  <button
+                    key={iconName}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, icon: iconName })}
+                    className={`p-3 rounded-xl border-2 transition-all hover:scale-110 ${
+                      formData.icon === iconName
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-surface hover:border-primary/50"
+                    }`}
+                  >
+                    <Icon name={iconName as IconName} size={24} />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Color */}
-          <div>
-            <label className="block text-sm font-medium text-muted mb-3">
-              Color
-            </label>
-            <div className="grid grid-cols-5 gap-2">
-              {COLOR_PRESETS.map((color) => (
-                <Button
-                  key={color}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, color })}
-                  variant="ghost"
-                  className={`h-10 rounded-lg border-2 transition-all hover:scale-110 p-0 ${
-                    formData.color === color
-                      ? "border-foreground ring-2 ring-primary"
-                      : "border-border"
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+            {/* Color */}
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-3">
+                Color
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {COLOR_PRESETS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, color })}
+                    className={`h-10 rounded-xl border-2 transition-all hover:scale-110 ${
+                      formData.color === color
+                        ? "border-foreground ring-2 ring-primary"
+                        : "border-border"
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          </ModalBody>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <ModalFooter>
             <Button
               type="button"
               onClick={onClose}
               disabled={loading}
-              variant="secondary"
-              className="flex-1"
+              variant="ghost"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 shadow-lg hover:shadow-xl"
+              isLoading={loading}
+              variant="bloom"
             >
-              {loading ? "Saving..." : isEdit ? "Update Goal" : "Create Goal"}
+              {isEdit ? "Update Goal" : "Create Goal"}
             </Button>
-          </div>
+          </ModalFooter>
         </form>
-      </Card>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }

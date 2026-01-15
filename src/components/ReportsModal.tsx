@@ -1,11 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { useState } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+} from "@/components/ui/Modal";
 import {
   PieChart,
   Pie,
@@ -118,185 +123,167 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
   }, [transactionsData]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <Card variant="glass" className="w-full max-w-5xl my-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
-            Financial Reports
-          </h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-muted hover:text-foreground text-2xl"
-          >
-            ✕
-          </Button>
-        </div>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="xl">
+        <ModalHeader>
+          <ModalTitle>Financial Reports</ModalTitle>
+        </ModalHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-muted">Loading reports...</div>
-          </div>
-        ) : (
-          <>
-            {/* View Toggle */}
-            <div className="flex gap-2 mb-6">
-              <Button
-                onClick={() => setView("category")}
-                variant={view === "category" ? "primary" : "secondary"}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  view === "category"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-none"
-                    : "bg-surface text-muted hover:text-foreground border border-border"
-                }`}
-              >
-                Category Breakdown
-              </Button>
-              <Button
-                onClick={() => setView("monthly")}
-                variant={view === "monthly" ? "primary" : "secondary"}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  view === "monthly"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-none"
-                    : "bg-surface text-muted hover:text-foreground border border-border"
-                }`}
-              >
-                Monthly Trends
-              </Button>
+        <ModalBody>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-text-secondary">Loading reports...</div>
             </div>
+          ) : (
+            <>
+              {/* View Toggle */}
+              <div className="flex gap-2 mb-6">
+                <Button
+                  onClick={() => setView("category")}
+                  variant={view === "category" ? "bloom" : "secondary"}
+                >
+                  Category Breakdown
+                </Button>
+                <Button
+                  onClick={() => setView("monthly")}
+                  variant={view === "monthly" ? "bloom" : "secondary"}
+                >
+                  Monthly Trends
+                </Button>
+              </div>
 
-            {/* Category Breakdown */}
-            {view === "category" && (
-              <div className="space-y-6">
-                <div className="bg-surface-alt/50 p-6 rounded-xl border border-border">
+              {/* Category Breakdown */}
+              {view === "category" && (
+                <div className="space-y-6">
+                  <div className="bg-sand/50 p-6 rounded-2xl border border-border">
+                    <h3 className="text-lg font-medium text-foreground mb-4">
+                      Spending by Category
+                    </h3>
+                    {categoryData.length > 0 ? (
+                      <div className="grid md:grid-cols-2 gap-8">
+                        {/* Pie Chart */}
+                        <div className="flex items-center justify-center">
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={categoryData}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={(entry) =>
+                                  `${entry.name}: €${entry.value}`
+                                }
+                                outerRadius={100}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {categoryData.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={entry.color}
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value) => `€${value}`} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* Bar Chart */}
+                        <div>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={categoryData}>
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="rgba(100, 116, 139, 0.2)"
+                              />
+                              <XAxis
+                                dataKey="name"
+                                tick={{
+                                  fill: "var(--text-secondary)",
+                                  fontSize: 12,
+                                }}
+                                angle={-45}
+                                textAnchor="end"
+                                height={100}
+                              />
+                              <YAxis tick={{ fill: "var(--text-secondary)" }} />
+                              <Tooltip
+                                formatter={(value) => `€${value}`}
+                                contentStyle={{
+                                  backgroundColor: "var(--surface)",
+                                  border: "1px solid var(--border)",
+                                  color: "var(--foreground)",
+                                }}
+                              />
+                              <Bar dataKey="value" fill="var(--primary)" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-text-secondary text-center py-8">
+                        No transaction data available
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Monthly Trends */}
+              {view === "monthly" && (
+                <div className="bg-sand/50 p-6 rounded-2xl border border-border">
                   <h3 className="text-lg font-medium text-foreground mb-4">
-                    Spending by Category
+                    Monthly Trends (Last 6 Months)
                   </h3>
-                  {categoryData.length > 0 ? (
-                    <div className="grid md:grid-cols-2 gap-8">
-                      {/* Pie Chart */}
-                      <div className="flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height={300}>
-                          <PieChart>
-                            <Pie
-                              data={categoryData}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={(entry) =>
-                                `${entry.name}: €${entry.value}`
-                              }
-                              outerRadius={100}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {categoryData.map((entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={entry.color}
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => `€${value}`} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Bar Chart */}
-                      <div>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={categoryData}>
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="rgba(100, 116, 139, 0.2)"
-                            />
-                            <XAxis
-                              dataKey="name"
-                              tick={{
-                                fill: "var(--text-secondary)",
-                                fontSize: 12,
-                              }}
-                              angle={-45}
-                              textAnchor="end"
-                              height={100}
-                            />
-                            <YAxis tick={{ fill: "var(--text-secondary)" }} />
-                            <Tooltip
-                              formatter={(value) => `€${value}`}
-                              contentStyle={{
-                                backgroundColor: "var(--surface)",
-                                border: "1px solid var(--border)",
-                                color: "var(--foreground)",
-                              }}
-                            />
-                            <Bar dataKey="value" fill="#3b82f6" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
+                  {monthlyData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={400}>
+                      <LineChart data={monthlyData}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="rgba(100, 116, 139, 0.2)"
+                        />
+                        <XAxis
+                          dataKey="month"
+                          tick={{ fill: "var(--text-secondary)" }}
+                        />
+                        <YAxis tick={{ fill: "var(--text-secondary)" }} />
+                        <Tooltip
+                          formatter={(value) => `€${value}`}
+                          contentStyle={{
+                            backgroundColor: "var(--surface)",
+                            border: "1px solid var(--border)",
+                            color: "var(--foreground)",
+                          }}
+                        />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="expenses"
+                          stroke="var(--expense)"
+                          strokeWidth={2}
+                          name="Expenses"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="income"
+                          stroke="var(--growth)"
+                          strokeWidth={2}
+                          name="Income"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   ) : (
-                    <p className="text-muted text-center py-8">
+                    <p className="text-text-secondary text-center py-8">
                       No transaction data available
                     </p>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Monthly Trends */}
-            {view === "monthly" && (
-              <div className="bg-surface-alt/50 p-6 rounded-xl border border-border">
-                <h3 className="text-lg font-medium text-foreground mb-4">
-                  Monthly Trends (Last 6 Months)
-                </h3>
-                {monthlyData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={400}>
-                    <LineChart data={monthlyData}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="rgba(100, 116, 139, 0.2)"
-                      />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fill: "var(--text-secondary)" }}
-                      />
-                      <YAxis tick={{ fill: "var(--text-secondary)" }} />
-                      <Tooltip
-                        formatter={(value) => `€${value}`}
-                        contentStyle={{
-                          backgroundColor: "var(--surface)",
-                          border: "1px solid var(--border)",
-                          color: "var(--foreground)",
-                        }}
-                      />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="expenses"
-                        stroke="#ef4444"
-                        strokeWidth={2}
-                        name="Expenses"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="income"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        name="Income"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-white/70 text-center py-8">
-                    No transaction data available
-                  </p>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </Card>
-    </div>
+              )}
+            </>
+          )}
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   );
 }

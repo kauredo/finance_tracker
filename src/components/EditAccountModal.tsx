@@ -5,7 +5,15 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Input, Select } from "@/components/ui/Input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 
 type AccountType = "checking" | "savings" | "credit" | "personal" | "joint";
 
@@ -60,74 +68,79 @@ export default function EditAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-surface border border-border rounded-xl shadow-xl max-w-md w-full">
-        <div className="p-6 border-b border-border">
-          <h2 className="text-xl font-bold text-foreground">Edit Account</h2>
-        </div>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader>
+          <ModalTitle>Edit Account</ModalTitle>
+        </ModalHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-              {error}
+        <form onSubmit={handleSubmit}>
+          <ModalBody className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-foreground mb-2"
+              >
+                Account Name
+              </label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Main Checking"
+                required
+                autoFocus
+              />
             </div>
-          )}
 
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-foreground mb-2"
-            >
-              Account Name
-            </label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Main Checking"
-              required
-              autoFocus
-            />
-          </div>
+            <div>
+              <label
+                htmlFor="type"
+                className="block text-sm font-medium text-foreground mb-2"
+              >
+                Account Type
+              </label>
+              <Select
+                id="type"
+                value={type}
+                onChange={(e) => setType(e.target.value as AccountType)}
+              >
+                <option value="checking">Checking</option>
+                <option value="savings">Savings</option>
+                <option value="credit">Credit</option>
+                <option value="personal">Personal</option>
+                <option value="joint">Joint</option>
+              </Select>
+            </div>
+          </ModalBody>
 
-          <div>
-            <label
-              htmlFor="type"
-              className="block text-sm font-medium text-foreground mb-2"
-            >
-              Account Type
-            </label>
-            <select
-              id="type"
-              value={type}
-              onChange={(e) => setType(e.target.value as AccountType)}
-              className="w-full px-4 py-2 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="checking">Checking</option>
-              <option value="savings">Savings</option>
-              <option value="credit">Credit</option>
-              <option value="personal">Personal</option>
-              <option value="joint">Joint</option>
-            </select>
-          </div>
-
-          <div className="flex gap-3 pt-4">
+          <ModalFooter>
             <Button
               type="button"
-              variant="secondary"
+              variant="ghost"
               onClick={onClose}
               disabled={loading}
-              className="flex-1"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? "Saving..." : "Save Changes"}
+            <Button
+              type="submit"
+              disabled={loading}
+              isLoading={loading}
+              variant="bloom"
+            >
+              Save Changes
             </Button>
-          </div>
+          </ModalFooter>
         </form>
-      </div>
-    </div>
+      </ModalContent>
+    </Modal>
   );
 }

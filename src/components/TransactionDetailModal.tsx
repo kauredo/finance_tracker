@@ -5,8 +5,16 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import EditTransactionModal from "@/components/EditTransactionModal";
 import Icon from "@/components/icons/Icon";
@@ -50,11 +58,15 @@ export default function TransactionDetailModal({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <Card variant="glass" className="w-full max-w-md">
-          <div className="text-center py-8 text-muted">Loading...</div>
-        </Card>
-      </div>
+      <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+        <ModalContent size="sm">
+          <ModalBody>
+            <div className="text-center py-8 text-text-secondary">
+              Loading...
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     );
   }
 
@@ -66,51 +78,30 @@ export default function TransactionDetailModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <Card variant="glass" className="w-full max-w-md">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-foreground">
-              Transaction Details
-            </h2>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              className="text-muted hover:text-foreground text-2xl"
-            >
-              ✕
-            </Button>
-          </div>
+      <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+        <ModalContent size="sm">
+          <ModalHeader>
+            <ModalTitle>Transaction Details</ModalTitle>
+          </ModalHeader>
 
-          <div className="space-y-4">
+          <ModalBody className="space-y-4">
             {/* Type Badge */}
             <div>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  isExpense
-                    ? "bg-danger/20 text-danger"
-                    : "bg-success/20 text-success"
-                }`}
+              <Badge
+                variant={isExpense ? "danger" : "growth"}
+                icon={
+                  <Icon name={isExpense ? "expense" : "income"} size={14} />
+                }
               >
-                {isExpense ? (
-                  <>
-                    <Icon name="expense" size={16} className="mr-2" />
-                    Expense
-                  </>
-                ) : (
-                  <>
-                    <Icon name="income" size={16} className="mr-2" />
-                    Income
-                  </>
-                )}
-              </span>
+                {isExpense ? "Expense" : "Income"}
+              </Badge>
             </div>
 
             {/* Amount */}
-            <div className="bg-surface-alt/50 p-4 rounded-lg">
-              <div className="text-sm text-muted mb-1">Amount</div>
+            <div className="bg-sand/50 p-4 rounded-2xl">
+              <div className="text-sm text-text-secondary mb-1">Amount</div>
               <div
-                className={`text-3xl font-bold ${isExpense ? "text-danger" : "text-success"}`}
+                className={`text-3xl font-bold tabular-nums ${isExpense ? "text-expense" : "text-growth"}`}
               >
                 {isExpense ? "-" : "+"}€
                 {Math.abs(transaction.amount).toFixed(2)}
@@ -119,7 +110,7 @@ export default function TransactionDetailModal({
 
             {/* Description */}
             <div>
-              <div className="text-sm text-muted mb-1">Description</div>
+              <div className="text-sm text-text-secondary mb-1">Description</div>
               <div className="text-foreground font-medium">
                 {transaction.description}
               </div>
@@ -128,13 +119,13 @@ export default function TransactionDetailModal({
             {/* Date */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-sm text-muted mb-1">Date</div>
+                <div className="text-sm text-text-secondary mb-1">Date</div>
                 <div className="text-foreground">
                   {new Date(transaction.date).toLocaleDateString()}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted mb-1">Created</div>
+                <div className="text-sm text-text-secondary mb-1">Created</div>
                 <div className="text-foreground text-sm">
                   {new Date(transaction.createdAt).toLocaleDateString()}
                 </div>
@@ -143,24 +134,29 @@ export default function TransactionDetailModal({
 
             {/* Category */}
             <div>
-              <div className="text-sm text-muted mb-1">Category</div>
+              <div className="text-sm text-text-secondary mb-1">Category</div>
               {transaction.category ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-surface-alt text-foreground">
-                  <Icon
-                    name={(transaction.category.icon as any) || "other"}
-                    size={16}
-                    className="mr-2"
-                  />
+                <Badge
+                  variant="default"
+                  icon={
+                    <Icon
+                      name={(transaction.category.icon as any) || "other"}
+                      size={14}
+                    />
+                  }
+                >
                   {transaction.category.name}
-                </span>
+                </Badge>
               ) : (
-                <span className="text-muted text-sm">Uncategorized</span>
+                <span className="text-text-secondary text-sm">
+                  Uncategorized
+                </span>
               )}
             </div>
 
             {/* Account */}
             <div>
-              <div className="text-sm text-muted mb-1">Account</div>
+              <div className="text-sm text-text-secondary mb-1">Account</div>
               <div className="text-foreground">
                 <div className="flex items-center gap-2">
                   <Icon
@@ -179,35 +175,34 @@ export default function TransactionDetailModal({
             {/* Notes */}
             {transaction.notes && (
               <div>
-                <div className="text-sm text-muted mb-1">Notes</div>
+                <div className="text-sm text-text-secondary mb-1">Notes</div>
                 <div className="text-foreground text-sm">
                   {transaction.notes}
                 </div>
               </div>
             )}
+          </ModalBody>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-border">
-              <Button
-                onClick={() => setShowEditModal(true)}
-                variant="secondary"
-                className="flex-1"
-              >
-                <Icon name="edit" size={18} className="mr-2" />
-                Edit
-              </Button>
-              <Button
-                onClick={() => setShowDeleteModal(true)}
-                variant="danger"
-                className="flex-1 bg-danger/20 hover:bg-danger/30 text-danger border-danger/30"
-              >
-                <Icon name="delete" size={18} className="mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
+          <ModalFooter>
+            <Button
+              onClick={() => setShowEditModal(true)}
+              variant="ghost"
+              className="flex-1"
+            >
+              <Icon name="edit" size={18} className="mr-2" />
+              Edit
+            </Button>
+            <Button
+              onClick={() => setShowDeleteModal(true)}
+              variant="danger"
+              className="flex-1"
+            >
+              <Icon name="delete" size={18} className="mr-2" />
+              Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* Edit Modal */}
       {showEditModal && (

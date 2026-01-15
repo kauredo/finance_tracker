@@ -4,8 +4,15 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/Modal";
 import CategoryPicker from "@/components/CategoryPicker";
 
 interface Category {
@@ -59,37 +66,26 @@ export default function DeleteCategoryModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card variant="glass" className="w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
-            Delete Category
-          </h2>
-          <Button
-            onClick={onClose}
-            disabled={loading}
-            variant="ghost"
-            size="sm"
-            className="text-muted hover:text-foreground text-2xl"
-          >
-            ✕
-          </Button>
-        </div>
+    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent size="sm">
+        <ModalHeader>
+          <ModalTitle>Delete Category</ModalTitle>
+        </ModalHeader>
 
-        <div className="space-y-6">
-          <div className="bg-danger/10 border border-danger/30 rounded-lg p-4">
+        <ModalBody className="space-y-4">
+          <div className="bg-danger/10 border border-danger/30 rounded-2xl p-4">
             <p className="text-foreground font-medium mb-2">
               Are you sure you want to delete{" "}
               <span className="font-bold">{category.name}</span>?
             </p>
             {transactionCount > 0 ? (
-              <p className="text-sm text-muted">
+              <p className="text-sm text-text-secondary">
                 This category is used in <strong>{transactionCount}</strong>{" "}
                 transactions. You must reassign them to another category before
                 deleting.
               </p>
             ) : (
-              <p className="text-sm text-muted">
+              <p className="text-sm text-text-secondary">
                 This category is not used in any transactions. It will be
                 permanently deleted.
               </p>
@@ -97,7 +93,7 @@ export default function DeleteCategoryModal({
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+            <div className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">
               {error}
             </div>
           )}
@@ -115,27 +111,22 @@ export default function DeleteCategoryModal({
               />
             </div>
           )}
+        </ModalBody>
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="secondary"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-              disabled={loading || (transactionCount > 0 && !reassignId)}
-              className="flex-1"
-            >
-              {loading ? "Deleting..." : "Delete Category"}
-            </Button>
-          </div>
-        </div>
-      </Card>
-    </div>
+        <ModalFooter>
+          <Button variant="ghost" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            disabled={loading || (transactionCount > 0 && !reassignId)}
+            isLoading={loading}
+          >
+            Delete Category
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
