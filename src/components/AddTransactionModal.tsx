@@ -35,7 +35,7 @@ export default function AddTransactionModal({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     account_id: "",
@@ -48,40 +48,40 @@ export default function AddTransactionModal({
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const fetchData = async () => {
+      try {
+        const supabase = createClient();
+        const [accountsRes, categoriesRes] = await Promise.all([
+          supabase.from("accounts").select("id, name, type").order("name"),
+          supabase
+            .from("categories")
+            .select("id, name, icon, color")
+            .order("name"),
+        ]);
 
-  const fetchData = async () => {
-    try {
-      const supabase = createClient();
-      const [accountsRes, categoriesRes] = await Promise.all([
-        supabase.from("accounts").select("id, name, type").order("name"),
-        supabase
-          .from("categories")
-          .select("id, name, icon, color")
-          .order("name"),
-      ]);
+        if (accountsRes.error) throw accountsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
 
-      if (accountsRes.error) throw accountsRes.error;
-      if (categoriesRes.error) throw categoriesRes.error;
+        setAccounts(accountsRes.data || []);
+        setCategories(categoriesRes.data || []);
 
-      setAccounts(accountsRes.data || []);
-      setCategories(categoriesRes.data || []);
-
-      // Auto-select first account if available
-      if (accountsRes.data && accountsRes.data.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          account_id: accountsRes.data[0].id,
-        }));
+        // Auto-select first account if available
+        if (accountsRes.data && accountsRes.data.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            account_id: accountsRes.data[0].id,
+          }));
+        }
+      } catch (error: any) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load accounts and categories");
+      } finally {
+        setLoadingData(false);
       }
-    } catch (error: any) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to load accounts and categories");
-    } finally {
-      setLoadingData(false);
-    }
-  };
+    };
+
+    fetchData();
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

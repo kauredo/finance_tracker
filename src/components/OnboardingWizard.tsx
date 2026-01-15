@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import Icon from "@/components/icons/Icon";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
@@ -35,7 +34,6 @@ const getGrowthStage = (step: Step) => {
 
 export default function OnboardingWizard() {
   const router = useRouter();
-  const { user } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
   const [currentStep, setCurrentStep] = useState<Step>("welcome");
   const [loading, setLoading] = useState(false);

@@ -79,7 +79,7 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
       const categoryMap = new Map<string, { total: number; color: string }>();
       const monthMap = new Map<string, { expenses: number; income: number }>();
 
-      transactions?.forEach((tx, index) => {
+      transactions?.forEach((tx) => {
         const categoryName = (tx.categories as any)?.name || "Other";
         const amount = tx.amount;
         const date = new Date(tx.date);

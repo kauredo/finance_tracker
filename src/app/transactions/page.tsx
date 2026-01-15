@@ -13,7 +13,7 @@ import { useDateRange } from "@/hooks/useDateRange";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, MotionCard } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Input";
-import Icon, { IconName } from "@/components/icons/Icon";
+import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 

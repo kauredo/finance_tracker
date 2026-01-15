@@ -53,58 +53,58 @@ export default function RecurringTransactionModal({
   const supabase = createClient();
 
   useEffect(() => {
+    const fetchData = async () => {
+      setFetching(true);
+      try {
+        // Fetch categories and accounts
+        const [catRes, accRes] = await Promise.all([
+          supabase.from("categories").select("*").order("name"),
+          supabase.from("accounts").select("*").order("name"),
+        ]);
+
+        if (catRes.data) setCategories(catRes.data);
+        if (accRes.data) setAccounts(accRes.data);
+
+        // If editing, fetch existing data
+        if (editId) {
+          const { data: recurring } = await supabase
+            .from("recurring_transactions")
+            .select("*")
+            .eq("id", editId)
+            .single();
+
+          if (recurring) {
+            setDescription(recurring.description);
+            setAmount(Math.abs(recurring.amount).toString());
+            setType(recurring.amount >= 0 ? "income" : "expense");
+            setCategoryId(recurring.category_id || "");
+            setAccountId(recurring.account_id || "");
+            setInterval(recurring.interval);
+            setNextRunDate(recurring.next_run_date);
+          }
+        } else if (initialData) {
+          // Pre-fill from suggestion
+          setDescription(initialData.description);
+          setAmount(Math.abs(initialData.amount).toString());
+          setType(initialData.amount >= 0 ? "income" : "expense");
+          setInterval(initialData.interval);
+          // Default to today for next run
+          setNextRunDate(new Date().toISOString().split("T")[0]);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        error("Failed to load data");
+      } finally {
+        setFetching(false);
+      }
+    };
+
     if (isOpen) {
       fetchData();
     } else {
       resetForm();
     }
-  }, [isOpen, editId, initialData]);
-
-  const fetchData = async () => {
-    setFetching(true);
-    try {
-      // Fetch categories and accounts
-      const [catRes, accRes] = await Promise.all([
-        supabase.from("categories").select("*").order("name"),
-        supabase.from("accounts").select("*").order("name"),
-      ]);
-
-      if (catRes.data) setCategories(catRes.data);
-      if (accRes.data) setAccounts(accRes.data);
-
-      // If editing, fetch existing data
-      if (editId) {
-        const { data: recurring } = await supabase
-          .from("recurring_transactions")
-          .select("*")
-          .eq("id", editId)
-          .single();
-
-        if (recurring) {
-          setDescription(recurring.description);
-          setAmount(Math.abs(recurring.amount).toString());
-          setType(recurring.amount >= 0 ? "income" : "expense");
-          setCategoryId(recurring.category_id || "");
-          setAccountId(recurring.account_id || "");
-          setInterval(recurring.interval);
-          setNextRunDate(recurring.next_run_date);
-        }
-      } else if (initialData) {
-        // Pre-fill from suggestion
-        setDescription(initialData.description);
-        setAmount(Math.abs(initialData.amount).toString());
-        setType(initialData.amount >= 0 ? "income" : "expense");
-        setInterval(initialData.interval);
-        // Default to today for next run
-        setNextRunDate(new Date().toISOString().split("T")[0]);
-      }
-    } catch (err) {
-      console.error("Error fetching data:", err);
-      error("Failed to load data");
-    } finally {
-      setFetching(false);
-    }
-  };
+  }, [isOpen, editId, initialData, supabase, error]);
 
   const resetForm = () => {
     setDescription("");

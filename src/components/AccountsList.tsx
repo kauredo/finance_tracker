@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
 import { motion } from "motion/react";
@@ -20,7 +19,9 @@ interface AccountsListProps {
   onRefresh?: () => void;
 }
 
-export default function AccountsList({ onRefresh }: AccountsListProps) {
+export default function AccountsList({
+  onRefresh: _onRefresh,
+}: AccountsListProps) {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);

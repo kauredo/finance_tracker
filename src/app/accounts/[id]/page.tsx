@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -34,15 +34,7 @@ export default function AccountDetailPage() {
 
   const accountId = params.id as string;
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/auth");
-    } else if (user && accountId) {
-      fetchAccountDetails();
-    }
-  }, [user, authLoading, router, accountId]);
-
-  const fetchAccountDetails = async () => {
+  const fetchAccountDetails = useCallback(async () => {
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -60,7 +52,15 @@ export default function AccountDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accountId, toast, router]);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/auth");
+    } else if (user && accountId) {
+      fetchAccountDetails();
+    }
+  }, [user, authLoading, router, accountId, fetchAccountDetails]);
 
   const handleDelete = async () => {
     setDeleteLoading(true);

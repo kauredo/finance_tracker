@@ -28,8 +28,38 @@ export default function InvitePartnerModal({
   const [inviteLink, setInviteLink] = useState("");
 
   useEffect(() => {
+    const fetchHouseholds = async () => {
+      if (!user) return;
+
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("household_members")
+          .select("household_id, households(id, name)")
+          .eq("user_id", user.id)
+          .eq("role", "owner");
+
+        if (error) throw error;
+
+        const householdList =
+          data?.map((item) => ({
+            id: (item.households as any).id,
+            name: (item.households as any).name,
+          })) || [];
+
+        setHouseholds(householdList);
+        if (householdList.length > 0) {
+          setSelectedHousehold(householdList[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching households:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchHouseholds();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (selectedHousehold && typeof window !== "undefined") {
@@ -38,36 +68,6 @@ export default function InvitePartnerModal({
       );
     }
   }, [selectedHousehold]);
-
-  const fetchHouseholds = async () => {
-    if (!user) return;
-
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("household_members")
-        .select("household_id, households(id, name)")
-        .eq("user_id", user.id)
-        .eq("role", "owner");
-
-      if (error) throw error;
-
-      const householdList =
-        data?.map((item) => ({
-          id: (item.households as any).id,
-          name: (item.households as any).name,
-        })) || [];
-
-      setHouseholds(householdList);
-      if (householdList.length > 0) {
-        setSelectedHousehold(householdList[0].id);
-      }
-    } catch (error) {
-      console.error("Error fetching households:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(inviteLink);

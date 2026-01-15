@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import { parseStatementWithVision, parseStatementWithAI } from "@/lib/openai";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { createCanvas } from "@napi-rs/canvas";
+import jschardet from "jschardet";
+import iconv from "iconv-lite";
+import Papa from "papaparse";
 
 // Configure PDF.js to use the Node.js canvas
 const NodeCanvasFactory = {
@@ -114,26 +117,13 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        console.log(
-          `Processing image ${file.filePath}, size:`,
-          fileData.size,
-          "bytes",
-        );
         const arrayBuffer = await fileData.arrayBuffer();
         const base64Image = Buffer.from(arrayBuffer).toString("base64");
         base64Images.push(base64Image);
-        console.log(
-          `Image ${file.filePath} converted, base64 length:`,
-          base64Image.length,
-        );
       }
 
-      console.log(`Calling vision API with ${base64Images.length} image(s)...`);
       const imageTransactions = await parseStatementWithVision(base64Images);
-      console.log(
-        "Extracted transactions from images:",
-        imageTransactions.length,
-      );
+
       transactions.push(...imageTransactions);
     }
 
@@ -154,12 +144,6 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        console.log(
-          `Processing PDF ${file.filePath}, size:`,
-          fileData.size,
-          "bytes",
-        );
-
         // Convert PDF to images
         try {
           const arrayBuffer = await fileData.arrayBuffer();
@@ -172,7 +156,6 @@ export async function POST(req: NextRequest) {
           }).promise;
 
           const numPages = pdfDocument.numPages;
-          console.log(`PDF has ${numPages} page(s)`);
 
           // Process each page
           for (let pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -201,11 +184,6 @@ export async function POST(req: NextRequest) {
               .toString("base64");
             base64Images.push(base64Image);
 
-            console.log(
-              `Rendered page ${pageNum}/${numPages}, base64 length:`,
-              base64Image.length,
-            );
-
             // Clean up
             NodeCanvasFactory.destroy(canvasFactory);
           }
@@ -218,20 +196,13 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      console.log(
-        `Calling vision API with ${base64Images.length} PDF page(s)...`,
-      );
       const pdfTransactions = await parseStatementWithVision(base64Images);
-      console.log("Extracted transactions from PDF:", pdfTransactions.length);
+
       transactions.push(...pdfTransactions);
     }
 
     // 6. Process CSV/TSV files with text parsing
     if (textFiles.length > 0) {
-      const jschardet = require("jschardet");
-      const iconv = require("iconv-lite");
-      const Papa = require("papaparse");
-
       for (const file of textFiles) {
         const { data: fileData, error: downloadError } = await supabase.storage
           .from("statements")
@@ -245,8 +216,6 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        console.log(`Processing text file ${file.filePath}`);
-
         // Get raw buffer
         const arrayBuffer = await fileData.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
@@ -254,9 +223,6 @@ export async function POST(req: NextRequest) {
         // Detect encoding
         const detected = jschardet.detect(buffer);
         const encoding = detected.encoding || "utf-8";
-        console.log(
-          `Detected encoding for ${file.filePath}: ${encoding} (confidence: ${detected.confidence})`,
-        );
 
         // Decode content
         let fileContent = iconv.decode(buffer, encoding);
@@ -282,11 +248,7 @@ export async function POST(req: NextRequest) {
 
           // If parsing was successful and we have data, use the JSON string
           if (parseResult.data && parseResult.data.length > 0) {
-            console.log(
-              `Successfully parsed ${parseResult.data.length} rows from CSV`,
-            );
             fileContent = JSON.stringify(parseResult.data, null, 2);
-            console.log(fileContent);
           }
         }
 
@@ -294,14 +256,10 @@ export async function POST(req: NextRequest) {
           fileContent,
           fileType,
         );
-        console.log(
-          `Extracted ${textTransactions.length} transactions from ${file.filePath}`,
-        );
+
         transactions.push(...textTransactions);
       }
     }
-
-    console.log("Total transactions extracted:", transactions.length);
 
     // 7. Get existing transactions for this account to detect duplicates
     const { data: existingTransactions, error: fetchError } = await supabase
@@ -337,22 +295,6 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Helper function to check if two descriptions are similar
-    const areSimilar = (desc1: string, desc2: string): boolean => {
-      const normalize = (s: string) =>
-        s.toLowerCase().trim().replace(/\s+/g, " ");
-      const d1 = normalize(desc1);
-      const d2 = normalize(desc2);
-
-      // Exact match
-      if (d1 === d2) return true;
-
-      // One contains the other (handles truncated descriptions)
-      if (d1.includes(d2) || d2.includes(d1)) return true;
-
-      return false;
-    };
-
     // Helper to check date proximity (+/- 3 days)
     const isDateClose = (date1: string, date2: string): boolean => {
       const d1 = new Date(date1).getTime();
@@ -376,18 +318,12 @@ export async function POST(req: NextRequest) {
       if (match) {
         // If matched, we skip insertion (it's a duplicate or the recurring tx already exists)
         // Optionally we could update the description if it was a recurring placeholder
-        console.log(
-          `Skipping duplicate/match: ${newTx.description} (${newTx.amount}) matches ${match.description}`,
-        );
       } else {
         newTransactions.push(newTx);
       }
     }
 
     const duplicateCount = dbTransactions.length - newTransactions.length;
-    console.log(
-      `Found ${newTransactions.length} new transactions, ${duplicateCount} duplicates skipped`,
-    );
 
     // 10. Insert only new transactions
     if (newTransactions.length > 0) {

@@ -27,15 +27,6 @@ interface Category {
   color: string;
 }
 
-interface Transaction {
-  id: string;
-  account_id: string;
-  date: string;
-  description: string;
-  amount: number;
-  category_id: string | null;
-}
-
 export default function EditTransactionModal({
   transactionId,
   onClose,
@@ -57,47 +48,47 @@ export default function EditTransactionModal({
   });
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const supabase = createClient();
+        const [transactionRes, accountsRes, categoriesRes] = await Promise.all([
+          fetch(`/api/transactions/${transactionId}`),
+          supabase.from("accounts").select("id, name, type").order("name"),
+          supabase
+            .from("categories")
+            .select("id, name, icon, color")
+            .order("name"),
+        ]);
+
+        const transactionData = await transactionRes.json();
+        if (!transactionRes.ok) throw new Error(transactionData.error);
+
+        if (accountsRes.error) throw accountsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+
+        setAccounts(accountsRes.data || []);
+        setCategories(categoriesRes.data || []);
+
+        const tx = transactionData.transaction;
+        setFormData({
+          account_id: tx.account_id || "",
+          date: tx.date,
+          description: tx.description,
+          amount: Math.abs(tx.amount).toString(),
+          category_id: tx.category_id || "",
+          transactionType: tx.amount < 0 ? "expense" : "income",
+        });
+      } catch (error: any) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load transaction data");
+        onClose();
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
     fetchData();
-  }, [transactionId]);
-
-  const fetchData = async () => {
-    try {
-      const supabase = createClient();
-      const [transactionRes, accountsRes, categoriesRes] = await Promise.all([
-        fetch(`/api/transactions/${transactionId}`),
-        supabase.from("accounts").select("id, name, type").order("name"),
-        supabase
-          .from("categories")
-          .select("id, name, icon, color")
-          .order("name"),
-      ]);
-
-      const transactionData = await transactionRes.json();
-      if (!transactionRes.ok) throw new Error(transactionData.error);
-
-      if (accountsRes.error) throw accountsRes.error;
-      if (categoriesRes.error) throw categoriesRes.error;
-
-      setAccounts(accountsRes.data || []);
-      setCategories(categoriesRes.data || []);
-
-      const tx = transactionData.transaction;
-      setFormData({
-        account_id: tx.account_id || "",
-        date: tx.date,
-        description: tx.description,
-        amount: Math.abs(tx.amount).toString(),
-        category_id: tx.category_id || "",
-        transactionType: tx.amount < 0 ? "expense" : "income",
-      });
-    } catch (error: any) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to load transaction data");
-      onClose();
-    } finally {
-      setLoadingData(false);
-    }
-  };
+  }, [transactionId, toast, onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

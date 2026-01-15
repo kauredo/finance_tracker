@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -17,7 +16,6 @@ export default function AddAccountModal({
   onClose,
   onSuccess,
 }: AddAccountModalProps) {
-  const { user } = useAuth();
   const [accountName, setAccountName] = useState("");
   const [accountType, setAccountType] = useState<"personal" | "joint">(
     "personal",
@@ -32,9 +30,6 @@ export default function AddAccountModal({
 
     try {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       const {
         data: { session },
       } = await supabase.auth.getSession();

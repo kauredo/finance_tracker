@@ -110,8 +110,6 @@ You MUST respond with valid JSON only, in this EXACT format:
 
     const responseContent = response.choices[0].message.content;
 
-    console.log("OpenAI Vision Response:", responseContent);
-
     if (!responseContent) {
       throw new Error("No response from OpenAI");
     }

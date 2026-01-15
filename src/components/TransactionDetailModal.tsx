@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -46,11 +46,7 @@ export default function TransactionDetailModal({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchTransaction();
-  }, [transactionId]);
-
-  const fetchTransaction = async () => {
+  const fetchTransaction = useCallback(async () => {
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -88,7 +84,11 @@ export default function TransactionDetailModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [transactionId, toast, onClose]);
+
+  useEffect(() => {
+    fetchTransaction();
+  }, [fetchTransaction]);
 
   const handleDelete = async () => {
     setDeleting(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
@@ -36,13 +36,7 @@ export default function GoalsPage() {
   const [deletingGoal, setDeletingGoal] = useState<Goal | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchGoals();
-    }
-  }, [user]);
-
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/goals");
@@ -59,7 +53,13 @@ export default function GoalsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    if (user) {
+      fetchGoals();
+    }
+  }, [user, fetchGoals]);
 
   const handleCreate = () => {
     setEditingGoal(undefined);

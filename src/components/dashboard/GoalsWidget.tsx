@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { EmptyState } from "@/components/ui/EmptyState";
-import Icon from "@/components/icons/Icon";
 import Link from "next/link";
 import { motion } from "motion/react";
 

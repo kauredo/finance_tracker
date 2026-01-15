@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Card } from "@/components/ui/Card";
 import Icon from "@/components/icons/Icon";
-import { SkeletonTable } from "@/components/ui/Skeleton";
 import { Pagination } from "@/components/ui/Pagination";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { motion } from "motion/react";
@@ -70,7 +68,6 @@ export default function TransactionsList({
   categoryFilter = "all",
   startDate,
   endDate,
-  limit = 100,
 }: TransactionsListProps = {}) {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -82,20 +79,7 @@ export default function TransactionsList({
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
-  useEffect(() => {
-    if (user) {
-      setCurrentPage(1);
-      fetchTransactions();
-    }
-  }, [user, searchQuery, accountFilter, categoryFilter, startDate, endDate]);
-
-  useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    }
-  }, [currentPage, itemsPerPage]);
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       const supabase = createClient();
 
@@ -165,7 +149,21 @@ export default function TransactionsList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    searchQuery,
+    accountFilter,
+    categoryFilter,
+    startDate,
+    endDate,
+    currentPage,
+    itemsPerPage,
+  ]);
+
+  useEffect(() => {
+    if (user) {
+      fetchTransactions();
+    }
+  }, [user, fetchTransactions]);
 
   if (loading) {
     return (

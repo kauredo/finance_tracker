@@ -6,10 +6,7 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    console.log(
-      "API: Cookies found:",
-      cookieStore.getAll().map((c) => c.name),
-    );
+
     const supabase = createClient(cookieStore);
     const { searchParams } = new URL(request.url);
 
@@ -18,8 +15,6 @@ export async function GET(request: NextRequest) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    console.log("API: User found:", user?.id);
-    console.log("API: Auth error:", authError);
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

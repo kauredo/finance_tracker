@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
-import { Card, CardContent, MotionCard } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon, { IconName } from "@/components/icons/Icon";
 import RecurringTransactionModal from "@/components/RecurringTransactionModal";
 import Image from "next/image";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 
 interface RecurringTransaction {

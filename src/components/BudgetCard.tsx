@@ -80,7 +80,7 @@ export default function BudgetCard({
       await onSave(parseFloat(amount));
       setIsEditing(false);
       success("Budget planted successfully");
-    } catch (err) {
+    } catch (_err) {
       error("Failed to save budget");
     } finally {
       setIsLoading(false);
@@ -95,7 +95,7 @@ export default function BudgetCard({
       await onDelete();
       setAmount("");
       success("Budget removed from garden");
-    } catch (err) {
+    } catch (_err) {
       error("Failed to remove budget");
     } finally {
       setIsLoading(false);

@@ -61,6 +61,88 @@ export default function FileUpload({
     setIsDragging(false);
   }, []);
 
+  const processFiles = useCallback(
+    async (files: File[]) => {
+      if (!user) return;
+      if (!selectedAccountId) {
+        setError("Please select an account first");
+        return;
+      }
+
+      setUploading(true);
+      setError(null);
+
+      try {
+        const supabase = createClient();
+        // Validate all files first
+        const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv", "pdf"];
+        for (const file of files) {
+          const fileExt = file.name.split(".").pop()?.toLowerCase();
+          if (!validExtensions.includes(fileExt || "")) {
+            throw new Error(
+              `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`,
+            );
+          }
+        }
+
+        // Upload all files to storage
+        const uploadedFiles: { filePath: string; fileType: string }[] = [];
+
+        for (const file of files) {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${Math.random()}.${fileExt}`;
+          const fileType = file.type || `image/${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("statements")
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          uploadedFiles.push({ filePath: fileName, fileType });
+        }
+
+        // Call API to parse all images together
+        const session = await supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+
+        const response = await fetch("/api/parse-statement", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            files: uploadedFiles, // Send multiple files
+            accountId: selectedAccountId,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to process files");
+        }
+
+        // Show detailed success message
+        let message = `Success! Processed ${result.total} transaction(s)`;
+        if (result.duplicates > 0) {
+          message += ` (${result.new} new, ${result.duplicates} duplicate${result.duplicates > 1 ? "s" : ""} skipped)`;
+        }
+        message += ` from ${files.length} file${files.length > 1 ? "s" : ""}.`;
+
+        alert(message);
+        onUploadComplete();
+      } catch (error: any) {
+        console.error("Error uploading/processing files:", error);
+        setError(error.message);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [user, selectedAccountId, onUploadComplete],
+  );
+
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
       e.preventDefault();
@@ -71,102 +153,21 @@ export default function FileUpload({
         await processFiles(files);
       }
     },
-    [user, selectedAccountId],
+    [processFiles],
   );
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
-    }
-
-    // Convert FileList to array
-    const files = Array.from(e.target.files);
-    await processFiles(files);
-  };
-
-  const processFiles = async (files: File[]) => {
-    if (!user) return;
-    if (!selectedAccountId) {
-      setError("Please select an account first");
-      return;
-    }
-
-    setUploading(true);
-    setError(null);
-
-    try {
-      const supabase = createClient();
-      // Validate all files first
-      const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv", "pdf"];
-      for (const file of files) {
-        const fileExt = file.name.split(".").pop()?.toLowerCase();
-        if (!validExtensions.includes(fileExt || "")) {
-          throw new Error(
-            `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`,
-          );
-        }
+  const handleFileUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || e.target.files.length === 0) {
+        return;
       }
 
-      // Upload all files to storage
-      const uploadedFiles: { filePath: string; fileType: string }[] = [];
-
-      for (const file of files) {
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-        const fileType = file.type || `image/${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("statements")
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        uploadedFiles.push({ filePath: fileName, fileType });
-      }
-
-      // Call API to parse all images together
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-
-      const response = await fetch("/api/parse-statement", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          files: uploadedFiles, // Send multiple files
-          accountId: selectedAccountId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to process files");
-      }
-
-      // Show detailed success message
-      let message = `Success! Processed ${result.total} transaction(s)`;
-      if (result.duplicates > 0) {
-        message += ` (${result.new} new, ${result.duplicates} duplicate${result.duplicates > 1 ? "s" : ""} skipped)`;
-      }
-      message += ` from ${files.length} file${files.length > 1 ? "s" : ""}.`;
-
-      alert(message);
-      onUploadComplete();
-    } catch (error: any) {
-      console.error("Error uploading/processing files:", error);
-      setError(error.message);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const processFile = async (file: File) => {
-    await processFiles([file]);
-  };
+      // Convert FileList to array
+      const files = Array.from(e.target.files);
+      await processFiles(files);
+    },
+    [processFiles],
+  );
 
   if (loadingAccounts) {
     return <div className="text-muted text-sm">Loading accounts...</div>;

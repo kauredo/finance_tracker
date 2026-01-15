@@ -16,7 +16,7 @@ interface Suggestion {
   occurrence_count: number;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);

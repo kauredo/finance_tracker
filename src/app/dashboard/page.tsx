@@ -56,11 +56,11 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("");
 
   // Filters
-  const [dateRange, setDateRange] = useState({
+  const dateRange = {
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     to: new Date(),
-  });
-  const [selectedAccount, setSelectedAccount] = useState("all");
+  };
+  const selectedAccount = "all";
 
   const [stats, setStats] = useState<DashboardStats>({
     totalExpenses: 0,
@@ -72,6 +72,104 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const supabase = createClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user!.id)
+          .single();
+
+        if (profile?.full_name) {
+          setUserName(profile.full_name.split(" ")[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    const checkWelcomeTour = async () => {
+      try {
+        const supabase = createClient();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("has_seen_welcome_tour")
+          .eq("id", user!.id)
+          .single();
+
+        if (profile && !profile.has_seen_welcome_tour) {
+          setShowWelcomeTour(true);
+        }
+      } catch (error) {
+        console.error("Error checking welcome tour:", error);
+      }
+    };
+
+    const fetchDashboardData = async () => {
+      try {
+        const supabase = createClient();
+
+        // Trigger recurring transaction processing (no recursive call to avoid infinite loop)
+        fetch("/api/recurring/process", { method: "POST" })
+          .then((res) => res.json())
+          .catch((err) => console.error("Error processing recurring:", err));
+
+        // Fetch transactions
+        const { data: transactionsData, error: transactionsError } =
+          await supabase.from("transactions").select("amount, date");
+
+        if (transactionsError) throw transactionsError;
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const newStats = (transactionsData || []).reduce(
+          (acc: any, curr: any) => {
+            const amount = curr.amount;
+            const date = new Date(curr.date);
+
+            if (amount < 0) {
+              acc.totalExpenses += Math.abs(amount);
+              if (
+                date.getMonth() === currentMonth &&
+                date.getFullYear() === currentYear
+              ) {
+                acc.monthlyExpenses += Math.abs(amount);
+              }
+            } else {
+              acc.totalIncome += amount;
+            }
+            acc.savings += amount;
+            return acc;
+          },
+          {
+            totalExpenses: 0,
+            monthlyExpenses: 0,
+            savings: 0,
+            totalBudget: 0,
+            budgetSpent: 0,
+            totalIncome: 0,
+          },
+        );
+
+        // Fetch Budgets
+        const { data: budgets } = await supabase
+          .from("budgets")
+          .select("amount");
+
+        if (budgets) {
+          newStats.totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
+          newStats.budgetSpent = newStats.monthlyExpenses;
+        }
+
+        setStats(newStats);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
     if (!loading && !user) {
       router.push("/auth");
     } else if (user) {
@@ -80,40 +178,6 @@ export default function DashboardPage() {
       fetchUserProfile();
     }
   }, [user, loading, router, dateRange, selectedAccount]);
-
-  const fetchUserProfile = async () => {
-    try {
-      const supabase = createClient();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user!.id)
-        .single();
-
-      if (profile?.full_name) {
-        setUserName(profile.full_name.split(" ")[0]);
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    }
-  };
-
-  const checkWelcomeTour = async () => {
-    try {
-      const supabase = createClient();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("has_seen_welcome_tour")
-        .eq("id", user!.id)
-        .single();
-
-      if (profile && !profile.has_seen_welcome_tour) {
-        setShowWelcomeTour(true);
-      }
-    } catch (error) {
-      console.error("Error checking welcome tour:", error);
-    }
-  };
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -133,73 +197,6 @@ export default function DashboardPage() {
       description: "Close modal",
     },
   ]);
-
-  const fetchDashboardData = async () => {
-    try {
-      const supabase = createClient();
-
-      // Trigger recurring transaction processing
-      fetch("/api/recurring/process", { method: "POST" })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.processed > 0) {
-            fetchDashboardData();
-          }
-        })
-        .catch((err) => console.error("Error processing recurring:", err));
-
-      // Fetch transactions
-      const { data: transactionsData, error: transactionsError } =
-        await supabase.from("transactions").select("amount, date");
-
-      if (transactionsError) throw transactionsError;
-
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-
-      const newStats = (transactionsData || []).reduce(
-        (acc: any, curr: any) => {
-          const amount = curr.amount;
-          const date = new Date(curr.date);
-
-          if (amount < 0) {
-            acc.totalExpenses += Math.abs(amount);
-            if (
-              date.getMonth() === currentMonth &&
-              date.getFullYear() === currentYear
-            ) {
-              acc.monthlyExpenses += Math.abs(amount);
-            }
-          } else {
-            acc.totalIncome += amount;
-          }
-          acc.savings += amount;
-          return acc;
-        },
-        {
-          totalExpenses: 0,
-          monthlyExpenses: 0,
-          savings: 0,
-          totalBudget: 0,
-          budgetSpent: 0,
-          totalIncome: 0,
-        },
-      );
-
-      // Fetch Budgets
-      const { data: budgets } = await supabase.from("budgets").select("amount");
-
-      if (budgets) {
-        newStats.totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
-        newStats.budgetSpent = newStats.monthlyExpenses;
-      }
-
-      setStats(newStats);
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
 
   if (loading || !user) {
     return (
@@ -597,9 +594,7 @@ export default function DashboardPage() {
       {showAccountModal && (
         <AddAccountModal
           onClose={() => setShowAccountModal(false)}
-          onSuccess={() => {
-            console.log("Account created successfully!");
-          }}
+          onSuccess={() => {}}
         />
       )}
       {showInviteModal && (

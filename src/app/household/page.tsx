@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -16,7 +16,6 @@ import {
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
-import Image from "next/image";
 import { format } from "date-fns";
 import { motion } from "motion/react";
 
@@ -45,13 +44,8 @@ export default function HouseholdPage() {
   const [members, setMembers] = useState<HouseholdMember[]>([]);
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
 
-  useEffect(() => {
-    if (user) {
-      fetchHouseholdData();
-    }
-  }, [user]);
-
-  const fetchHouseholdData = async () => {
+  const fetchHouseholdData = useCallback(async () => {
+    if (!user) return;
     try {
       const supabase = createClient();
 
@@ -59,7 +53,7 @@ export default function HouseholdPage() {
       const { data: membership, error: membershipError } = await supabase
         .from("household_members")
         .select("household_id, role")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .single();
 
       if (membershipError || !membership) {
@@ -117,7 +111,13 @@ export default function HouseholdPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, showError]);
+
+  useEffect(() => {
+    if (user) {
+      fetchHouseholdData();
+    }
+  }, [user, fetchHouseholdData]);
 
   const handleRemoveMember = async (userId: string) => {
     if (!household || currentUserRole !== "owner") return;

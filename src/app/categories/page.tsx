@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
-import { Card, MotionCard } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon, { IconName } from "@/components/icons/Icon";
@@ -33,15 +33,9 @@ export default function CategoriesPage() {
     null,
   );
   const [transactionCount, setTransactionCount] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [_isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchCategories();
-    }
-  }, [user]);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/categories");
@@ -58,7 +52,13 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    }
+  }, [user, fetchCategories]);
 
   const handleCreate = () => {
     setEditingCategory(null);

@@ -23,40 +23,40 @@ function JoinContent() {
   const householdId = searchParams?.get("household");
 
   useEffect(() => {
+    const fetchHousehold = async () => {
+      if (!householdId) return;
+
+      try {
+        const response = await fetch("/api/get-household-info", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ householdId }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch household info");
+        }
+
+        setHousehold(data);
+      } catch (err: any) {
+        console.error("Error fetching household:", err);
+        setError("Invalid invitation link or household not found.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (!authLoading && !user) {
       // Redirect to auth with return URL
       router.push(`/auth?redirect=/join?household=${householdId}`);
     } else if (user && householdId) {
       fetchHousehold();
     }
-  }, [user, authLoading, householdId]);
-
-  const fetchHousehold = async () => {
-    if (!householdId) return;
-
-    try {
-      const response = await fetch("/api/get-household-info", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ householdId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch household info");
-      }
-
-      setHousehold(data);
-    } catch (err: any) {
-      console.error("Error fetching household:", err);
-      setError("Invalid invitation link or household not found.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, authLoading, householdId, router]);
 
   const handleJoin = async () => {
     if (!user || !householdId) return;

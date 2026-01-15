@@ -51,87 +51,87 @@ export default function GlobalSearch() {
       return;
     }
 
+    const performSearch = async () => {
+      setLoading(true);
+      try {
+        const supabase = createClient();
+        const searchTerm = query.trim();
+
+        // Search transactions
+        const { data: transactions } = await supabase
+          .from("transactions")
+          .select(
+            "id, description, amount, date, category:categories(name, icon, color)",
+          )
+          .ilike("description", `%${searchTerm}%`)
+          .limit(5);
+
+        // Search accounts
+        const { data: accounts } = await supabase
+          .from("accounts")
+          .select("id, name, type")
+          .ilike("name", `%${searchTerm}%`)
+          .limit(5);
+
+        // Search categories
+        const { data: categories } = await supabase
+          .from("categories")
+          .select("id, name, icon, color")
+          .ilike("name", `%${searchTerm}%`)
+          .limit(5);
+
+        const allResults: SearchResult[] = [];
+
+        // Format transactions
+        transactions?.forEach((t) => {
+          allResults.push({
+            id: t.id,
+            type: "transaction",
+            title: t.description,
+            subtitle: new Date(t.date).toLocaleDateString(),
+            amount: t.amount,
+            icon: (t.category as any)?.icon || "other",
+            color: (t.category as any)?.color,
+          });
+        });
+
+        // Format accounts
+        accounts?.forEach((a) => {
+          allResults.push({
+            id: a.id,
+            type: "account",
+            title: a.name,
+            subtitle: a.type,
+            icon: "accounts",
+          });
+        });
+
+        // Format categories
+        categories?.forEach((c) => {
+          allResults.push({
+            id: c.id,
+            type: "category",
+            title: c.name,
+            subtitle: "Category",
+            icon: c.icon,
+            color: c.color,
+          });
+        });
+
+        setResults(allResults);
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const timer = setTimeout(() => {
       performSearch();
     }, 300); // Debounce
 
     return () => clearTimeout(timer);
   }, [query]);
-
-  const performSearch = async () => {
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const searchTerm = query.trim();
-
-      // Search transactions
-      const { data: transactions } = await supabase
-        .from("transactions")
-        .select(
-          "id, description, amount, date, category:categories(name, icon, color)",
-        )
-        .ilike("description", `%${searchTerm}%`)
-        .limit(5);
-
-      // Search accounts
-      const { data: accounts } = await supabase
-        .from("accounts")
-        .select("id, name, type")
-        .ilike("name", `%${searchTerm}%`)
-        .limit(5);
-
-      // Search categories
-      const { data: categories } = await supabase
-        .from("categories")
-        .select("id, name, icon, color")
-        .ilike("name", `%${searchTerm}%`)
-        .limit(5);
-
-      const allResults: SearchResult[] = [];
-
-      // Format transactions
-      transactions?.forEach((t) => {
-        allResults.push({
-          id: t.id,
-          type: "transaction",
-          title: t.description,
-          subtitle: new Date(t.date).toLocaleDateString(),
-          amount: t.amount,
-          icon: (t.category as any)?.icon || "other",
-          color: (t.category as any)?.color,
-        });
-      });
-
-      // Format accounts
-      accounts?.forEach((a) => {
-        allResults.push({
-          id: a.id,
-          type: "account",
-          title: a.name,
-          subtitle: a.type,
-          icon: "accounts",
-        });
-      });
-
-      // Format categories
-      categories?.forEach((c) => {
-        allResults.push({
-          id: c.id,
-          type: "category",
-          title: c.name,
-          subtitle: "Category",
-          icon: c.icon,
-          color: c.color,
-        });
-      });
-
-      setResults(allResults);
-    } catch (error) {
-      console.error("Search error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleResultClick = (result: SearchResult) => {
     setIsOpen(false);

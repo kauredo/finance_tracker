@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { motion, AnimatePresence } from "motion/react";
 
