@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
 import {
@@ -21,18 +23,26 @@ interface UploadStatementModalProps {
   onSuccess: () => void;
 }
 
+type UploadStep = "select" | "uploading" | "processing" | "complete" | "error";
+
 export default function UploadStatementModal({
   onClose,
   onSuccess,
 }: UploadStatementModalProps) {
-  const [uploading, setUploading] = useState(false);
+  const toast = useToast();
+  const [step, setStep] = useState<UploadStep>("select");
   const [error, setError] = useState<string | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
+  const [transactionCount, setTransactionCount] = useState(0);
 
   // Fetch accounts from Convex
   const accounts = useQuery(api.accounts.list);
   const loadingAccounts = accounts === undefined;
+
+  // Convex mutations and actions
+  const generateUploadUrl = useMutation(api.statements.generateUploadUrl);
+  const processStatement = useAction(api.statements.processStatement);
 
   // Set default account when accounts load
   useEffect(() => {
@@ -51,41 +61,66 @@ export default function UploadStatementModal({
     setIsDragging(false);
   }, []);
 
-  const processFiles = useCallback(
-    async (files: File[]) => {
+  const processFile = useCallback(
+    async (file: File) => {
       if (!selectedAccountId) {
         setError("Please select an account first");
         return;
       }
 
-      setUploading(true);
+      // Validate file type
+      const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv", "pdf"];
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+      if (!fileExt || !validExtensions.includes(fileExt)) {
+        setError(
+          `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`
+        );
+        return;
+      }
+
       setError(null);
+      setStep("uploading");
 
       try {
-        // Validate all files first
-        const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv", "pdf"];
-        for (const file of files) {
-          const fileExt = file.name.split(".").pop()?.toLowerCase();
-          if (!validExtensions.includes(fileExt || "")) {
-            throw new Error(
-              `Invalid file type: ${file.name}. Only PNG, JPEG, PDF, CSV, and TSV files are supported.`,
-            );
-          }
+        // Step 1: Get upload URL
+        const uploadUrl = await generateUploadUrl();
+
+        // Step 2: Upload the file
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": file.type,
+          },
+          body: file,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload file");
         }
 
-        // TODO: Implement Convex action for file upload and AI parsing
-        // For now, show a message that this feature is being migrated
-        throw new Error(
-          "Statement upload is being migrated to the new backend. Please add transactions manually for now.",
-        );
-      } catch (error: any) {
-        console.error("Error uploading/processing files:", error);
-        setError(error.message);
-      } finally {
-        setUploading(false);
+        const { storageId } = await uploadResponse.json();
+
+        // Step 3: Process with AI
+        setStep("processing");
+
+        const result = await processStatement({
+          storageId: storageId as Id<"_storage">,
+          accountId: selectedAccountId as Id<"accounts">,
+          fileName: file.name,
+          fileType: file.type,
+        });
+
+        // Success!
+        setTransactionCount(result.transactionCount);
+        setStep("complete");
+        toast.success(`Successfully imported ${result.transactionCount} transactions!`);
+      } catch (err: any) {
+        console.error("Error processing statement:", err);
+        setError(err.message || "Failed to process statement");
+        setStep("error");
       }
     },
-    [selectedAccountId],
+    [selectedAccountId, generateUploadUrl, processStatement, toast]
   );
 
   const handleDrop = useCallback(
@@ -94,11 +129,11 @@ export default function UploadStatementModal({
       setIsDragging(false);
 
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const files = Array.from(e.dataTransfer.files);
-        await processFiles(files);
+        const file = e.dataTransfer.files[0];
+        await processFile(file);
       }
     },
-    [processFiles],
+    [processFile]
   );
 
   const handleFileUpload = useCallback(
@@ -107,17 +142,32 @@ export default function UploadStatementModal({
         return;
       }
 
-      const files = Array.from(e.target.files);
-      await processFiles(files);
+      const file = e.target.files[0];
+      await processFile(file);
     },
-    [processFiles],
+    [processFile]
   );
 
+  const handleClose = () => {
+    if (step === "complete") {
+      onSuccess();
+    }
+    onClose();
+  };
+
+  const resetAndTryAgain = () => {
+    setStep("select");
+    setError(null);
+    setTransactionCount(0);
+  };
+
   return (
-    <Modal open={true} onOpenChange={(open) => !open && onClose()}>
+    <Modal open={true} onOpenChange={(open) => !open && handleClose()}>
       <ModalContent size="md">
         <ModalHeader>
-          <ModalTitle>Upload Bank Statement</ModalTitle>
+          <ModalTitle>
+            {step === "complete" ? "Import Complete" : "Upload Bank Statement"}
+          </ModalTitle>
         </ModalHeader>
 
         <ModalBody className="space-y-4">
@@ -137,7 +187,51 @@ export default function UploadStatementModal({
                 Please create an account before uploading statements.
               </p>
             </div>
+          ) : step === "complete" ? (
+            // Success state
+            <div className="text-center py-8">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-growth-pale flex items-center justify-center">
+                <Icon name="check" size={40} className="text-growth" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                Import Successful!
+              </h3>
+              <p className="text-text-secondary">
+                {transactionCount} transaction{transactionCount !== 1 ? "s" : ""}{" "}
+                imported successfully.
+              </p>
+            </div>
+          ) : step === "error" ? (
+            // Error state
+            <div className="text-center py-8">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-danger/10 flex items-center justify-center">
+                <Icon name="close" size={40} className="text-danger" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                Import Failed
+              </h3>
+              <p className="text-text-secondary mb-4">{error}</p>
+              <Button variant="secondary" onClick={resetAndTryAgain}>
+                Try Again
+              </Button>
+            </div>
+          ) : step === "uploading" || step === "processing" ? (
+            // Processing state
+            <div className="text-center py-12">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary-pale flex items-center justify-center">
+                <div className="animate-spin h-10 w-10 border-3 border-primary border-t-transparent rounded-full" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                {step === "uploading" ? "Uploading file..." : "Analyzing with AI..."}
+              </h3>
+              <p className="text-text-secondary text-sm">
+                {step === "uploading"
+                  ? "Please wait while we upload your file."
+                  : "Our AI is extracting transactions from your statement. This may take a moment."}
+              </p>
+            </div>
           ) : (
+            // Selection state
             <>
               {/* Account Selection */}
               <div>
@@ -163,53 +257,40 @@ export default function UploadStatementModal({
                     "flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
                     isDragging
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50 hover:bg-sand/50 bg-surface",
+                      : "border-border hover:border-primary/50 hover:bg-sand/50 bg-surface"
                   )}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                 >
                   <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
-                    {uploading ? (
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mb-3" />
-                        <p className="text-sm text-text-secondary">
-                          Processing with AI...
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <div
-                          className={cn(
-                            "p-3 rounded-full mb-3 transition-colors",
-                            isDragging
-                              ? "bg-primary/10 text-primary"
-                              : "bg-sand text-text-secondary",
-                          )}
-                        >
-                          <Icon name="upload" size={32} />
-                        </div>
-                        <p className="mb-2 text-sm text-foreground font-medium">
-                          <span className="text-primary">Click to upload</span>{" "}
-                          or drag and drop
-                        </p>
-                        <p className="text-xs text-text-secondary">
-                          Images (PNG/JPEG), PDF, CSV, or TSV files
-                        </p>
-                        <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
-                          <Icon name="tip" size={12} />
-                          Upload multiple images for multi-page statements
-                        </p>
-                      </>
-                    )}
+                    <div
+                      className={cn(
+                        "p-3 rounded-full mb-3 transition-colors",
+                        isDragging
+                          ? "bg-primary/10 text-primary"
+                          : "bg-sand text-text-secondary"
+                      )}
+                    >
+                      <Icon name="upload" size={32} />
+                    </div>
+                    <p className="mb-2 text-sm text-foreground font-medium">
+                      <span className="text-primary">Click to upload</span> or
+                      drag and drop
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      Images (PNG/JPEG), PDF, CSV, or TSV files
+                    </p>
+                    <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
+                      <Icon name="tip" size={12} />
+                      AI will automatically extract transactions
+                    </p>
                   </div>
                   <input
                     type="file"
                     className="hidden"
                     accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg,.pdf,application/pdf,.csv,.tsv"
-                    multiple
                     onChange={handleFileUpload}
-                    disabled={uploading}
                   />
                 </label>
               </div>
@@ -226,9 +307,19 @@ export default function UploadStatementModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
+          {step === "complete" ? (
+            <Button variant="bloom" onClick={handleClose}>
+              Done
+            </Button>
+          ) : step === "error" ? (
+            <Button variant="ghost" onClick={handleClose}>
+              Close
+            </Button>
+          ) : step === "uploading" || step === "processing" ? null : (
+            <Button variant="ghost" onClick={handleClose}>
+              Cancel
+            </Button>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>
