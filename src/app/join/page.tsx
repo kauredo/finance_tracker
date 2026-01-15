@@ -2,8 +2,10 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import Icon from "@/components/icons/Icon";
@@ -14,47 +16,25 @@ function JoinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const [household, setHousehold] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const householdId = searchParams?.get("household");
+  const householdId = searchParams?.get("household") as Id<"households"> | null;
+
+  // Fetch household info from Convex
+  const household = useQuery(
+    api.households.getInfo,
+    householdId ? { id: householdId } : "skip"
+  );
+  const joinHousehold = useMutation(api.households.joinByHouseholdId);
+
+  const loading = household === undefined && householdId !== null;
 
   useEffect(() => {
-    const fetchHousehold = async () => {
-      if (!householdId) return;
-
-      try {
-        const response = await fetch("/api/get-household-info", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ householdId }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to fetch household info");
-        }
-
-        setHousehold(data);
-      } catch (err: any) {
-        console.error("Error fetching household:", err);
-        setError("Invalid invitation link or household not found.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!authLoading && !user) {
+    if (!authLoading && !user && householdId) {
       // Redirect to auth with return URL
       router.push(`/auth?redirect=/join?household=${householdId}`);
-    } else if (user && householdId) {
-      fetchHousehold();
     }
   }, [user, authLoading, householdId, router]);
 
@@ -65,26 +45,11 @@ function JoinContent() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const response = await fetch("/api/accept-invite", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: JSON.stringify({ householdId }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to join household");
-      }
-
+      await joinHousehold({ householdId });
       setSuccess(true);
       setTimeout(() => router.push("/dashboard"), 2000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to join household");
     } finally {
       setJoining(false);
     }
@@ -205,37 +170,12 @@ function JoinContent() {
                   </p>
                 </div>
 
-                {household.household_members &&
-                  household.household_members.length > 0 && (
+                {household.memberCount > 0 && (
                     <div className="bg-sand/30 rounded-2xl p-4 mb-6">
-                      <p className="text-sm text-text-secondary mb-3 flex items-center gap-2">
+                      <p className="text-sm text-text-secondary flex items-center gap-2">
                         <Icon name="user" size={16} />
-                        Current garden partners:
+                        {household.memberCount} garden partner{household.memberCount > 1 ? "s" : ""} in this household
                       </p>
-                      <div className="space-y-2">
-                        {household.household_members.map(
-                          (member: any, index: number) => (
-                            <motion.div
-                              key={index}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                              className="flex items-center gap-3 p-2 bg-surface rounded-xl"
-                            >
-                              <div className="w-8 h-8 rounded-full bg-primary-pale flex items-center justify-center">
-                                <Icon
-                                  name="user"
-                                  size={16}
-                                  className="text-primary"
-                                />
-                              </div>
-                              <span className="text-sm text-foreground">
-                                {member.profiles?.email || "Unknown"}
-                              </span>
-                            </motion.div>
-                          ),
-                        )}
-                      </div>
                     </div>
                   )}
 

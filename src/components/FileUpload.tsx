@@ -1,16 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/utils/supabase/client";
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import Icon from "@/components/icons/Icon";
-
-interface Account {
-  id: string;
-  name: string;
-  type: "personal" | "joint";
-}
 
 export default function FileUpload({
   onUploadComplete,
@@ -19,37 +14,19 @@ export default function FileUpload({
 }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
-  const { user } = useAuth();
 
+  // Fetch accounts from Convex
+  const accounts = useQuery(api.accounts.list);
+  const loadingAccounts = accounts === undefined;
+
+  // Set default account when accounts load
   useEffect(() => {
-    if (user) {
-      fetchAccounts();
+    if (accounts && accounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(accounts[0]._id);
     }
-  }, [user]);
-
-  const fetchAccounts = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("id, name, type")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setAccounts(data || []);
-      if (data && data.length > 0) {
-        setSelectedAccountId(data[0].id);
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-    } finally {
-      setLoadingAccounts(false);
-    }
-  };
+  }, [accounts, selectedAccountId]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -63,7 +40,6 @@ export default function FileUpload({
 
   const processFiles = useCallback(
     async (files: File[]) => {
-      if (!user) return;
       if (!selectedAccountId) {
         setError("Please select an account first");
         return;
@@ -73,7 +49,6 @@ export default function FileUpload({
       setError(null);
 
       try {
-        const supabase = createClient();
         // Validate all files first
         const validExtensions = ["png", "jpg", "jpeg", "csv", "tsv", "pdf"];
         for (const file of files) {
@@ -85,54 +60,16 @@ export default function FileUpload({
           }
         }
 
-        // Upload all files to storage
-        const uploadedFiles: { filePath: string; fileType: string }[] = [];
+        // TODO: Implement Convex action for file upload and AI parsing
+        // For now, show a message that this feature is being migrated
+        throw new Error(
+          "Statement upload is being migrated to the new backend. Please add transactions manually for now.",
+        );
 
-        for (const file of files) {
-          const fileExt = file.name.split(".").pop();
-          const fileName = `${Math.random()}.${fileExt}`;
-          const fileType = file.type || `image/${fileExt}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from("statements")
-            .upload(fileName, file);
-
-          if (uploadError) throw uploadError;
-
-          uploadedFiles.push({ filePath: fileName, fileType });
-        }
-
-        // Call API to parse all images together
-        const session = await supabase.auth.getSession();
-        const token = session.data.session?.access_token;
-
-        const response = await fetch("/api/parse-statement", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            files: uploadedFiles, // Send multiple files
-            accountId: selectedAccountId,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to process files");
-        }
-
-        // Show detailed success message
-        let message = `Success! Processed ${result.total} transaction(s)`;
-        if (result.duplicates > 0) {
-          message += ` (${result.new} new, ${result.duplicates} duplicate${result.duplicates > 1 ? "s" : ""} skipped)`;
-        }
-        message += ` from ${files.length} file${files.length > 1 ? "s" : ""}.`;
-
-        alert(message);
-        onUploadComplete();
+        // Future implementation will use Convex file storage and actions
+        // const uploadUrl = await generateUploadUrl();
+        // const result = await parseStatement({ files, accountId });
+        // onUploadComplete();
       } catch (error: any) {
         console.error("Error uploading/processing files:", error);
         setError(error.message);
@@ -140,7 +77,7 @@ export default function FileUpload({
         setUploading(false);
       }
     },
-    [user, selectedAccountId, onUploadComplete],
+    [selectedAccountId, onUploadComplete],
   );
 
   const handleDrop = useCallback(
@@ -173,7 +110,7 @@ export default function FileUpload({
     return <div className="text-muted text-sm">Loading accounts...</div>;
   }
 
-  if (accounts.length === 0) {
+  if (!accounts || accounts.length === 0) {
     return (
       <div className="text-center p-4 bg-surface-alt rounded-lg border border-border">
         <p className="text-foreground mb-2">No accounts found</p>
@@ -196,7 +133,7 @@ export default function FileUpload({
           className="w-full px-4 py-2 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
+            <option key={account._id} value={account._id}>
               {account.name} ({account.type})
             </option>
           ))}

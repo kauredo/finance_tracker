@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useState } from "react";
 import {
   PieChart,
   Pie,
@@ -49,90 +51,71 @@ const COLORS = [
 ];
 
 export default function ReportsModal({ onClose }: ReportsModalProps) {
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"category" | "monthly">("category");
 
-  useEffect(() => {
-    fetchReportsData();
-  }, []);
+  // Fetch all transactions from Convex
+  const transactionsData = useQuery(api.transactions.list, { limit: 1000 });
+  const loading = transactionsData === undefined;
 
-  const fetchReportsData = async () => {
-    try {
-      setLoading(true);
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Fetch transactions with categories
-      const { data: transactions, error } = await supabase
-        .from("transactions")
-        .select("amount, date, category_id, categories(name)")
-        .order("date", { ascending: true });
-
-      if (error) throw error;
-
-      // Process category data
-      const categoryMap = new Map<string, { total: number; color: string }>();
-      const monthMap = new Map<string, { expenses: number; income: number }>();
-
-      transactions?.forEach((tx) => {
-        const categoryName = (tx.categories as any)?.name || "Other";
-        const amount = tx.amount;
-        const date = new Date(tx.date);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-
-        // Category breakdown (only expenses)
-        if (amount < 0) {
-          const existing = categoryMap.get(categoryName) || {
-            total: 0,
-            color: COLORS[categoryMap.size % COLORS.length],
-          };
-          existing.total += Math.abs(amount);
-          categoryMap.set(categoryName, existing);
-        }
-
-        // Monthly data
-        const monthData = monthMap.get(monthKey) || { expenses: 0, income: 0 };
-        if (amount < 0) {
-          monthData.expenses += Math.abs(amount);
-        } else {
-          monthData.income += amount;
-        }
-        monthMap.set(monthKey, monthData);
-      });
-
-      // Convert to chart data
-      const catData: CategoryData[] = Array.from(categoryMap.entries())
-        .map(([name, data]) => ({
-          name,
-          value: parseFloat(data.total.toFixed(2)),
-          color: data.color,
-        }))
-        .sort((a, b) => b.value - a.value);
-
-      const monthData: MonthlyData[] = Array.from(monthMap.entries())
-        .map(([month, data]) => ({
-          month: new Date(month + "-01").toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric",
-          }),
-          expenses: parseFloat(data.expenses.toFixed(2)),
-          income: parseFloat(data.income.toFixed(2)),
-        }))
-        .slice(-6); // Last 6 months
-
-      setCategoryData(catData);
-      setMonthlyData(monthData);
-    } catch (error) {
-      console.error("Error fetching reports data:", error);
-    } finally {
-      setLoading(false);
+  // Process data for charts
+  const { categoryData, monthlyData } = useMemo(() => {
+    if (!transactionsData?.transactions) {
+      return { categoryData: [], monthlyData: [] };
     }
-  };
+
+    const categoryMap = new Map<string, { total: number; color: string }>();
+    const monthMap = new Map<string, { expenses: number; income: number }>();
+
+    transactionsData.transactions.forEach((tx) => {
+      const categoryName = tx.category?.name || "Other";
+      const amount = tx.amount;
+      const date = new Date(tx.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+      // Category breakdown (only expenses)
+      if (amount < 0) {
+        const existing = categoryMap.get(categoryName) || {
+          total: 0,
+          color: COLORS[categoryMap.size % COLORS.length],
+        };
+        existing.total += Math.abs(amount);
+        categoryMap.set(categoryName, existing);
+      }
+
+      // Monthly data
+      const monthData = monthMap.get(monthKey) || { expenses: 0, income: 0 };
+      if (amount < 0) {
+        monthData.expenses += Math.abs(amount);
+      } else {
+        monthData.income += amount;
+      }
+      monthMap.set(monthKey, monthData);
+    });
+
+    // Convert to chart data
+    const catData: CategoryData[] = Array.from(categoryMap.entries())
+      .map(([name, data]) => ({
+        name,
+        value: parseFloat(data.total.toFixed(2)),
+        color: data.color,
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    const monthData: MonthlyData[] = Array.from(monthMap.entries())
+      .map(([month, data]) => ({
+        month: new Date(month + "-01").toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
+        expenses: parseFloat(data.expenses.toFixed(2)),
+        income: parseFloat(data.income.toFixed(2)),
+        rawDate: month,
+      }))
+      .sort((a: any, b: any) => a.rawDate.localeCompare(b.rawDate))
+      .slice(-6); // Last 6 months
+
+    return { categoryData: catData, monthlyData: monthData };
+  }, [transactionsData]);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">

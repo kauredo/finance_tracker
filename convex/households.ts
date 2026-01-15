@@ -337,3 +337,41 @@ export const transferOwnership = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Join a household directly by ID (for simple invite links)
+ */
+export const joinByHouseholdId = mutation({
+  args: { householdId: v.id("households") },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+
+    // Check if household exists
+    const household = await ctx.db.get(args.householdId);
+    if (!household) {
+      throw new Error("Household not found");
+    }
+
+    // Check if user is already in a household
+    const existingHouseholdId = await getUserHouseholdId(ctx, user._id);
+    if (existingHouseholdId) {
+      if (existingHouseholdId === args.householdId) {
+        throw new Error("You are already a member of this household");
+      }
+      throw new Error("You are already part of another household");
+    }
+
+    // Add user to household as member
+    await ctx.db.insert("householdMembers", {
+      householdId: args.householdId,
+      userId: user._id,
+      role: "member",
+      joinedAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      householdId: args.householdId,
+    };
+  },
+});

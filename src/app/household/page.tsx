@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
 import {
@@ -19,107 +21,32 @@ import Icon from "@/components/icons/Icon";
 import { format } from "date-fns";
 import { motion } from "motion/react";
 
-interface HouseholdMember {
-  user_id: string;
-  role: string;
-  joined_at: string;
-  profiles: {
-    full_name: string;
-    email: string;
-  };
-}
-
-interface Household {
-  id: string;
-  name: string;
-  created_at: string;
-}
-
 export default function HouseholdPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const { success: showSuccess, error: showError } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [household, setHousehold] = useState<Household | null>(null);
-  const [members, setMembers] = useState<HouseholdMember[]>([]);
-  const [currentUserRole, setCurrentUserRole] = useState<string>("");
 
-  const fetchHouseholdData = useCallback(async () => {
-    if (!user) return;
-    try {
-      const supabase = createClient();
+  // Fetch household using Convex
+  const householdData = useQuery(api.households.getCurrentHousehold);
+  const removeMemberMutation = useMutation(api.households.removeMember);
+  const createInvite = useMutation(api.households.createInvite);
 
-      // Get user's household membership
-      const { data: membership, error: membershipError } = await supabase
-        .from("household_members")
-        .select("household_id, role")
-        .eq("user_id", user.id)
-        .single();
+  const loading = householdData === undefined;
+  const household = householdData;
+  const members = householdData?.members ?? [];
 
-      if (membershipError || !membership) {
-        // User is not in a household
-        setLoading(false);
-        return;
-      }
+  // Find current user's role
+  const currentUserMembership = members.find((m) => m.userId === user?._id);
+  const currentUserRole = currentUserMembership?.role ?? "";
 
-      setCurrentUserRole(membership.role);
-
-      // Fetch household details
-      const { data: householdData, error: householdError } = await supabase
-        .from("households")
-        .select("*")
-        .eq("id", membership.household_id)
-        .single();
-
-      if (householdError) throw householdError;
-      setHousehold(householdData);
-
-      // Fetch all household members
-      const { data: membersData, error: membersError } = await supabase
-        .from("household_members")
-        .select(
-          `
-          user_id,
-          role,
-          joined_at,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `,
-        )
-        .eq("household_id", membership.household_id)
-        .order("joined_at", { ascending: true });
-
-      if (membersError) throw membersError;
-
-      // Transform the data to match the expected type
-      const transformedMembers =
-        membersData?.map((member: any) => ({
-          user_id: member.user_id,
-          role: member.role,
-          joined_at: member.joined_at,
-          profiles: Array.isArray(member.profiles)
-            ? member.profiles[0]
-            : member.profiles,
-        })) || [];
-
-      setMembers(transformedMembers);
-    } catch (error) {
-      console.error("Error fetching household:", error);
-      showError("Failed to load household data");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, showError]);
-
+  // Redirect if not authenticated
   useEffect(() => {
-    if (user) {
-      fetchHouseholdData();
+    if (!authLoading && !isAuthenticated) {
+      router.push("/auth");
     }
-  }, [user, fetchHouseholdData]);
+  }, [authLoading, isAuthenticated, router]);
 
-  const handleRemoveMember = async (userId: string) => {
+  const handleRemoveMember = async (userId: Id<"users">) => {
     if (!household || currentUserRole !== "owner") return;
 
     if (
@@ -131,17 +58,12 @@ export default function HouseholdPage() {
     }
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("household_members")
-        .delete()
-        .eq("household_id", household.id)
-        .eq("user_id", userId);
-
-      if (error) throw error;
+      await removeMemberMutation({
+        householdId: household._id,
+        userId,
+      });
 
       showSuccess("Member removed successfully");
-      fetchHouseholdData();
     } catch (error) {
       console.error("Error removing member:", error);
       showError("Failed to remove member");
@@ -242,7 +164,7 @@ export default function HouseholdPage() {
                 </h1>
                 <p className="text-text-secondary">
                   Growing together since{" "}
-                  {format(new Date(household.created_at), "MMMM yyyy")}
+                  {format(new Date(household.createdAt), "MMMM yyyy")}
                 </p>
               </div>
             </div>
@@ -289,15 +211,13 @@ export default function HouseholdPage() {
             <CardContent>
               <div className="space-y-3">
                 {members.map((member, index) => {
-                  const profile = Array.isArray(member.profiles)
-                    ? member.profiles[0]
-                    : member.profiles;
-                  const isCurrentUser = member.user_id === user!.id;
+                  const memberUser = member.user;
+                  const isCurrentUser = member.userId === user?._id;
                   const memberIsOwner = member.role === "owner";
 
                   return (
                     <motion.div
-                      key={member.user_id}
+                      key={member.userId}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -318,8 +238,8 @@ export default function HouseholdPage() {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-display font-bold text-foreground">
-                              {profile?.full_name ||
-                                profile?.email ||
+                              {memberUser?.fullName ||
+                                memberUser?.email ||
                                 "Unknown"}
                             </span>
                             {memberIsOwner && (
@@ -334,11 +254,11 @@ export default function HouseholdPage() {
                             )}
                           </div>
                           <p className="text-sm text-text-secondary">
-                            {profile?.email}
+                            {memberUser?.email}
                           </p>
                           <p className="text-xs text-text-secondary mt-1">
                             Joined{" "}
-                            {format(new Date(member.joined_at), "MMM d, yyyy")}
+                            {format(new Date(member.joinedAt), "MMM d, yyyy")}
                           </p>
                         </div>
                       </div>
@@ -347,7 +267,7 @@ export default function HouseholdPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveMember(member.user_id)}
+                          onClick={() => handleRemoveMember(member.userId)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-expense hover:bg-expense/10"
                         >
                           <Icon name="trash" size={16} />
@@ -412,14 +332,14 @@ export default function HouseholdPage() {
                       <div className="flex gap-2">
                         <code className="flex-1 px-4 py-2 bg-surface rounded-xl text-sm font-mono text-foreground truncate">
                           {typeof window !== "undefined"
-                            ? `${window.location.origin}/join?household=${household.id}`
-                            : `/join?household=${household.id}`}
+                            ? `${window.location.origin}/join?household=${household._id}`
+                            : `/join?household=${household._id}`}
                         </code>
                         <Button
                           variant="secondary"
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              `${window.location.origin}/join?household=${household.id}`,
+                              `${window.location.origin}/join?household=${household._id}`,
                             );
                             showSuccess("Link copied!");
                           }}

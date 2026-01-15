@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
@@ -10,13 +13,7 @@ import { Select, Input } from "@/components/ui/Input";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { format } from "date-fns";
-import { createClient } from "@/utils/supabase/client";
 import { motion } from "motion/react";
-
-interface Account {
-  id: string;
-  name: string;
-}
 
 const exportFormats = [
   {
@@ -26,20 +23,11 @@ const exportFormats = [
     description: "Spreadsheet compatible",
     subtitle: "Works in Excel, Google Sheets, etc.",
   },
-  {
-    id: "excel",
-    name: "Excel",
-    emoji: "📊",
-    description: "Formatted with summaries",
-    subtitle: "Includes colors and totals",
-  },
 ];
 
 export default function DataExportPage() {
   const { user, loading: authLoading } = useAuth();
   const { error: showError, success: showSuccess } = useToast();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
   // Filters
@@ -48,65 +36,50 @@ export default function DataExportPage() {
   const [endDate, setEndDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd"),
   );
-  const [exportFormat, setExportFormat] = useState<"csv" | "excel">("csv");
+  const [exportFormat, setExportFormat] = useState<"csv">("csv");
 
-  useEffect(() => {
-    if (user) {
-      fetchAccounts();
-    }
-  }, [user]);
+  // Fetch accounts from Convex
+  const accounts = useQuery(api.accounts.list);
+  const loading = accounts === undefined;
 
-  const fetchAccounts = async () => {
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("id, name")
-        .order("name");
-
-      if (error) throw error;
-      setAccounts(data || []);
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch transactions for export
+  const transactionsData = useQuery(api.transactions.list, {
+    accountId: selectedAccount !== "all" ? (selectedAccount as Id<"accounts">) : undefined,
+    dateFrom: startDate || undefined,
+    dateTo: endDate || undefined,
+    limit: 10000, // Get all transactions for export
+  });
 
   const handleExport = async () => {
+    if (!transactionsData?.transactions) {
+      showError("No data to export");
+      return;
+    }
+
     setExporting(true);
     try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append("format", exportFormat);
+      // Generate CSV content
+      const headers = ["Date", "Description", "Amount", "Category", "Account", "Type"];
+      const rows = transactionsData.transactions.map((tx) => [
+        tx.date,
+        `"${tx.description.replace(/"/g, '""')}"`,
+        tx.amount.toFixed(2),
+        tx.category?.name || "Uncategorized",
+        tx.account?.name || "Unknown",
+        tx.amount >= 0 ? "Income" : "Expense",
+      ]);
 
-      if (selectedAccount !== "all") {
-        params.append("accountId", selectedAccount);
-      }
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.join(",")),
+      ].join("\n");
 
-      if (startDate) {
-        params.append("startDate", startDate);
-      }
-
-      if (endDate) {
-        params.append("endDate", endDate);
-      }
-
-      const response = await fetch(`/api/export?${params.toString()}`);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Export API error:", errorData);
-        throw new Error(errorData.error || "Export failed");
-      }
-
-      // Download the file
-      const blob = await response.blob();
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `transactions_${format(new Date(), "yyyy-MM-dd")}.${exportFormat === "csv" ? "csv" : "xlsx"}`;
+      a.download = `transactions_${format(new Date(), "yyyy-MM-dd")}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -186,7 +159,7 @@ export default function DataExportPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 + index * 0.05 }}
                       onClick={() =>
-                        setExportFormat(format.id as "csv" | "excel")
+                        setExportFormat(format.id as "csv")
                       }
                       className={`p-5 rounded-2xl border-2 transition-all text-left ${
                         exportFormat === format.id
@@ -249,8 +222,8 @@ export default function DataExportPage() {
                       disabled={loading}
                     >
                       <option value="all">All Accounts</option>
-                      {accounts.map((account) => (
-                        <option key={account.id} value={account.id}>
+                      {accounts?.map((account) => (
+                        <option key={account._id} value={account._id}>
                           {account.name}
                         </option>
                       ))}
@@ -351,16 +324,6 @@ export default function DataExportPage() {
                           />
                           Transaction type (income/expense)
                         </li>
-                        {exportFormat === "excel" && (
-                          <li className="flex items-center gap-2">
-                            <Icon
-                              name="check"
-                              size={14}
-                              className="text-growth"
-                            />
-                            Formatted with colors and totals
-                          </li>
-                        )}
                       </ul>
                     </div>
                   </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/icons/Icon";
 import { Card } from "@/components/ui/Card";
@@ -20,11 +21,71 @@ interface SearchResult {
 
 export default function GlobalSearch() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  // Only fetch data when search is open
+  const transactionsData = useQuery(
+    api.transactions.list,
+    isOpen ? { search: query.trim().length >= 2 ? query.trim() : undefined, limit: 5 } : "skip"
+  );
+  const accounts = useQuery(api.accounts.list, isOpen ? {} : "skip");
+  const categories = useQuery(api.categories.list, isOpen ? {} : "skip");
+
+  const loading = isOpen && (transactionsData === undefined || accounts === undefined || categories === undefined);
+
+  // Compute search results
+  const results = useMemo(() => {
+    if (query.trim().length < 2) return [];
+
+    const searchLower = query.trim().toLowerCase();
+    const allResults: SearchResult[] = [];
+
+    // Format transactions (already filtered by search query in Convex)
+    transactionsData?.transactions?.forEach((t) => {
+      allResults.push({
+        id: t._id,
+        type: "transaction",
+        title: t.description,
+        subtitle: new Date(t.date).toLocaleDateString(),
+        amount: t.amount,
+        icon: t.category?.icon || "other",
+        color: t.category?.color,
+      });
+    });
+
+    // Filter and format accounts
+    accounts
+      ?.filter((a) => a.name.toLowerCase().includes(searchLower))
+      .slice(0, 5)
+      .forEach((a) => {
+        allResults.push({
+          id: a._id,
+          type: "account",
+          title: a.name,
+          subtitle: a.type,
+          icon: "accounts",
+        });
+      });
+
+    // Filter and format categories
+    categories
+      ?.filter((c) => c.name.toLowerCase().includes(searchLower))
+      .slice(0, 5)
+      .forEach((c) => {
+        allResults.push({
+          id: c._id,
+          type: "category",
+          title: c.name,
+          subtitle: "Category",
+          icon: c.icon,
+          color: c.color,
+        });
+      });
+
+    return allResults;
+  }, [query, transactionsData, accounts, categories]);
 
   useEffect(() => {
     // Keyboard shortcut: / to focus search
@@ -37,7 +98,6 @@ export default function GlobalSearch() {
       if (e.key === "Escape" && isOpen) {
         setIsOpen(false);
         setQuery("");
-        setResults([]);
       }
     };
 
@@ -45,98 +105,9 @@ export default function GlobalSearch() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      return;
-    }
-
-    const performSearch = async () => {
-      setLoading(true);
-      try {
-        const supabase = createClient();
-        const searchTerm = query.trim();
-
-        // Search transactions
-        const { data: transactions } = await supabase
-          .from("transactions")
-          .select(
-            "id, description, amount, date, category:categories(name, icon, color)",
-          )
-          .ilike("description", `%${searchTerm}%`)
-          .limit(5);
-
-        // Search accounts
-        const { data: accounts } = await supabase
-          .from("accounts")
-          .select("id, name, type")
-          .ilike("name", `%${searchTerm}%`)
-          .limit(5);
-
-        // Search categories
-        const { data: categories } = await supabase
-          .from("categories")
-          .select("id, name, icon, color")
-          .ilike("name", `%${searchTerm}%`)
-          .limit(5);
-
-        const allResults: SearchResult[] = [];
-
-        // Format transactions
-        transactions?.forEach((t) => {
-          allResults.push({
-            id: t.id,
-            type: "transaction",
-            title: t.description,
-            subtitle: new Date(t.date).toLocaleDateString(),
-            amount: t.amount,
-            icon: (t.category as any)?.icon || "other",
-            color: (t.category as any)?.color,
-          });
-        });
-
-        // Format accounts
-        accounts?.forEach((a) => {
-          allResults.push({
-            id: a.id,
-            type: "account",
-            title: a.name,
-            subtitle: a.type,
-            icon: "accounts",
-          });
-        });
-
-        // Format categories
-        categories?.forEach((c) => {
-          allResults.push({
-            id: c.id,
-            type: "category",
-            title: c.name,
-            subtitle: "Category",
-            icon: c.icon,
-            color: c.color,
-          });
-        });
-
-        setResults(allResults);
-      } catch (error) {
-        console.error("Search error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const timer = setTimeout(() => {
-      performSearch();
-    }, 300); // Debounce
-
-    return () => clearTimeout(timer);
-  }, [query]);
-
   const handleResultClick = (result: SearchResult) => {
     setIsOpen(false);
     setQuery("");
-    setResults([]);
 
     if (result.type === "transaction") {
       router.push("/transactions");
@@ -171,7 +142,6 @@ export default function GlobalSearch() {
         onClick={() => {
           setIsOpen(false);
           setQuery("");
-          setResults([]);
         }}
       />
 

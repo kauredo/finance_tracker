@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -12,62 +12,29 @@ interface InvitePartnerModalProps {
   onClose: () => void;
 }
 
-interface Household {
-  id: string;
-  name: string;
-}
-
 export default function InvitePartnerModal({
   onClose,
 }: InvitePartnerModalProps) {
-  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
-  const [households, setHouseholds] = useState<Household[]>([]);
-  const [selectedHousehold, setSelectedHousehold] = useState<string>("");
-  const [loading, setLoading] = useState(true);
   const [inviteLink, setInviteLink] = useState("");
 
-  useEffect(() => {
-    const fetchHouseholds = async () => {
-      if (!user) return;
+  // Fetch household from Convex - user can only be in one household
+  const household = useQuery(api.households.getCurrentHousehold);
+  const loading = household === undefined;
 
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("household_members")
-          .select("household_id, households(id, name)")
-          .eq("user_id", user.id)
-          .eq("role", "owner");
-
-        if (error) throw error;
-
-        const householdList =
-          data?.map((item) => ({
-            id: (item.households as any).id,
-            name: (item.households as any).name,
-          })) || [];
-
-        setHouseholds(householdList);
-        if (householdList.length > 0) {
-          setSelectedHousehold(householdList[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching households:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHouseholds();
-  }, [user]);
+  // Check if user is owner
+  const currentUserRole = household?.members?.find(
+    (m) => m.role === "owner"
+  )?.role;
+  const isOwner = currentUserRole === "owner";
 
   useEffect(() => {
-    if (selectedHousehold && typeof window !== "undefined") {
+    if (household?._id && typeof window !== "undefined") {
       setInviteLink(
-        `${window.location.origin}/join?household=${selectedHousehold}`,
+        `${window.location.origin}/join?household=${household._id}`,
       );
     }
-  }, [selectedHousehold]);
+  }, [household]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(inviteLink);
@@ -92,13 +59,19 @@ export default function InvitePartnerModal({
 
         {loading ? (
           <div className="text-center py-8 text-muted">Loading...</div>
-        ) : households.length === 0 ? (
+        ) : !household ? (
           <div className="text-center py-8">
             <p className="text-muted mb-4">
               You don't have any joint accounts yet.
             </p>
             <p className="text-sm text-text-secondary">
               Create a joint account first to invite your partner!
+            </p>
+          </div>
+        ) : !isOwner ? (
+          <div className="text-center py-8">
+            <p className="text-muted mb-4">
+              Only household owners can invite new members.
             </p>
           </div>
         ) : (
@@ -109,30 +82,6 @@ export default function InvitePartnerModal({
             </p>
 
             <div className="space-y-4">
-              {/* Household Selector */}
-              {households.length > 1 && (
-                <div>
-                  <label className="block text-foreground text-sm font-medium mb-2">
-                    Household
-                  </label>
-                  <select
-                    value={selectedHousehold}
-                    onChange={(e) => setSelectedHousehold(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent"
-                  >
-                    {households.map((household) => (
-                      <option
-                        key={household.id}
-                        value={household.id}
-                        className="bg-surface"
-                      >
-                        {household.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               {/* Share Link */}
               <div>
                 <label className="block text-foreground text-sm font-medium mb-2">

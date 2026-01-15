@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
-import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/contexts/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,14 +14,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { motion } from "motion/react";
-
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string;
-  currency: string;
-  date_format: string;
-}
 
 const navigationItems = [
   {
@@ -59,77 +53,55 @@ const navigationItems = [
 export default function SettingsPage() {
   const router = useRouter();
   const { success: showSuccess, error: showError } = useToast();
-  const [loading, setLoading] = useState(true);
+  const { loading: authLoading, isAuthenticated, user } = useAuth();
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
 
-  // Form states
+  // Fetch profile using Convex
+  const profile = useQuery(api.users.getCurrentUserProfile);
+  const updateProfile = useMutation(api.users.updateProfile);
+
+  // Form states - initialized from profile
   const [fullName, setFullName] = useState("");
   const [currency, setCurrency] = useState("EUR");
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
+  const [formInitialized, setFormInitialized] = useState(false);
 
   // Password states
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  const supabase = createClient();
+  const loading = profile === undefined;
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/auth");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name || "");
-        setCurrency(data.currency || "EUR");
-        setDateFormat(data.date_format || "DD/MM/YYYY");
-      }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      showError("Failed to load profile");
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase, router, showError]);
-
+  // Initialize form when profile loads
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    if (profile && !formInitialized) {
+      setFullName(profile.fullName || "");
+      setCurrency(profile.currency || "EUR");
+      setDateFormat(profile.dateFormat || "DD/MM/YYYY");
+      setFormInitialized(true);
+    }
+  }, [profile, formInitialized]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/auth");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      const response = await fetch("/api/settings/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          full_name: fullName,
-          currency,
-          date_format: dateFormat,
-        }),
+      await updateProfile({
+        fullName,
+        currency,
+        dateFormat,
       });
 
-      if (!response.ok) throw new Error("Failed to update profile");
-
       showSuccess("Your garden settings have been updated!");
-      fetchProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
       showError("Failed to update profile");
@@ -154,19 +126,9 @@ export default function SettingsPage() {
     setPasswordLoading(true);
 
     try {
-      const response = await fetch("/api/settings/password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newPassword }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update password");
-      }
-
-      showSuccess("Password updated successfully");
+      // Note: Password update with Convex Auth requires special handling
+      // For now, show a message that this feature needs to be implemented
+      showError("Password change is not yet available with the new auth system");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
@@ -300,7 +262,7 @@ export default function SettingsPage() {
                       <Input
                         type="email"
                         disabled
-                        value={profile?.email || ""}
+                        value={user?.email || profile?.email || ""}
                         className="bg-sand/50 text-text-secondary cursor-not-allowed"
                       />
                       <p className="mt-1.5 text-xs text-text-secondary">

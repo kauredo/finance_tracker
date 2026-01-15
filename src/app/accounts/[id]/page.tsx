@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { createClient } from "@/utils/supabase/client";
 import NavBar from "@/components/NavBar";
 import TransactionsList from "@/components/TransactionsList";
 import EditAccountModal from "@/components/EditAccountModal";
@@ -14,69 +16,34 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import Icon from "@/components/icons/Icon";
 
-interface Account {
-  id: string;
-  name: string;
-  type: "personal" | "joint";
-  balance: number;
-}
-
 export default function AccountDetailPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const params = useParams();
   const toast = useToast();
-  const [account, setAccount] = useState<Account | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const accountId = params.id as string;
+  const accountId = params.id as Id<"accounts">;
 
-  const fetchAccountDetails = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("id, name, type, balance")
-        .eq("id", accountId)
-        .single();
+  // Fetch account using Convex
+  const account = useQuery(api.accounts.getById, { id: accountId });
+  const deleteAccount = useMutation(api.accounts.remove);
 
-      if (error) throw error;
-      setAccount(data);
-    } catch (error) {
-      console.error("Error fetching account:", error);
-      toast.error("Failed to load account details");
-      router.push("/accounts");
-    } finally {
-      setLoading(false);
-    }
-  }, [accountId, toast, router]);
+  const loading = account === undefined;
 
+  // Redirect if not authenticated
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !isAuthenticated) {
       router.push("/auth");
-    } else if (user && accountId) {
-      fetchAccountDetails();
     }
-  }, [user, authLoading, router, accountId, fetchAccountDetails]);
+  }, [authLoading, isAuthenticated, router]);
 
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
-      const supabase = createClient();
-
-      // Check for transactions first?
-      // Ideally backend handles cascade or we warn user.
-      // For now, let's assume we can delete.
-
-      const { error } = await supabase
-        .from("accounts")
-        .delete()
-        .eq("id", accountId);
-
-      if (error) throw error;
+      await deleteAccount({ id: accountId });
 
       toast.success("Account deleted successfully");
       router.push("/accounts");
@@ -168,9 +135,9 @@ export default function AccountDetailPage() {
             <CardContent className="pt-6">
               <div className="text-sm text-muted mb-1">Current Balance</div>
               <div
-                className={`text-3xl font-bold ${account.balance >= 0 ? "text-success" : "text-danger"}`}
+                className={`text-3xl font-bold ${(account.balance ?? 0) >= 0 ? "text-success" : "text-danger"}`}
               >
-                €{account.balance.toFixed(2)}
+                €{(account.balance ?? 0).toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -186,14 +153,18 @@ export default function AccountDetailPage() {
         </Card>
       </main>
 
-      {showEditModal && (
+      {showEditModal && account && (
         <EditAccountModal
-          account={account}
+          account={{
+            _id: account._id,
+            name: account.name,
+            type: account.type,
+          }}
           onClose={() => setShowEditModal(false)}
           onSuccess={() => {
             setShowEditModal(false);
-            fetchAccountDetails();
             toast.success("Account updated successfully");
+            // Convex auto-refreshes data
           }}
         />
       )}

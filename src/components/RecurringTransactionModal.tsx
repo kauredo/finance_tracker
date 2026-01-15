@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -11,20 +13,12 @@ interface RecurringTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  editId?: string;
-  initialData?: any;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
-
-interface Account {
-  id: string;
-  name: string;
+  editId?: Id<"recurringTransactions">;
+  initialData?: {
+    description: string;
+    amount: number;
+    interval: string;
+  };
 }
 
 export default function RecurringTransactionModal({
@@ -39,72 +33,48 @@ export default function RecurringTransactionModal({
   const [type, setType] = useState<"expense" | "income">("expense");
   const [categoryId, setCategoryId] = useState("");
   const [accountId, setAccountId] = useState("");
-  const [interval, setInterval] = useState("monthly");
+  const [interval, setInterval] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
   const [nextRunDate, setNextRunDate] = useState(
     new Date().toISOString().split("T")[0],
   );
-
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
 
   const { success, error } = useToast();
-  const supabase = createClient();
 
+  // Fetch categories and accounts from Convex
+  const categories = useQuery(api.categories.list, isOpen ? {} : "skip");
+  const accounts = useQuery(api.accounts.list, isOpen ? {} : "skip");
+  const existingRecurring = useQuery(
+    api.recurring.getById,
+    isOpen && editId ? { id: editId } : "skip"
+  );
+
+  const createRecurring = useMutation(api.recurring.create);
+  const updateRecurring = useMutation(api.recurring.update);
+
+  const fetching = isOpen && (categories === undefined || accounts === undefined || (editId && existingRecurring === undefined));
+
+  // Initialize form when data loads
   useEffect(() => {
-    const fetchData = async () => {
-      setFetching(true);
-      try {
-        // Fetch categories and accounts
-        const [catRes, accRes] = await Promise.all([
-          supabase.from("categories").select("*").order("name"),
-          supabase.from("accounts").select("*").order("name"),
-        ]);
-
-        if (catRes.data) setCategories(catRes.data);
-        if (accRes.data) setAccounts(accRes.data);
-
-        // If editing, fetch existing data
-        if (editId) {
-          const { data: recurring } = await supabase
-            .from("recurring_transactions")
-            .select("*")
-            .eq("id", editId)
-            .single();
-
-          if (recurring) {
-            setDescription(recurring.description);
-            setAmount(Math.abs(recurring.amount).toString());
-            setType(recurring.amount >= 0 ? "income" : "expense");
-            setCategoryId(recurring.category_id || "");
-            setAccountId(recurring.account_id || "");
-            setInterval(recurring.interval);
-            setNextRunDate(recurring.next_run_date);
-          }
-        } else if (initialData) {
-          // Pre-fill from suggestion
-          setDescription(initialData.description);
-          setAmount(Math.abs(initialData.amount).toString());
-          setType(initialData.amount >= 0 ? "income" : "expense");
-          setInterval(initialData.interval);
-          // Default to today for next run
-          setNextRunDate(new Date().toISOString().split("T")[0]);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        error("Failed to load data");
-      } finally {
-        setFetching(false);
-      }
-    };
-
-    if (isOpen) {
-      fetchData();
-    } else {
+    if (isOpen && existingRecurring && editId) {
+      setDescription(existingRecurring.description);
+      setAmount(Math.abs(existingRecurring.amount).toString());
+      setType(existingRecurring.amount >= 0 ? "income" : "expense");
+      setCategoryId(existingRecurring.categoryId || "");
+      setAccountId(existingRecurring.accountId || "");
+      setInterval(existingRecurring.interval);
+      setNextRunDate(existingRecurring.nextRunDate);
+    } else if (isOpen && initialData && !editId) {
+      // Pre-fill from suggestion
+      setDescription(initialData.description);
+      setAmount(Math.abs(initialData.amount).toString());
+      setType(initialData.amount >= 0 ? "income" : "expense");
+      setInterval(initialData.interval as "daily" | "weekly" | "monthly" | "yearly");
+      setNextRunDate(new Date().toISOString().split("T")[0]);
+    } else if (!isOpen) {
       resetForm();
     }
-  }, [isOpen, editId, initialData, supabase, error]);
+  }, [isOpen, existingRecurring, editId, initialData]);
 
   const resetForm = () => {
     setDescription("");
@@ -127,32 +97,30 @@ export default function RecurringTransactionModal({
           : Math.abs(parseFloat(amount));
       const dateObj = new Date(nextRunDate);
 
-      const payload = {
-        description,
-        amount: finalAmount,
-        category_id: categoryId || null,
-        account_id: accountId || null,
-        interval,
-        next_run_date: nextRunDate,
-        day_of_month: dateObj.getDate(),
-        day_of_week: dateObj.getDay(),
-      };
-
       if (editId) {
-        const res = await fetch(`/api/recurring/${editId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+        await updateRecurring({
+          id: editId,
+          description,
+          amount: finalAmount,
+          categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
+          accountId: accountId ? (accountId as Id<"accounts">) : undefined,
+          interval,
+          nextRunDate,
+          dayOfMonth: dateObj.getDate(),
+          dayOfWeek: dateObj.getDay(),
         });
-        if (!res.ok) throw new Error("Failed to update");
         success("Recurring transaction updated");
       } else {
-        const res = await fetch("/api/recurring", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+        await createRecurring({
+          description,
+          amount: finalAmount,
+          categoryId: categoryId ? (categoryId as Id<"categories">) : undefined,
+          accountId: accountId ? (accountId as Id<"accounts">) : undefined,
+          interval,
+          nextRunDate,
+          dayOfMonth: dateObj.getDate(),
+          dayOfWeek: dateObj.getDay(),
         });
-        if (!res.ok) throw new Error("Failed to create");
         success("Recurring transaction created");
       }
 
@@ -262,8 +230,8 @@ export default function RecurringTransactionModal({
                 className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
               >
                 <option value="">Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
+                {categories?.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
                     {cat.name}
                   </option>
                 ))}
@@ -282,8 +250,8 @@ export default function RecurringTransactionModal({
                 className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
               >
                 <option value="">Select Account</option>
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
+                {accounts?.map((acc) => (
+                  <option key={acc._id} value={acc._id}>
                     {acc.name}
                   </option>
                 ))}
@@ -299,7 +267,7 @@ export default function RecurringTransactionModal({
                 <select
                   required
                   value={interval}
-                  onChange={(e) => setInterval(e.target.value)}
+                  onChange={(e) => setInterval(e.target.value as "daily" | "weekly" | "monthly" | "yearly")}
                   className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
                 >
                   <option value="daily">Daily</option>

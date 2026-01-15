@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
+type AccountType = "checking" | "savings" | "credit" | "personal" | "joint";
+
 interface Account {
-  id: string;
+  _id: Id<"accounts">;
   name: string;
-  type: "personal" | "joint";
+  type: AccountType;
 }
 
 interface EditAccountModalProps {
@@ -22,9 +27,11 @@ export default function EditAccountModal({
   onSuccess,
 }: EditAccountModalProps) {
   const [name, setName] = useState(account.name);
-  const [type, setType] = useState<"personal" | "joint">(account.type);
+  const [type, setType] = useState<AccountType>(account.type);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const updateAccount = useMutation(api.accounts.update);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,21 +45,11 @@ export default function EditAccountModal({
     setLoading(true);
 
     try {
-      const response = await fetch("/api/update-account", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accountId: account.id,
-          name: name.trim(),
-          type,
-        }),
+      await updateAccount({
+        id: account._id,
+        name: name.trim(),
+        type,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update account");
-      }
 
       onSuccess();
     } catch (err: any) {
@@ -104,9 +101,12 @@ export default function EditAccountModal({
             <select
               id="type"
               value={type}
-              onChange={(e) => setType(e.target.value as "personal" | "joint")}
+              onChange={(e) => setType(e.target.value as AccountType)}
               className="w-full px-4 py-2 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
+              <option value="checking">Checking</option>
+              <option value="savings">Savings</option>
+              <option value="credit">Credit</option>
               <option value="personal">Personal</option>
               <option value="joint">Joint</option>
             </select>

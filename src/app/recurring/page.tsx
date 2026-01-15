@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -13,20 +16,20 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 
 interface RecurringTransaction {
-  id: string;
+  _id: Id<"recurringTransactions">;
   description: string;
   amount: number;
-  interval: string;
-  next_run_date: string;
+  interval: "daily" | "weekly" | "monthly" | "yearly";
+  nextRunDate: string;
   active: boolean;
   category?: {
     name: string;
-    icon: string;
-    color: string;
-  };
+    icon?: string;
+    color?: string;
+  } | null;
   account?: {
     name: string;
-  };
+  } | null;
 }
 
 const intervalLabels: Record<string, string> = {
@@ -38,34 +41,19 @@ const intervalLabels: Record<string, string> = {
 
 export default function RecurringPage() {
   const { user, loading: authLoading } = useAuth();
-  const [recurring, setRecurring] = useState<RecurringTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editId, setEditId] = useState<string | undefined>(undefined);
+  const [editId, setEditId] = useState<Id<"recurringTransactions"> | undefined>(undefined);
   const [suggestionData, setSuggestionData] = useState<any>(undefined);
 
-  useEffect(() => {
-    if (user) {
-      fetchRecurring();
-    }
-  }, [user]);
+  // Fetch recurring transactions from Convex
+  const recurringData = useQuery(api.recurring.list);
+  const deleteRecurring = useMutation(api.recurring.remove);
+  const toggleRecurring = useMutation(api.recurring.toggleActive);
 
-  const fetchRecurring = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/recurring");
-      const data = await res.json();
-      if (data.recurring) {
-        setRecurring(data.recurring);
-      }
-    } catch (error) {
-      console.error("Error fetching recurring:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = recurringData === undefined;
+  const recurring = (recurringData ?? []) as RecurringTransaction[];
 
-  const handleEdit = (id: string) => {
+  const handleEdit = (id: Id<"recurringTransactions">) => {
     setEditId(id);
     setSuggestionData(undefined);
     setIsModalOpen(true);
@@ -77,36 +65,22 @@ export default function RecurringPage() {
     setIsModalOpen(true);
   };
 
-  const handleUseSuggestion = (suggestion: any) => {
-    setEditId(undefined);
-    setSuggestionData(suggestion);
-    setIsModalOpen(true);
-  };
-
-  const handleToggleActive = async (id: string, currentStatus: boolean) => {
-    try {
-      const res = await fetch(`/api/recurring/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: !currentStatus }),
-      });
-      if (res.ok) fetchRecurring();
-    } catch (error) {
-      console.error("Error toggling status:", error);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"recurringTransactions">) => {
     if (!confirm("Are you sure you want to delete this recurring transaction?"))
       return;
 
     try {
-      const res = await fetch(`/api/recurring/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) fetchRecurring();
+      await deleteRecurring({ id });
     } catch (error) {
       console.error("Error deleting:", error);
+    }
+  };
+
+  const handleToggle = async (id: Id<"recurringTransactions">) => {
+    try {
+      await toggleRecurring({ id });
+    } catch (error) {
+      console.error("Error toggling:", error);
     }
   };
 
@@ -206,9 +180,6 @@ export default function RecurringPage() {
             </motion.div>
           )}
 
-          {/* Suggestions Section */}
-          <SuggestionsList onAdd={handleUseSuggestion} />
-
           {loading ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
@@ -260,12 +231,12 @@ export default function RecurringPage() {
                     <AnimatePresence>
                       {activeRecurring.map((item, index) => (
                         <RecurringCard
-                          key={item.id}
+                          key={item._id}
                           item={item}
                           index={index}
                           onEdit={handleEdit}
                           onDelete={handleDelete}
-                          onToggle={handleToggleActive}
+                          onToggle={handleToggle}
                         />
                       ))}
                     </AnimatePresence>
@@ -295,12 +266,12 @@ export default function RecurringPage() {
                     <AnimatePresence>
                       {pausedRecurring.map((item, index) => (
                         <RecurringCard
-                          key={item.id}
+                          key={item._id}
                           item={item}
                           index={index}
                           onEdit={handleEdit}
                           onDelete={handleDelete}
-                          onToggle={handleToggleActive}
+                          onToggle={handleToggle}
                         />
                       ))}
                     </AnimatePresence>
@@ -332,7 +303,10 @@ export default function RecurringPage() {
       <RecurringTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchRecurring}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          // Convex auto-refreshes data
+        }}
         editId={editId}
         initialData={suggestionData}
       />
@@ -350,11 +324,11 @@ function RecurringCard({
 }: {
   item: RecurringTransaction;
   index: number;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onToggle: (id: string, active: boolean) => void;
+  onEdit: (id: Id<"recurringTransactions">) => void;
+  onDelete: (id: Id<"recurringTransactions">) => void;
+  onToggle: (id: Id<"recurringTransactions">) => void;
 }) {
-  const nextDate = new Date(item.next_run_date);
+  const nextDate = new Date(item.nextRunDate);
   const isUpcoming = nextDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   return (
@@ -420,7 +394,7 @@ function RecurringCard({
             {/* Actions */}
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
-                onClick={() => onToggle(item.id, item.active)}
+                onClick={() => onToggle(item._id)}
                 variant="ghost"
                 size="sm"
                 className={`p-2 h-auto ${
@@ -433,7 +407,7 @@ function RecurringCard({
                 <Icon name={item.active ? "check" : "close"} size={18} />
               </Button>
               <Button
-                onClick={() => onEdit(item.id)}
+                onClick={() => onEdit(item._id)}
                 variant="ghost"
                 size="sm"
                 className="p-2 h-auto text-text-secondary hover:text-primary hover:bg-primary/10"
@@ -442,7 +416,7 @@ function RecurringCard({
                 <Icon name="edit" size={18} />
               </Button>
               <Button
-                onClick={() => onDelete(item.id)}
+                onClick={() => onDelete(item._id)}
                 variant="ghost"
                 size="sm"
                 className="p-2 h-auto text-text-secondary hover:text-expense hover:bg-expense/10"
@@ -454,82 +428,6 @@ function RecurringCard({
           </div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
-}
-
-// Suggestions Component
-function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/recurring/suggestions")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.suggestions) setSuggestions(data.suggestions);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading || suggestions.length === 0) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mb-8"
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <Icon name="tip" size={20} className="text-primary" />
-        <h2 className="text-lg font-display font-bold text-foreground">
-          Suggested for you
-        </h2>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {suggestions.map((s, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05 }}
-          >
-            <Card className="border-primary/20 bg-primary-pale/30 hover:border-primary/40 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="font-medium text-foreground">
-                    {s.description}
-                  </div>
-                  <div
-                    className={`font-bold font-mono ${
-                      s.amount >= 0 ? "text-growth" : "text-foreground"
-                    }`}
-                  >
-                    {s.amount >= 0 ? "+" : ""}€{Math.abs(s.amount).toFixed(2)}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-xs text-text-secondary">
-                    <span className="px-2 py-0.5 bg-surface rounded-full mr-2">
-                      {intervalLabels[s.interval] || s.interval}
-                    </span>
-                    {s.occurrence_count} times
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => onAdd(s)}
-                  >
-                    <Icon name="plus" size={14} />
-                    Add
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
     </motion.div>
   );
 }

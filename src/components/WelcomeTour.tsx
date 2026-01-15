@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
-import { createClient } from "@/utils/supabase/client";
 
 interface WelcomeTourProps {
   onClose: () => void;
@@ -12,7 +11,6 @@ interface WelcomeTourProps {
 
 export default function WelcomeTour({ onClose }: WelcomeTourProps) {
   const [step, setStep] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   const steps = [
     {
@@ -38,35 +36,12 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
     },
   ];
 
-  const handleComplete = async () => {
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        await supabase
-          .from("profiles")
-          .update({ has_seen_welcome_tour: true })
-          .eq("id", user.id);
-      }
-
-      onClose();
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleNext = () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      handleComplete();
+      // Parent component handles marking tour as seen via Convex mutation
+      onClose();
     }
   };
 
@@ -84,7 +59,7 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
         className="w-full max-w-md overflow-hidden relative"
       >
         <Button
-          onClick={handleComplete}
+          onClick={onClose}
           variant="ghost"
           size="sm"
           className="absolute top-4 right-4 text-muted hover:text-foreground"
@@ -132,14 +107,9 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
             size="lg"
             className="w-full"
             onClick={handleNext}
-            disabled={loading}
             autoFocus
           >
-            {step === steps.length - 1
-              ? loading
-                ? "Finishing..."
-                : "Let's Go!"
-              : "Next"}
+            {step === steps.length - 1 ? "Let's Go!" : "Next"}
           </Button>
         </div>
       </Card>

@@ -94,14 +94,14 @@ export default function AccountsList({
                   <p className="text-xs text-text-secondary mb-1">Balance</p>
                   <p
                     className={`text-xl font-bold font-mono ${
-                      account.balance === null
+                      account.balance == null
                         ? "text-text-secondary"
                         : account.balance >= 0
                           ? "text-growth"
                           : "text-expense"
                     }`}
                   >
-                    {account.balance !== null
+                    {account.balance != null
                       ? `€${account.balance.toLocaleString("de-DE", {
                           minimumFractionDigits: 2,
                         })}`
