@@ -95,6 +95,18 @@ export default function UserMenu() {
               <span>Settings</span>
             </Link>
 
+            {/* Admin Link - only for admins */}
+            {user.isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground rounded-lg hover:bg-surface-alt transition-colors"
+              >
+                <Icon name="shield" size={18} className="text-muted" />
+                <span>Admin Panel</span>
+              </Link>
+            )}
+
             <div className="h-px bg-border my-1" />
 
             {/* Sign Out */}

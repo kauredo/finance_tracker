@@ -21,7 +21,7 @@ export default function NavBar() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
-  const baseNavigation: { name: string; href: string; icon: IconName }[] = [
+  const navigation: { name: string; href: string; icon: IconName }[] = [
     { name: "Transactions", href: "/transactions", icon: "transactions" },
     { name: "Categories", href: "/categories", icon: "tag" },
     { name: "Budgets", href: "/budgets", icon: "chart" },
@@ -29,14 +29,6 @@ export default function NavBar() {
     { name: "Recurring", href: "/recurring", icon: "calendar" },
     { name: "Reports", href: "/reports", icon: "reports" },
   ];
-
-  // Add Admin link for admin users
-  const navigation = user?.isAdmin
-    ? [
-        ...baseNavigation,
-        { name: "Admin", href: "/admin", icon: "shield" as IconName },
-      ]
-    : baseNavigation;
 
   const mobileNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" as IconName },
@@ -273,6 +265,28 @@ export default function NavBar() {
                     {theme === "light" ? "Dark Mode" : "Light Mode"}
                   </button>
                 </motion.div>
+
+                {/* Mobile Admin Link - only for admins */}
+                {user?.isAdmin && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      delay: (mobileNavigation.length + 0.5) * 0.05,
+                    }}
+                  >
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center w-full px-4 py-3 rounded-2xl text-base font-medium text-foreground hover:bg-sand transition-all"
+                    >
+                      <div className="p-2 rounded-xl mr-3 bg-sand">
+                        <Icon name="shield" size={20} className="text-muted" />
+                      </div>
+                      Admin Panel
+                    </Link>
+                  </motion.div>
+                )}
 
                 {/* Mobile Sign Out */}
                 <motion.div
