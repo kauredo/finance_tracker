@@ -112,7 +112,7 @@ export default function RecurringPage() {
       <div className="min-h-screen bg-background">
         {/* Hero Header */}
         <div className="bg-gradient-to-br from-primary-pale via-cream to-sand">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -343,48 +343,61 @@ function RecurringCard({
     >
       <Card className={`group ${!item.active ? "opacity-60" : ""}`}>
         <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            {/* Icon */}
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-              style={{
-                backgroundColor: item.category
-                  ? `${item.category.color}15`
-                  : "var(--sand)",
-                color: item.category?.color || "var(--text-secondary)",
-              }}
-            >
-              <Icon
-                name={(item.category?.icon as IconName) || "other"}
-                size={24}
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              {/* Icon */}
+              <div
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
+                style={{
+                  backgroundColor: item.category
+                    ? `${item.category.color}15`
+                    : "var(--sand)",
+                  color: item.category?.color || "var(--text-secondary)",
+                }}
+              >
+                <Icon
+                  name={(item.category?.icon as IconName) || "other"}
+                  size={20}
+                  className="sm:w-6 sm:h-6"
+                />
+              </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display font-bold text-foreground truncate">
-                {item.description}
-              </h3>
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <span className="px-2 py-0.5 bg-sand rounded-full text-xs font-medium">
-                  {intervalLabels[item.interval] || item.interval}
-                </span>
-                <span>•</span>
-                <span
-                  className={
-                    isUpcoming && item.active ? "text-primary font-medium" : ""
-                  }
-                >
-                  {isUpcoming && item.active ? "Soon: " : "Next: "}
-                  {format(nextDate, "MMM d")}
-                </span>
-                <span>•</span>
-                <span>{item.account?.name}</span>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display font-bold text-foreground truncate">
+                    {item.description}
+                  </h3>
+                  {/* Amount - inline on mobile */}
+                  <span
+                    className={`sm:hidden text-base font-bold tabular-nums flex-shrink-0 ${
+                      item.amount >= 0 ? "text-growth" : "text-foreground"
+                    }`}
+                  >
+                    {item.amount >= 0 ? "+" : ""}€{Math.abs(item.amount).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm text-text-secondary mt-0.5">
+                  <span className="px-2 py-0.5 bg-sand rounded-full text-xs font-medium">
+                    {intervalLabels[item.interval] || item.interval}
+                  </span>
+                  <span className="hidden sm:inline">•</span>
+                  <span
+                    className={
+                      isUpcoming && item.active ? "text-primary font-medium" : ""
+                    }
+                  >
+                    {isUpcoming && item.active ? "Soon: " : "Next: "}
+                    {format(nextDate, "MMM d")}
+                  </span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="hidden sm:inline">{item.account?.name}</span>
+                </div>
               </div>
             </div>
 
-            {/* Amount */}
-            <div className="text-right mr-4">
+            {/* Amount - separate on desktop */}
+            <div className="hidden sm:block text-right mr-4">
               <span
                 className={`text-lg font-bold tabular-nums ${
                   item.amount >= 0 ? "text-growth" : "text-foreground"
@@ -394,8 +407,8 @@ function RecurringCard({
               </span>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Actions - visible on mobile, hover on desktop */}
+            <div className="flex items-center gap-1 justify-end sm:justify-start md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               <Button
                 onClick={() => onToggle(item._id)}
                 variant="ghost"

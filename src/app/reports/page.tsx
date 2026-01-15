@@ -229,7 +229,7 @@ export default function ReportsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             {[...Array(4)].map((_, i) => (
               <Card key={i} className="animate-pulse">
                 <CardContent className="p-6">
@@ -242,7 +242,7 @@ export default function ReportsPage() {
         ) : (
           <>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
               <MotionCard variant="glass" transition={{ delay: 0.1 }}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 h-full min-h-[64px]">
@@ -308,7 +308,7 @@ export default function ReportsPage() {
 
               <MotionCard variant="glass" transition={{ delay: 0.25 }}>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-6 h-full min-h-[64px]">
+                  <div className="flex items-center gap-4 h-full min-h-[64px]">
                     <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
                       <ProgressRing
                         progress={Math.max(

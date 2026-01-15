@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -20,6 +20,18 @@ export default function NavBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
 
   const navigation: { name: string; href: string; icon: IconName }[] = [
     { name: "Transactions", href: "/transactions", icon: "transactions" },
@@ -199,9 +211,9 @@ export default function NavBar() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden overflow-hidden"
+              className="md:hidden bg-surface"
             >
-              <div className="py-4 space-y-1 border-t border-border/50">
+              <div className="py-4 space-y-1 border-t border-border/50 overflow-y-auto max-h-[calc(100vh-5rem)] px-2 overscroll-contain">
                 {mobileNavigation.map((item, index) => {
                   const isActive =
                     pathname === item.href ||

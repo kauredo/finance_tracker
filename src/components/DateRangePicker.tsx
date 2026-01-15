@@ -28,20 +28,20 @@ export default function DateRangePicker({
   ];
 
   return (
-    <Card variant="glass" className="p-4">
-      <div className="space-y-4">
+    <Card variant="glass" className="p-3 sm:p-4">
+      <div className="space-y-3 sm:space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
             Quick Select
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {presets.map((preset) => (
               <Button
                 key={preset.value}
                 onClick={() => onPresetChange?.(preset.value)}
                 variant="secondary"
                 size="sm"
-                className="px-3 py-1.5 h-auto text-sm bg-surface hover:bg-surface-alt border border-border"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 h-auto text-xs sm:text-sm bg-surface hover:bg-surface-alt border border-border"
               >
                 {preset.label}
               </Button>
@@ -49,7 +49,7 @@ export default function DateRangePicker({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Start Date

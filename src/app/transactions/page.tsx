@@ -91,22 +91,29 @@ export default function TransactionsPage() {
                 Track every coin that flows through your garden
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 variant="secondary"
                 onClick={() => setShowFilters(!showFilters)}
-                className={hasActiveFilters ? "ring-2 ring-primary/30" : ""}
+                className={`flex-1 sm:flex-none ${hasActiveFilters ? "ring-2 ring-primary/30" : ""}`}
               >
                 <Icon name="search" size={18} />
-                {hasActiveFilters ? "Filters Active" : "Filter"}
+                <span className="hidden sm:inline">
+                  {hasActiveFilters ? "Filters Active" : "Filter"}
+                </span>
+                <span className="sm:hidden">
+                  {hasActiveFilters ? "Active" : "Filter"}
+                </span>
               </Button>
               <Button
                 onClick={() => setShowAddModal(true)}
                 variant="bloom"
                 pill
+                className="flex-1 sm:flex-none"
               >
                 <Icon name="plus" size={18} />
-                Add Transaction
+                <span className="hidden sm:inline">Add Transaction</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </motion.div>
@@ -125,25 +132,26 @@ export default function TransactionsPage() {
               className="mb-6 overflow-hidden"
             >
               <Card className="bg-sand/30">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-display font-bold text-foreground flex items-center gap-2">
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <h3 className="font-display font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
                       <Icon name="search" size={18} />
-                      Search & Filter
+                      <span className="hidden sm:inline">Search & Filter</span>
+                      <span className="sm:hidden">Filters</span>
                     </h3>
                     {hasActiveFilters && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={clearFilters}
-                        className="text-text-secondary hover:text-foreground"
+                        className="text-text-secondary hover:text-foreground text-xs sm:text-sm"
                       >
                         Clear all
                       </Button>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {/* Search */}
                     <div>
                       <Input
@@ -205,7 +213,7 @@ export default function TransactionsPage() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 pt-4 border-t border-border overflow-hidden"
+                        className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border overflow-hidden"
                       >
                         <DateRangePicker
                           startDate={dateRange.startDate}

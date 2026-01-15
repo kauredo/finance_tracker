@@ -169,7 +169,7 @@ export default function AdminPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between p-4 rounded-xl bg-sand/30">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-sand/30">
                 <div>
                   <p className="font-medium text-foreground">
                     Default Categories
@@ -182,6 +182,7 @@ export default function AdminPage() {
                   variant="secondary"
                   onClick={handleSeedCategories}
                   isLoading={isSeeding}
+                  className="w-full sm:w-auto"
                 >
                   <Icon name="tag" size={16} />
                   Seed Categories
@@ -207,33 +208,34 @@ export default function AdminPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 rounded-xl bg-warning/5 border border-warning/20"
+                      className="p-4 rounded-xl bg-warning/5 border border-warning/20"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center flex-shrink-0">
                           <Icon
                             name="user"
                             size={20}
                             className="text-warning"
                           />
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">
                             {user.fullName || "No name"}
                           </p>
-                          <p className="text-sm text-text-secondary">
+                          <p className="text-sm text-text-secondary truncate">
                             {user.email}
+                          </p>
+                          <p className="text-xs text-text-secondary mt-1">
+                            Joined {formatDate(user.createdAt)}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-text-secondary mr-2">
-                          Joined {formatDate(user.createdAt)}
-                        </span>
+                      <div className="flex items-center gap-2 mt-3">
                         <Button
                           variant="bloom"
                           size="sm"
                           onClick={() => handleConfirm(user._id)}
+                          className="flex-1 sm:flex-none"
                         >
                           <Icon name="check" size={16} />
                           Confirm
@@ -276,11 +278,11 @@ export default function AdminPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 rounded-xl bg-sand/30 hover:bg-sand/50 transition-colors"
+                      className="p-4 rounded-xl bg-sand/30 hover:bg-sand/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                             user.isAdmin ? "bg-primary/20" : "bg-growth/20"
                           }`}
                         >
@@ -292,9 +294,9 @@ export default function AdminPage() {
                             }
                           />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-foreground">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-foreground truncate">
                               {user.fullName || "No name"}
                             </p>
                             {user.isAdmin && (
@@ -308,13 +310,13 @@ export default function AdminPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-text-secondary">
+                          <p className="text-sm text-text-secondary truncate">
                             {user.email}
                           </p>
                         </div>
                       </div>
                       {user._id !== currentUser?._id && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/50">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -322,15 +324,21 @@ export default function AdminPage() {
                               handleToggleAdmin(user._id, user.isAdmin)
                             }
                             title={user.isAdmin ? "Remove admin" : "Make admin"}
+                            className="flex-1 sm:flex-none"
                           >
                             <Icon name="settings" size={16} />
-                            {user.isAdmin ? "Remove Admin" : "Make Admin"}
+                            <span className="hidden sm:inline">
+                              {user.isAdmin ? "Remove Admin" : "Make Admin"}
+                            </span>
+                            <span className="sm:hidden">
+                              {user.isAdmin ? "Demote" : "Promote"}
+                            </span>
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleUnconfirm(user._id)}
-                            className="text-warning hover:bg-warning/10"
+                            className="text-warning hover:bg-warning/10 flex-1 sm:flex-none"
                             disabled={user.isAdmin}
                             title={
                               user.isAdmin

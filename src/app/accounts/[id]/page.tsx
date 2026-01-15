@@ -60,14 +60,14 @@ export default function AccountDetailPage() {
       <div className="min-h-screen bg-background">
         <NavBar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex justify-between items-start mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <Skeleton variant="text" className="w-48 h-10 mb-2" />
               <Skeleton variant="text" className="w-24 h-5" />
             </div>
-            <div className="flex gap-3">
-              <Skeleton variant="rectangle" className="w-24 h-10 rounded-md" />
-              <Skeleton variant="rectangle" className="w-24 h-10 rounded-md" />
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+              <Skeleton variant="rectangle" className="flex-1 sm:flex-none sm:w-24 h-10 rounded-md" />
+              <Skeleton variant="rectangle" className="flex-1 sm:flex-none sm:w-24 h-10 rounded-md" />
             </div>
           </div>
           <Card className="mb-6">
@@ -120,12 +120,22 @@ export default function AccountDetailPage() {
               <p className="text-muted capitalize">{account.type} Account</p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => setShowEditModal(true)}>
-              Edit Account
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button
+              variant="secondary"
+              onClick={() => setShowEditModal(true)}
+              className="flex-1 sm:flex-none"
+            >
+              <span className="hidden sm:inline">Edit Account</span>
+              <span className="sm:hidden">Edit</span>
             </Button>
-            <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-              Delete Account
+            <Button
+              variant="danger"
+              onClick={() => setShowDeleteModal(true)}
+              className="flex-1 sm:flex-none"
+            >
+              <span className="hidden sm:inline">Delete Account</span>
+              <span className="sm:hidden">Delete</span>
             </Button>
           </div>
         </div>

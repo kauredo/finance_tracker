@@ -106,7 +106,7 @@ export default function GoalsPage() {
       <div className="min-h-screen bg-background">
         {/* Hero Header */}
         <div className="bg-gradient-to-br from-growth-pale via-cream to-primary-pale">
-          <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -138,9 +138,9 @@ export default function GoalsPage() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 -mt-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 -mt-16">
             <MotionCard
               variant="glass"
               transition={{ delay: 0.1 }}
