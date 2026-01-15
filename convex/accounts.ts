@@ -76,6 +76,7 @@ export const create = mutation({
       v.literal("personal"),
       v.literal("joint")
     ),
+    balance: v.optional(v.number()),
     color: v.optional(v.string()),
     icon: v.optional(v.string()),
   },
@@ -102,7 +103,7 @@ export const create = mutation({
       return ctx.db.insert("accounts", {
         name: args.name,
         type: args.type,
-        balance: 0,
+        balance: args.balance ?? 0,
         color: args.color,
         icon: args.icon,
         householdId,
@@ -115,7 +116,7 @@ export const create = mutation({
     return ctx.db.insert("accounts", {
       name: args.name,
       type: args.type,
-      balance: 0,
+      balance: args.balance ?? 0,
       color: args.color,
       icon: args.icon,
       ownerId: user._id,

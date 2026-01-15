@@ -1,16 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-
-interface Category {
-  id: string;
-  name: string;
-  color: string;
-  icon: string;
-}
 
 interface CategoryPickerProps {
   value: string;
@@ -25,27 +20,19 @@ export default function CategoryPicker({
   disabled = false,
   placeholder = "Select category",
 }: CategoryPickerProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const categoriesData = useQuery(api.categories.list);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories");
-        const data = await response.json();
-
-        if (response.ok) {
-          setCategories(data.categories || []);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const categories = useMemo(() => {
+    return (categoriesData ?? []).map((c) => ({
+      id: c._id,
+      name: c.name,
+      color: c.color || "#6b7280",
+      icon: c.icon || "other",
+    }));
+  }, [categoriesData]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

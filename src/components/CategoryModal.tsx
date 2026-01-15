@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -58,6 +61,9 @@ export default function CategoryModal({
   const [icon, setIcon] = useState(category?.icon || "other");
   const [isLoading, setIsLoading] = useState(false);
 
+  const createCategory = useMutation(api.categories.create);
+  const updateCategory = useMutation(api.categories.update);
+
   const isEdit = !!category;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,20 +77,19 @@ export default function CategoryModal({
     setIsLoading(true);
 
     try {
-      const url = isEdit ? `/api/categories/${category.id}` : "/api/categories";
-
-      const method = isEdit ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, color, icon }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save category");
+      if (isEdit) {
+        await updateCategory({
+          id: category.id as Id<"categories">,
+          name,
+          color,
+          icon,
+        });
+      } else {
+        await createCategory({
+          name,
+          color,
+          icon,
+        });
       }
 
       showSuccess(`Category ${isEdit ? "updated" : "created"} successfully`);

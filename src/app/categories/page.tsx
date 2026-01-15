@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
@@ -18,47 +21,35 @@ interface Category {
   name: string;
   color: string;
   icon: string;
-  is_custom: boolean;
-  owner_id: string | null;
+  isCustom: boolean;
 }
 
 export default function CategoriesPage() {
   const { user, loading: authLoading } = useAuth();
   const { error: showError, success: showSuccess } = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(
     null,
   );
   const [transactionCount, setTransactionCount] = useState<number | null>(null);
-  const [_isDeleting, setIsDeleting] = useState(false);
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/categories");
-      const data = await response.json();
+  // Fetch categories from Convex
+  const categoriesData = useQuery(api.categories.list);
+  const getTransactionCount = useMutation(api.categories.getTransactionCount);
+  const deleteCategory = useMutation(api.categories.remove);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch categories");
-      }
+  const loading = categoriesData === undefined;
 
-      setCategories(data.categories || []);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      showError("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
-
-  useEffect(() => {
-    if (user) {
-      fetchCategories();
-    }
-  }, [user, fetchCategories]);
+  const categories = useMemo(() => {
+    return (categoriesData ?? []).map((c) => ({
+      id: c._id,
+      name: c.name,
+      color: c.color || "#6b7280",
+      icon: c.icon || "other",
+      isCustom: c.isCustom,
+    }));
+  }, [categoriesData]);
 
   const handleCreate = () => {
     setEditingCategory(null);
@@ -66,7 +57,7 @@ export default function CategoriesPage() {
   };
 
   const handleEdit = (category: Category) => {
-    if (!category.is_custom) {
+    if (!category.isCustom) {
       showError("Cannot edit default categories");
       return;
     }
@@ -76,26 +67,20 @@ export default function CategoriesPage() {
 
   const handleDeleteClick = async (category: Category) => {
     setDeletingCategory(category);
-    setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/categories/${category.id}`, {
-        method: "DELETE",
+      const count = await getTransactionCount({
+        id: category.id as Id<"categories">,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (count === 0) {
+        // No transactions, delete immediately
+        await deleteCategory({ id: category.id as Id<"categories"> });
         showSuccess("Category removed from garden");
-        fetchCategories();
         setDeletingCategory(null);
-      } else if (
-        response.status === 400 &&
-        data.transactionCount !== undefined
-      ) {
-        setTransactionCount(data.transactionCount);
       } else {
-        throw new Error(data.error || "Failed to delete category");
+        // Show modal to reassign transactions
+        setTransactionCount(count);
       }
     } catch (error) {
       console.error("Error checking category:", error);
@@ -103,8 +88,6 @@ export default function CategoriesPage() {
         error instanceof Error ? error.message : "Failed to delete category",
       );
       setDeletingCategory(null);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -121,8 +104,8 @@ export default function CategoriesPage() {
     );
   }
 
-  const defaultCategories = categories.filter((c) => !c.is_custom);
-  const customCategories = categories.filter((c) => c.is_custom);
+  const defaultCategories = categories.filter((c) => !c.isCustom);
+  const customCategories = categories.filter((c) => c.isCustom);
 
   return (
     <>
@@ -364,7 +347,7 @@ export default function CategoriesPage() {
           onSuccess={() => {
             setShowModal(false);
             setEditingCategory(null);
-            fetchCategories();
+            // Convex auto-refreshes data
           }}
         />
       )}
@@ -381,7 +364,7 @@ export default function CategoriesPage() {
             setDeletingCategory(null);
             setTransactionCount(null);
             showSuccess("Category removed from garden");
-            fetchCategories();
+            // Convex auto-refreshes data
           }}
         />
       )}

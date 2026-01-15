@@ -426,7 +426,7 @@ export default function DashboardPage() {
                   <Tooltip content="Upload a bank statement (Press 'n')">
                     <button
                       onClick={() => setShowUpload(true)}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group"
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
                     >
                       <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
                         <Icon
@@ -443,7 +443,7 @@ export default function DashboardPage() {
                   <Tooltip content="Create a new account">
                     <button
                       onClick={() => setShowAccountModal(true)}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group"
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
                     >
                       <div className="p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
                         <Icon name="wallet" size={24} className="text-growth" />
@@ -456,7 +456,7 @@ export default function DashboardPage() {
                   <Tooltip content="Invite a partner to your household">
                     <button
                       onClick={() => setShowInviteModal(true)}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-info-light hover:bg-info/20 transition-all group"
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
                     >
                       <div className="p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
                         <Icon name="joint" size={24} className="text-info" />
@@ -469,7 +469,7 @@ export default function DashboardPage() {
                   <Tooltip content="View detailed analytics and reports">
                     <button
                       onClick={() => router.push("/reports")}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-warning-light hover:bg-warning/20 transition-all group"
+                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-warning-light hover:bg-warning/20 transition-all group w-full"
                     >
                       <div className="p-3 rounded-xl bg-warning/10 group-hover:bg-warning/20 transition-colors">
                         <Icon

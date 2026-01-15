@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -43,6 +45,8 @@ export default function OnboardingWizard() {
   const [accountName, setAccountName] = useState("");
   const [accountBalance, setAccountBalance] = useState("");
 
+  const createAccount = useMutation(api.accounts.create);
+
   const handleCurrencySelect = (curr: string) => {
     setCurrency(curr);
     setCurrentStep("account");
@@ -56,21 +60,11 @@ export default function OnboardingWizard() {
 
     setLoading(true);
     try {
-      // Create Account
-      const response = await fetch("/api/accounts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: accountName,
-          type: "checking",
-          balance: parseFloat(accountBalance),
-          currency: currency,
-        }),
+      await createAccount({
+        name: accountName,
+        type: "checking",
+        balance: parseFloat(accountBalance),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to create account");
-      }
 
       showSuccess("Your garden is ready! 🌱");
       setCurrentStep("complete");

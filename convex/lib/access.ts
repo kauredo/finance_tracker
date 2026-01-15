@@ -1,19 +1,17 @@
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { Id } from "../_generated/dataModel";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * Get the current authenticated user from the database
  */
 export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity || !identity.email) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) {
     return null;
   }
 
-  return ctx.db
-    .query("users")
-    .withIndex("by_email", (q) => q.eq("email", identity.email!))
-    .first();
+  return ctx.db.get(userId);
 }
 
 /**

@@ -130,10 +130,30 @@ export const update = mutation({
 });
 
 /**
+ * Get transaction count for a category
+ */
+export const getTransactionCount = mutation({
+  args: { id: v.id("categories") },
+  handler: async (ctx, args) => {
+    await requireUser(ctx);
+
+    const transactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_category", (q) => q.eq("categoryId", args.id))
+      .collect();
+
+    return transactions.length;
+  },
+});
+
+/**
  * Delete a custom category
  */
 export const remove = mutation({
-  args: { id: v.id("categories") },
+  args: {
+    id: v.id("categories"),
+    reassignTo: v.optional(v.id("categories")),
+  },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const category = await ctx.db.get(args.id);
@@ -146,16 +166,23 @@ export const remove = mutation({
       throw new Error("You can only delete your own custom categories");
     }
 
-    // Check if category is used by any transactions
+    // Get all transactions with this category
     const transactionsWithCategory = await ctx.db
       .query("transactions")
       .withIndex("by_category", (q) => q.eq("categoryId", args.id))
-      .first();
+      .collect();
 
-    if (transactionsWithCategory) {
-      throw new Error(
-        "Cannot delete category that is used by transactions. Please reassign transactions first."
-      );
+    if (transactionsWithCategory.length > 0) {
+      if (!args.reassignTo) {
+        throw new Error(
+          "Cannot delete category that is used by transactions. Please reassign transactions first."
+        );
+      }
+
+      // Reassign all transactions to the new category
+      for (const tx of transactionsWithCategory) {
+        await ctx.db.patch(tx._id, { categoryId: args.reassignTo });
+      }
     }
 
     await ctx.db.delete(args.id);

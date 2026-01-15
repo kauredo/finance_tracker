@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import CategoryPicker from "@/components/CategoryPicker";
@@ -29,6 +32,8 @@ export default function DeleteCategoryModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const deleteCategory = useMutation(api.categories.remove);
+
   const handleDelete = async () => {
     if (transactionCount > 0 && !reassignId) {
       setError("Please select a category to reassign transactions to");
@@ -39,20 +44,10 @@ export default function DeleteCategoryModal({
     setError("");
 
     try {
-      let url = `/api/categories/${category.id}`;
-      if (reassignId) {
-        url += `?reassign_to=${reassignId}`;
-      }
-
-      const response = await fetch(url, {
-        method: "DELETE",
+      await deleteCategory({
+        id: category.id as Id<"categories">,
+        reassignTo: reassignId ? (reassignId as Id<"categories">) : undefined,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete category");
-      }
 
       onSuccess();
     } catch (err: any) {
