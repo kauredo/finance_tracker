@@ -29,7 +29,7 @@ For each transaction, provide:
 - date (ISO format YYYY-MM-DD)
 - description (merchant/payee name, combine multiline names into single string)
 - amount (NEGATIVE for "Débito", POSITIVE for "Crédito")
-- category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, income, other)
+- category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, subscriptions, travel, housing, education, personal care, gifts, income, other)
 
 File type: ${fileType}
 Content (extracted text or JSON):
@@ -70,7 +70,7 @@ Extract each transaction with:
 - date (ISO format YYYY-MM-DD)
 - description (merchant/payee name, combine any multiline text into single string)
 - amount (NEGATIVE for "Débito", POSITIVE for "Crédito")
-- category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, income, other)
+- category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, subscriptions, travel, housing, education, personal care, gifts, income, other)
 
 CRITICAL:
 - Extract ALL transactions from ALL pages

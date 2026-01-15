@@ -26,6 +26,9 @@ export default function AdminPage() {
   const unconfirmUser = useMutation(api.admin.unconfirmUser);
   const setAdminStatus = useMutation(api.admin.setAdminStatus);
   const deleteUser = useMutation(api.admin.deleteUser);
+  const seedCategories = useMutation(api.admin.seedCategories);
+
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const loading = currentUser === undefined || users === undefined;
 
@@ -89,6 +92,18 @@ export default function AdminPage() {
     }
   };
 
+  const handleSeedCategories = async () => {
+    setIsSeeding(true);
+    try {
+      await seedCategories({});
+      toast.success("Default categories seeded");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to seed categories");
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString(undefined, {
       year: "numeric",
@@ -139,6 +154,36 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* System Setup */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-xl">⚙️</span>
+              System Setup
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 rounded-xl bg-sand/30">
+              <div>
+                <p className="font-medium text-foreground">
+                  Default Categories
+                </p>
+                <p className="text-sm text-text-secondary">
+                  Seed the default expense and income categories
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={handleSeedCategories}
+                isLoading={isSeeding}
+              >
+                <Icon name="tag" size={16} />
+                Seed Categories
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Pending Users */}
         {pendingUsers.length > 0 && (
           <Card>

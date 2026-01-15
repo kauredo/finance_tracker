@@ -74,7 +74,7 @@ export const icons = {
     "M19 14c0 2.21-3.58 4-8 4s-8-1.79-8-4 3.58-4 8-4 8 1.79 8 4z M7 17v3 M15 17v3 M5 12l-2-2 M17 12l2-2 M4 14a1 1 0 100 2 1 1 0 000-2 M11 8h2 M12 5v2",
   savings:
     "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", // Coin (reused income)
-  car: "M5 17a2 2 0 104 0H5zm10 0a2 2 0 104 0h-4zm-9-2h10v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2zm-4 0h2m14 0h2m-6-9l2-2m-8 2l-2-2",
+  car: "M3 14h18v-4h-3l-2-4H8L6 10H3v4zm4 3a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z", // Simple car
   home: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
   vacation:
     "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z", // Sun (reused)
@@ -82,10 +82,12 @@ export const icons = {
   education:
     "M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222",
   investment: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
-  gift: "M20 12a8 8 0 00-8-8 8 8 0 00-8 8c0 4.418 3.582 8 8 8s8-3.582 8-8zm-8 3.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z", // Simple circle for now, or maybe a box? Let's use a box.
-  // Better gift:
-  // M20 7h-3a2 2 0 00-2-2h-2a2 2 0 00-2 2H8a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2zm-5 9h-2v-2h2v2zm0-4h-2V9h2v3z
-  // Let's stick to simple paths.
+  gift: "M12 7V3m0 4h8a1 1 0 011 1v3H3V8a1 1 0 011-1h8zm0 0c-1.5 0-3-1-3-2.5S9 2 10.5 2c1 0 1.5 1 1.5 1s.5-1 1.5-1C15 2 15 2.5 15 4.5S13.5 7 12 7zM3 11h18v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9zm9 0v11", // Gift box with ribbon bow
+  subscriptions: "M4 4h16v2H4zm0 4h16v12H4zm4 4h2v2H8zm4 0h4v2h-4z", // Credit card / recurring
+  personal_care:
+    "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z", // Heart with sparkle vibe
+  travel:
+    "M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z", // Airplane
   electronics:
     "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", // Monitor
 
@@ -164,7 +166,10 @@ export type IconName =
   | "flag"
   | "menu"
   | "arrow_left"
-  | "shield";
+  | "shield"
+  | "subscriptions"
+  | "personal_care"
+  | "travel";
 
 // Overwriting piggy_bank with a better "Savings" icon (Piggy bank style)
 // M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z is moon

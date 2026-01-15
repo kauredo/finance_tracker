@@ -197,14 +197,23 @@ export const seedDefaultCategories = internalMutation({
   args: {},
   handler: async (ctx) => {
     const defaultCategories = [
+      // Expenses
       { name: "Groceries", color: "#10b981", icon: "groceries" },
       { name: "Dining", color: "#f59e0b", icon: "dining" },
-      { name: "Transport", color: "#3b82f6", icon: "transport" },
+      { name: "Transport", color: "#3b82f6", icon: "car" },
       { name: "Utilities", color: "#8b5cf6", icon: "utilities" },
       { name: "Entertainment", color: "#ec4899", icon: "entertainment" },
       { name: "Shopping", color: "#f43f5e", icon: "shopping" },
       { name: "Healthcare", color: "#06b6d4", icon: "healthcare" },
+      { name: "Subscriptions", color: "#a855f7", icon: "subscriptions" },
+      { name: "Travel", color: "#0ea5e9", icon: "travel" },
+      { name: "Housing", color: "#78716c", icon: "home" },
+      { name: "Education", color: "#f97316", icon: "education" },
+      { name: "Personal Care", color: "#db2777", icon: "personal_care" },
+      { name: "Gifts", color: "#e11d48", icon: "gift" },
+      // Income
       { name: "Income", color: "#22c55e", icon: "income" },
+      // Fallback
       { name: "Other", color: "#6b7280", icon: "other" },
     ];
 
@@ -217,7 +226,15 @@ export const seedDefaultCategories = internalMutation({
         .withIndex("by_name", (q) => q.eq("name", cat.name))
         .first();
 
-      if (!existing) {
+      if (existing) {
+        // Update existing category with new icon/color if different
+        if (existing.icon !== cat.icon || existing.color !== cat.color) {
+          await ctx.db.patch(existing._id, {
+            icon: cat.icon,
+            color: cat.color,
+          });
+        }
+      } else {
         await ctx.db.insert("categories", {
           name: cat.name,
           color: cat.color,

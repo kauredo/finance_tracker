@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAdmin, getCurrentUser } from "./lib/access";
+import { internal } from "./_generated/api";
 
 /**
  * Get the current user's status (for frontend to check admin/confirmed)
@@ -197,6 +198,21 @@ export const deleteUser = mutation({
 
     // 4. Delete the user
     await ctx.db.delete(args.userId);
+
+    return { success: true };
+  },
+});
+
+/**
+ * Seed default categories (admin only)
+ */
+export const seedCategories = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+
+    // Call the internal seed function
+    await ctx.runMutation(internal.categories.seedDefaultCategories, {});
 
     return { success: true };
   },
