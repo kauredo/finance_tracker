@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseSecretKey);
 
-    let accountData: any = {
+    const accountData: any = {
       name: accountName,
       type: accountType,
     };

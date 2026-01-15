@@ -49,7 +49,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-sm font-medium text-foreground mb-1">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: <span className="font-mono font-bold">€{entry.value.toLocaleString()}</span>
+            {entry.name}:{" "}
+            <span className="font-mono font-bold">
+              €{entry.value.toLocaleString()}
+            </span>
           </p>
         ))}
       </div>
@@ -64,7 +67,10 @@ const PieTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-surface border border-border rounded-xl p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground">{data.name}</p>
-        <p className="text-sm font-mono font-bold" style={{ color: data.payload.color }}>
+        <p
+          className="text-sm font-mono font-bold"
+          style={{ color: data.payload.color }}
+        >
           €{data.value.toLocaleString()}
         </p>
       </div>
@@ -88,7 +94,9 @@ export default function ReportsCharts({
           variant={view === "category" ? "primary" : "ghost"}
           size="sm"
           className={`rounded-xl transition-all ${
-            view === "category" ? "" : "text-text-secondary hover:text-foreground"
+            view === "category"
+              ? ""
+              : "text-text-secondary hover:text-foreground"
           }`}
         >
           <Icon name="chart" size={16} />
@@ -99,7 +107,9 @@ export default function ReportsCharts({
           variant={view === "monthly" ? "primary" : "ghost"}
           size="sm"
           className={`rounded-xl transition-all ${
-            view === "monthly" ? "" : "text-text-secondary hover:text-foreground"
+            view === "monthly"
+              ? ""
+              : "text-text-secondary hover:text-foreground"
           }`}
         >
           <Icon name="trending_up" size={16} />
@@ -170,7 +180,10 @@ export default function ReportsCharts({
                 {categoryData.length > 0 ? (
                   <div className="space-y-3">
                     {categoryData.slice(0, 6).map((category, index) => {
-                      const total = categoryData.reduce((sum, c) => sum + c.value, 0);
+                      const total = categoryData.reduce(
+                        (sum, c) => sum + c.value,
+                        0,
+                      );
                       const percentage = (category.value / total) * 100;
 
                       return (
@@ -200,7 +213,10 @@ export default function ReportsCharts({
                                 style={{ backgroundColor: category.color }}
                                 initial={{ width: 0 }}
                                 animate={{ width: `${percentage}%` }}
-                                transition={{ duration: 0.5, delay: index * 0.05 }}
+                                transition={{
+                                  duration: 0.5,
+                                  delay: index * 0.05,
+                                }}
                               />
                             </div>
                           </div>
@@ -238,13 +254,41 @@ export default function ReportsCharts({
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={monthlyData}>
                         <defs>
-                          <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#7cb482" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#7cb482" stopOpacity={0}/>
+                          <linearGradient
+                            id="colorIncome"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#7cb482"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#7cb482"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
-                          <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#e57373" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#e57373" stopOpacity={0}/>
+                          <linearGradient
+                            id="colorExpenses"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#e57373"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#e57373"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                         </defs>
                         <CartesianGrid
@@ -268,7 +312,9 @@ export default function ReportsCharts({
                         <Legend
                           wrapperStyle={{ paddingTop: 20 }}
                           formatter={(value) => (
-                            <span className="text-sm text-foreground">{value}</span>
+                            <span className="text-sm text-foreground">
+                              {value}
+                            </span>
                           )}
                         />
                         <Area
@@ -312,9 +358,13 @@ export default function ReportsCharts({
                             transition={{ delay: index * 0.1 }}
                             className="text-center p-3 bg-sand/30 rounded-xl"
                           >
-                            <p className="text-xs text-text-secondary mb-1">{month.month}</p>
-                            <p className={`font-mono font-bold ${net >= 0 ? 'text-growth' : 'text-expense'}`}>
-                              {net >= 0 ? '+' : ''}€{net.toLocaleString()}
+                            <p className="text-xs text-text-secondary mb-1">
+                              {month.month}
+                            </p>
+                            <p
+                              className={`font-mono font-bold ${net >= 0 ? "text-growth" : "text-expense"}`}
+                            >
+                              {net >= 0 ? "+" : ""}€{net.toLocaleString()}
                             </p>
                           </motion.div>
                         );

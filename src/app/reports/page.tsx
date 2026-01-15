@@ -163,10 +163,14 @@ export default function ReportsPage() {
 
   // Get health message based on savings rate
   const getFinancialHealth = () => {
-    if (summary.savingsRate >= 30) return { emoji: "🌸", label: "Blooming!", status: "excellent" };
-    if (summary.savingsRate >= 20) return { emoji: "🌿", label: "Thriving", status: "good" };
-    if (summary.savingsRate >= 10) return { emoji: "🌱", label: "Growing", status: "okay" };
-    if (summary.savingsRate > 0) return { emoji: "🌰", label: "Sprouting", status: "needs-attention" };
+    if (summary.savingsRate >= 30)
+      return { emoji: "🌸", label: "Blooming!", status: "excellent" };
+    if (summary.savingsRate >= 20)
+      return { emoji: "🌿", label: "Thriving", status: "good" };
+    if (summary.savingsRate >= 10)
+      return { emoji: "🌱", label: "Growing", status: "okay" };
+    if (summary.savingsRate > 0)
+      return { emoji: "🌰", label: "Sprouting", status: "needs-attention" };
     return { emoji: "🥀", label: "Needs Water", status: "critical" };
   };
 
@@ -225,7 +229,9 @@ export default function ReportsPage() {
               <span className="text-3xl">{health.emoji}</span>
               <div>
                 <p className="text-sm text-text-secondary">Garden Status</p>
-                <p className="font-display font-bold text-foreground">{health.label}</p>
+                <p className="font-display font-bold text-foreground">
+                  {health.label}
+                </p>
               </div>
             </motion.div>
           </motion.div>
@@ -317,19 +323,27 @@ export default function ReportsPage() {
                     <ProgressRing
                       progress={Math.max(0, Math.min(100, summary.savingsRate))}
                       size="md"
-                      color={summary.savingsRate >= 20 ? "growth" : summary.savingsRate > 0 ? "primary" : "danger"}
+                      color={
+                        summary.savingsRate >= 20
+                          ? "growth"
+                          : summary.savingsRate > 0
+                            ? "primary"
+                            : "danger"
+                      }
                     />
                     <div>
                       <p className="text-sm text-text-secondary font-medium">
                         Savings Rate
                       </p>
-                      <p className={`text-2xl font-bold font-mono ${
-                        summary.savingsRate >= 20
-                          ? "text-growth"
-                          : summary.savingsRate > 0
-                            ? "text-primary"
-                            : "text-expense"
-                      }`}>
+                      <p
+                        className={`text-2xl font-bold font-mono ${
+                          summary.savingsRate >= 20
+                            ? "text-growth"
+                            : summary.savingsRate > 0
+                              ? "text-primary"
+                              : "text-expense"
+                        }`}
+                      >
                         {summary.savingsRate.toFixed(1)}%
                       </p>
                     </div>
@@ -365,34 +379,38 @@ export default function ReportsPage() {
             )}
 
             {/* Tips Section */}
-            {!loading && summary.savingsRate < 20 && categoryData.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-8"
-              >
-                <Card className="bg-primary-pale/50 border-primary/20">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-primary/10 rounded-2xl">
-                        <Icon name="tip" size={24} className="text-primary" />
+            {!loading &&
+              summary.savingsRate < 20 &&
+              categoryData.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-8"
+                >
+                  <Card className="bg-primary-pale/50 border-primary/20">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-primary/10 rounded-2xl">
+                          <Icon name="tip" size={24} className="text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-display font-bold text-foreground mb-2">
+                            Growing Tips 🌱
+                          </h3>
+                          <p className="text-text-secondary">
+                            Your top spending category is{" "}
+                            <strong>{categoryData[0]?.name}</strong>. Consider
+                            reviewing these expenses to help your savings grow.
+                            A healthy garden needs at least 20% savings rate to
+                            thrive!
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-display font-bold text-foreground mb-2">
-                          Growing Tips 🌱
-                        </h3>
-                        <p className="text-text-secondary">
-                          Your top spending category is <strong>{categoryData[0]?.name}</strong>.
-                          Consider reviewing these expenses to help your savings grow.
-                          A healthy garden needs at least 20% savings rate to thrive!
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
           </>
         )}
       </main>

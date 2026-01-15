@@ -251,10 +251,7 @@ export default function SettingsPage() {
                           className={`w-12 h-12 rounded-xl ${item.bgColor} flex items-center justify-center transition-transform group-hover:scale-110`}
                           style={{ color: item.iconColor }}
                         >
-                          <Icon
-                            name={item.icon}
-                            size={24}
-                          />
+                          <Icon name={item.icon} size={24} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-display font-bold text-foreground group-hover:text-primary transition-colors">
@@ -349,9 +346,15 @@ export default function SettingsPage() {
                         value={dateFormat}
                         onChange={(e) => setDateFormat(e.target.value)}
                       >
-                        <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2024)</option>
-                        <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2024)</option>
-                        <option value="YYYY-MM-DD">YYYY-MM-DD (2024-12-31)</option>
+                        <option value="DD/MM/YYYY">
+                          DD/MM/YYYY (31/12/2024)
+                        </option>
+                        <option value="MM/DD/YYYY">
+                          MM/DD/YYYY (12/31/2024)
+                        </option>
+                        <option value="YYYY-MM-DD">
+                          YYYY-MM-DD (2024-12-31)
+                        </option>
                       </Select>
                     </div>
                   </div>

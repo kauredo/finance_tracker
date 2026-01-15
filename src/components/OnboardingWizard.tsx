@@ -245,7 +245,9 @@ export default function OnboardingWizard() {
                       <div className="text-4xl font-bold text-foreground mb-2 font-mono">
                         {curr.symbol}
                       </div>
-                      <div className="font-medium text-foreground">{curr.code}</div>
+                      <div className="font-medium text-foreground">
+                        {curr.code}
+                      </div>
                       <div className="text-xs text-text-secondary mt-1">
                         {curr.name}
                       </div>

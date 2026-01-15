@@ -155,7 +155,8 @@ function JoinContent() {
                   Welcome to the garden! 🌸
                 </h2>
                 <p className="text-text-secondary mb-6">
-                  You're now part of the household. Redirecting to your dashboard...
+                  You're now part of the household. Redirecting to your
+                  dashboard...
                 </p>
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
@@ -222,7 +223,11 @@ function JoinContent() {
                               className="flex items-center gap-3 p-2 bg-surface rounded-xl"
                             >
                               <div className="w-8 h-8 rounded-full bg-primary-pale flex items-center justify-center">
-                                <Icon name="user" size={16} className="text-primary" />
+                                <Icon
+                                  name="user"
+                                  size={16}
+                                  className="text-primary"
+                                />
                               </div>
                               <span className="text-sm text-foreground">
                                 {member.profiles?.email || "Unknown"}

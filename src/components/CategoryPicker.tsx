@@ -31,6 +31,19 @@ export default function CategoryPicker({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        const data = await response.json();
+
+        if (response.ok) {
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
     fetchCategories();
   }, []);
 
@@ -52,19 +65,6 @@ export default function CategoryPicker({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch("/api/categories");
-      const data = await response.json();
-
-      if (response.ok) {
-        setCategories(data.categories || []);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
 
   const selectedCategory = categories.find((c) => c.id === value);
 

@@ -185,7 +185,9 @@ export default function DataExportPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 + index * 0.05 }}
-                      onClick={() => setExportFormat(format.id as "csv" | "excel")}
+                      onClick={() =>
+                        setExportFormat(format.id as "csv" | "excel")
+                      }
                       className={`p-5 rounded-2xl border-2 transition-all text-left ${
                         exportFormat === format.id
                           ? "border-primary bg-primary-pale shadow-md"
@@ -212,7 +214,11 @@ export default function DataExportPage() {
                             className="ml-auto"
                           >
                             <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                              <Icon name="check" size={14} className="text-white" />
+                              <Icon
+                                name="check"
+                                size={14}
+                                className="text-white"
+                              />
                             </div>
                           </motion.div>
                         )}
@@ -322,20 +328,36 @@ export default function DataExportPage() {
                       </h3>
                       <ul className="text-sm text-text-secondary space-y-1.5">
                         <li className="flex items-center gap-2">
-                          <Icon name="check" size={14} className="text-growth" />
+                          <Icon
+                            name="check"
+                            size={14}
+                            className="text-growth"
+                          />
                           Date, description, and amount
                         </li>
                         <li className="flex items-center gap-2">
-                          <Icon name="check" size={14} className="text-growth" />
+                          <Icon
+                            name="check"
+                            size={14}
+                            className="text-growth"
+                          />
                           Category and account information
                         </li>
                         <li className="flex items-center gap-2">
-                          <Icon name="check" size={14} className="text-growth" />
+                          <Icon
+                            name="check"
+                            size={14}
+                            className="text-growth"
+                          />
                           Transaction type (income/expense)
                         </li>
                         {exportFormat === "excel" && (
                           <li className="flex items-center gap-2">
-                            <Icon name="check" size={14} className="text-growth" />
+                            <Icon
+                              name="check"
+                              size={14}
+                              className="text-growth"
+                            />
                             Formatted with colors and totals
                           </li>
                         )}

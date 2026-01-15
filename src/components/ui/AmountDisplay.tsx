@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion, useSpring, useTransform } from "motion/react";
 
@@ -110,12 +110,6 @@ export function AmountWithTrend({
   size = "md",
   className,
 }: AmountWithTrendProps) {
-  const formatter = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  });
-
   const hasTrend = previousValue !== undefined && previousValue !== 0;
   const percentChange = hasTrend
     ? ((value - previousValue) / Math.abs(previousValue)) * 100

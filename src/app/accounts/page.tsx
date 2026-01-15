@@ -8,7 +8,7 @@ import NavBar from "@/components/NavBar";
 import AccountsList from "@/components/AccountsList";
 import AddAccountModal from "@/components/AddAccountModal";
 import { Button } from "@/components/ui/Button";
-import { Card, MotionCard } from "@/components/ui/Card";
+import { MotionCard } from "@/components/ui/Card";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";

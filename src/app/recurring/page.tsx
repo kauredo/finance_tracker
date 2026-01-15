@@ -146,7 +146,11 @@ export default function RecurringPage() {
                   <motion.span
                     className="text-4xl"
                     animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 10,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   >
                     🔄
                   </motion.span>
@@ -155,7 +159,8 @@ export default function RecurringPage() {
                   </h1>
                 </div>
                 <p className="text-text-secondary">
-                  Set it and forget it - automatic transactions that keep your garden flowing
+                  Set it and forget it - automatic transactions that keep your
+                  garden flowing
                 </p>
               </div>
 
@@ -179,14 +184,21 @@ export default function RecurringPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-text-secondary mb-1">Monthly Recurring</p>
-                      <p className={`text-3xl font-bold font-mono ${monthlyTotal >= 0 ? 'text-growth' : 'text-foreground'}`}>
-                        {monthlyTotal >= 0 ? '+' : ''}€{Math.abs(monthlyTotal).toFixed(2)}
+                      <p className="text-sm text-text-secondary mb-1">
+                        Monthly Recurring
+                      </p>
+                      <p
+                        className={`text-3xl font-bold font-mono ${monthlyTotal >= 0 ? "text-growth" : "text-foreground"}`}
+                      >
+                        {monthlyTotal >= 0 ? "+" : ""}€
+                        {Math.abs(monthlyTotal).toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-text-secondary mb-1">Active</p>
-                      <p className="text-2xl font-bold text-foreground">{activeRecurring.length}</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {activeRecurring.length}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -381,7 +393,11 @@ function RecurringCard({
                   {intervalLabels[item.interval] || item.interval}
                 </span>
                 <span>•</span>
-                <span className={isUpcoming && item.active ? "text-primary font-medium" : ""}>
+                <span
+                  className={
+                    isUpcoming && item.active ? "text-primary font-medium" : ""
+                  }
+                >
                   {isUpcoming && item.active ? "Soon: " : "Next: "}
                   {format(nextDate, "MMM d")}
                 </span>
@@ -482,7 +498,9 @@ function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
             <Card className="border-primary/20 bg-primary-pale/30 hover:border-primary/40 transition-colors">
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-3">
-                  <div className="font-medium text-foreground">{s.description}</div>
+                  <div className="font-medium text-foreground">
+                    {s.description}
+                  </div>
                   <div
                     className={`font-bold font-mono ${
                       s.amount >= 0 ? "text-growth" : "text-foreground"
@@ -498,7 +516,11 @@ function SuggestionsList({ onAdd }: { onAdd: (s: any) => void }) {
                     </span>
                     {s.occurrence_count} times
                   </div>
-                  <Button size="sm" variant="secondary" onClick={() => onAdd(s)}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onAdd(s)}
+                  >
                     <Icon name="plus" size={14} />
                     Add
                   </Button>

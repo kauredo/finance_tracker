@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
         f.filePath.endsWith(".tsv"),
     );
 
-    let transactions: any[] = [];
+    const transactions: any[] = [];
 
     // 5. Process image files with Vision API
     if (imageFiles.length > 0) {

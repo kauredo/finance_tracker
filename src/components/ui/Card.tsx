@@ -2,7 +2,7 @@
 
 import { HTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
-import { motion, HTMLMotionProps } from "motion/react";
+import { motion } from "motion/react";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "interactive" | "stat" | "glass" | "growing" | "warm";

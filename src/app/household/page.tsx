@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
-import { Card, CardHeader, CardTitle, CardContent, MotionCard } from "@/components/ui/Card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  MotionCard,
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
@@ -235,7 +241,8 @@ export default function HouseholdPage() {
                   {household.name}
                 </h1>
                 <p className="text-text-secondary">
-                  Growing together since {format(new Date(household.created_at), "MMMM yyyy")}
+                  Growing together since{" "}
+                  {format(new Date(household.created_at), "MMMM yyyy")}
                 </p>
               </div>
             </div>
@@ -249,7 +256,9 @@ export default function HouseholdPage() {
           <div className="grid grid-cols-2 gap-4">
             <MotionCard variant="glass" transition={{ delay: 0.1 }}>
               <CardContent className="p-5 text-center">
-                <p className="text-sm text-text-secondary mb-1">Garden Partners</p>
+                <p className="text-sm text-text-secondary mb-1">
+                  Garden Partners
+                </p>
                 <p className="text-3xl font-bold text-foreground font-mono">
                   {members.length}
                 </p>
@@ -299,13 +308,19 @@ export default function HouseholdPage() {
                           {memberIsOwner ? (
                             <span className="text-2xl">👑</span>
                           ) : (
-                            <Icon name="user" size={24} className="text-primary" />
+                            <Icon
+                              name="user"
+                              size={24}
+                              className="text-primary"
+                            />
                           )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-display font-bold text-foreground">
-                              {profile?.full_name || profile?.email || "Unknown"}
+                              {profile?.full_name ||
+                                profile?.email ||
+                                "Unknown"}
                             </span>
                             {memberIsOwner && (
                               <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
@@ -322,7 +337,8 @@ export default function HouseholdPage() {
                             {profile?.email}
                           </p>
                           <p className="text-xs text-text-secondary mt-1">
-                            Joined {format(new Date(member.joined_at), "MMM d, yyyy")}
+                            Joined{" "}
+                            {format(new Date(member.joined_at), "MMM d, yyyy")}
                           </p>
                         </div>
                       </div>
@@ -355,10 +371,15 @@ export default function HouseholdPage() {
               <Card className="bg-sand/30">
                 <CardContent className="py-5">
                   <div className="flex items-start gap-3">
-                    <Icon name="memo" size={20} className="text-text-secondary mt-0.5" />
+                    <Icon
+                      name="memo"
+                      size={20}
+                      className="text-text-secondary mt-0.5"
+                    />
                     <div>
                       <p className="text-sm text-text-secondary">
-                        You are a member of this household. Only the owner can manage members and settings.
+                        You are a member of this household. Only the owner can
+                        manage members and settings.
                       </p>
                     </div>
                   </div>
@@ -385,7 +406,8 @@ export default function HouseholdPage() {
                         Invite a Partner
                       </h3>
                       <p className="text-sm text-text-secondary mb-4">
-                        Share this link with someone to invite them to your household garden.
+                        Share this link with someone to invite them to your
+                        household garden.
                       </p>
                       <div className="flex gap-2">
                         <code className="flex-1 px-4 py-2 bg-surface rounded-xl text-sm font-mono text-foreground truncate">
@@ -397,7 +419,7 @@ export default function HouseholdPage() {
                           variant="secondary"
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              `${window.location.origin}/join?household=${household.id}`
+                              `${window.location.origin}/join?household=${household.id}`,
                             );
                             showSuccess("Link copied!");
                           }}
