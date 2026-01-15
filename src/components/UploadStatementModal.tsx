@@ -35,6 +35,7 @@ export default function UploadStatementModal({
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
   const [transactionCount, setTransactionCount] = useState(0);
+  const [skippedDuplicates, setSkippedDuplicates] = useState(0);
 
   // Fetch accounts from Convex
   const accounts = useQuery(api.accounts.list);
@@ -112,9 +113,14 @@ export default function UploadStatementModal({
 
         // Success!
         setTransactionCount(result.transactionCount);
+        setSkippedDuplicates(result.skippedDuplicates || 0);
         setStep("complete");
+
+        const duplicateMsg = result.skippedDuplicates
+          ? ` (${result.skippedDuplicates} duplicates skipped)`
+          : "";
         toast.success(
-          `Successfully imported ${result.transactionCount} transactions!`,
+          `Successfully imported ${result.transactionCount} transactions!${duplicateMsg}`,
         );
       } catch (err: any) {
         console.error("Error processing statement:", err);
@@ -161,6 +167,7 @@ export default function UploadStatementModal({
     setStep("select");
     setError(null);
     setTransactionCount(0);
+    setSkippedDuplicates(0);
   };
 
   return (
@@ -202,6 +209,12 @@ export default function UploadStatementModal({
                 {transactionCount} transaction
                 {transactionCount !== 1 ? "s" : ""} imported successfully.
               </p>
+              {skippedDuplicates > 0 && (
+                <p className="text-text-secondary text-sm mt-2">
+                  {skippedDuplicates} duplicate
+                  {skippedDuplicates !== 1 ? "s" : ""} were skipped.
+                </p>
+              )}
             </div>
           ) : step === "error" ? (
             // Error state
