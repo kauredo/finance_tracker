@@ -234,7 +234,7 @@ export default function OnboardingWizard() {
                           : "border-border bg-surface hover:border-primary/30"
                       }`}
                     >
-                      <div className="text-4xl font-bold text-foreground mb-2 font-mono">
+                      <div className="text-4xl font-bold text-foreground mb-2">
                         {curr.symbol}
                       </div>
                       <div className="font-medium text-foreground">
@@ -298,7 +298,7 @@ export default function OnboardingWizard() {
                       Current Balance
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-mono font-medium">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-medium">
                         {currencies.find((c) => c.code === currency)?.symbol}
                       </span>
                       <Input
@@ -306,7 +306,7 @@ export default function OnboardingWizard() {
                         placeholder="0.00"
                         value={accountBalance}
                         onChange={(e) => setAccountBalance(e.target.value)}
-                        className="pl-10 font-mono"
+                        className="pl-10"
                       />
                     </div>
                   </div>

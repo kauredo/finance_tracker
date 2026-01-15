@@ -162,7 +162,7 @@ export default function RecurringPage() {
                         Monthly Recurring
                       </p>
                       <p
-                        className={`text-3xl font-bold font-mono ${monthlyTotal >= 0 ? "text-growth" : "text-foreground"}`}
+                        className={`text-3xl font-bold tabular-nums ${monthlyTotal >= 0 ? "text-growth" : "text-foreground"}`}
                       >
                         {monthlyTotal >= 0 ? "+" : ""}€
                         {Math.abs(monthlyTotal).toFixed(2)}
@@ -383,7 +383,7 @@ function RecurringCard({
             {/* Amount */}
             <div className="text-right mr-4">
               <span
-                className={`text-lg font-bold font-mono ${
+                className={`text-lg font-bold tabular-nums ${
                   item.amount >= 0 ? "text-growth" : "text-foreground"
                 }`}
               >

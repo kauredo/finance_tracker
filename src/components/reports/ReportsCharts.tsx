@@ -46,7 +46,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}:{" "}
-            <span className="font-mono font-bold">
+            <span className="font-bold tabular-nums">
               €{entry.value.toLocaleString()}
             </span>
           </p>
@@ -64,7 +64,7 @@ const PieTooltip = ({ active, payload }: any) => {
       <div className="bg-surface border border-border rounded-xl p-3 shadow-lg">
         <p className="text-sm font-medium text-foreground">{data.name}</p>
         <p
-          className="text-sm font-mono font-bold"
+          className="text-sm font-bold tabular-nums"
           style={{ color: data.payload.color }}
         >
           €{data.value.toLocaleString()}
@@ -199,7 +199,7 @@ export default function ReportsCharts({
                               <span className="text-sm font-medium text-foreground truncate">
                                 {category.name}
                               </span>
-                              <span className="text-sm font-mono text-foreground">
+                              <span className="text-sm text-foreground tabular-nums">
                                 €{category.value.toLocaleString()}
                               </span>
                             </div>
@@ -358,7 +358,7 @@ export default function ReportsCharts({
                               {month.month}
                             </p>
                             <p
-                              className={`font-mono font-bold ${net >= 0 ? "text-growth" : "text-expense"}`}
+                              className={`font-bold tabular-nums ${net >= 0 ? "text-growth" : "text-expense"}`}
                             >
                               {net >= 0 ? "+" : ""}€{net.toLocaleString()}
                             </p>

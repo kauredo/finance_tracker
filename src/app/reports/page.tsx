@@ -54,7 +54,12 @@ export default function ReportsPage() {
       return {
         categoryData: [],
         monthlyData: [],
-        summary: { totalIncome: 0, totalExpenses: 0, netSavings: 0, savingsRate: 0 },
+        summary: {
+          totalIncome: 0,
+          totalExpenses: 0,
+          netSavings: 0,
+          savingsRate: 0,
+        },
       };
     }
 
@@ -125,8 +130,7 @@ export default function ReportsPage() {
       .slice(-6); // Last 6 months
 
     const netSavings = totalIncome - totalExpenses;
-    const savingsRate =
-      totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
+    const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
     return {
       categoryData: catData,
@@ -241,8 +245,8 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <MotionCard variant="glass" transition={{ delay: 0.1 }}>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-growth-pale rounded-2xl">
+                  <div className="flex items-center gap-4 h-full min-h-[64px]">
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-growth-pale rounded-2xl">
                       <Icon name="income" size={24} className="text-growth" />
                     </div>
                     <div>
@@ -262,8 +266,8 @@ export default function ReportsPage() {
 
               <MotionCard variant="glass" transition={{ delay: 0.15 }}>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-expense/10 rounded-2xl">
+                  <div className="flex items-center gap-4 h-full min-h-[64px]">
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-expense/10 rounded-2xl">
                       <Icon name="expense" size={24} className="text-expense" />
                     </div>
                     <div>
@@ -283,8 +287,8 @@ export default function ReportsPage() {
 
               <MotionCard variant="glass" transition={{ delay: 0.2 }}>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary-pale rounded-2xl">
+                  <div className="flex items-center gap-4 h-full min-h-[64px]">
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                       <Icon name="savings" size={24} className="text-primary" />
                     </div>
                     <div>
@@ -304,24 +308,29 @@ export default function ReportsPage() {
 
               <MotionCard variant="glass" transition={{ delay: 0.25 }}>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <ProgressRing
-                      progress={Math.max(0, Math.min(100, summary.savingsRate))}
-                      size="md"
-                      color={
-                        summary.savingsRate >= 20
-                          ? "growth"
-                          : summary.savingsRate > 0
-                            ? "primary"
-                            : "danger"
-                      }
-                    />
+                  <div className="flex items-center gap-6 h-full min-h-[64px]">
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                      <ProgressRing
+                        progress={Math.max(
+                          0,
+                          Math.min(100, summary.savingsRate),
+                        )}
+                        size="md"
+                        color={
+                          summary.savingsRate >= 20
+                            ? "growth"
+                            : summary.savingsRate > 0
+                              ? "primary"
+                              : "danger"
+                        }
+                      />
+                    </div>
                     <div>
                       <p className="text-sm text-text-secondary font-medium">
                         Savings Rate
                       </p>
                       <p
-                        className={`text-2xl font-bold font-mono ${
+                        className={`text-2xl font-bold tabular-nums ${
                           summary.savingsRate >= 20
                             ? "text-growth"
                             : summary.savingsRate > 0

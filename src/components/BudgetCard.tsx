@@ -138,7 +138,7 @@ export default function BudgetCard({
                 Monthly Limit
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-mono">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
                   €
                 </span>
                 <Input
@@ -146,7 +146,7 @@ export default function BudgetCard({
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="pl-10 font-mono"
+                  className="pl-10"
                 />
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function BudgetCard({
         <div className="mb-4">
           <div className="flex items-baseline gap-2">
             <span
-              className={`text-2xl font-bold font-mono ${
+              className={`text-2xl font-bold tabular-nums ${
                 status === "wilting" ? "text-expense" : "text-foreground"
               }`}
             >
@@ -300,11 +300,11 @@ export default function BudgetCard({
             {clampedPercentage.toFixed(0)}% used
           </span>
           {budget.amount - spent > 0 ? (
-            <span className="text-foreground font-medium font-mono">
+            <span className="text-foreground font-medium tabular-nums">
               €{(budget.amount - spent).toFixed(2)} left
             </span>
           ) : (
-            <span className="text-expense font-medium font-mono">
+            <span className="text-expense font-medium tabular-nums">
               €{Math.abs(budget.amount - spent).toFixed(2)} over
             </span>
           )}

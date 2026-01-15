@@ -109,7 +109,7 @@ export default function GoalsWidget() {
                         </span>
                       </div>
                       <div className="flex items-baseline gap-1 text-sm">
-                        <span className="font-mono font-bold text-foreground">
+                        <span className="font-bold text-foreground tabular-nums">
                           €{goal.currentAmount.toLocaleString()}
                         </span>
                         <span className="text-muted">
@@ -121,7 +121,7 @@ export default function GoalsWidget() {
                     {/* Remaining */}
                     <div className="text-right hidden sm:block">
                       <p className="text-xs text-text-secondary">Remaining</p>
-                      <p className="font-mono text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-foreground tabular-nums">
                         €{remaining.toLocaleString()}
                       </p>
                     </div>

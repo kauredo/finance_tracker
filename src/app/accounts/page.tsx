@@ -90,8 +90,8 @@ export default function AccountsPage() {
             transition={{ delay: 0.1 }}
             className="backdrop-blur-xl"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-growth-pale rounded-2xl">
+            <div className="flex items-center gap-4 h-full min-h-[64px]">
+              <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-growth-pale rounded-2xl">
                 <Icon name="wallet" size={24} className="text-growth" />
               </div>
               <div>
@@ -119,15 +119,15 @@ export default function AccountsPage() {
             transition={{ delay: 0.2 }}
             className="backdrop-blur-xl"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary-pale rounded-2xl">
+            <div className="flex items-center gap-4 h-full min-h-[64px]">
+              <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                 <Icon name="accounts" size={24} className="text-primary" />
               </div>
               <div>
                 <p className="text-sm text-text-secondary font-medium">
                   Active Accounts
                 </p>
-                <p className="text-2xl font-bold text-foreground font-mono">
+                <p className="text-2xl font-bold text-foreground tabular-nums">
                   {accountCount}
                 </p>
               </div>

@@ -81,7 +81,7 @@ export function AmountDisplay({
   return (
     <span
       className={cn(
-        "font-mono font-bold tracking-tight tabular-nums",
+        "font-bold tracking-tight tabular-nums",
         sizeStyles[size],
         variantStyles[effectiveVariant],
         className,
@@ -261,7 +261,7 @@ export function TransactionAmount({
   return (
     <span
       className={cn(
-        "font-mono font-semibold tabular-nums",
+        "font-semibold tabular-nums",
         type === "income" ? "text-growth" : "text-expense",
         className,
       )}

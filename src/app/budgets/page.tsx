@@ -85,7 +85,10 @@ export default function BudgetsPage() {
     return spendMap;
   }, [budgetProgress]);
 
-  const handleSaveBudget = async (categoryId: Id<"categories">, amount: number) => {
+  const handleSaveBudget = async (
+    categoryId: Id<"categories">,
+    amount: number,
+  ) => {
     try {
       await upsertBudget({
         categoryId,
@@ -183,12 +186,14 @@ export default function BudgetsPage() {
               transition={{ delay: 0.1 }}
               className="backdrop-blur-xl"
             >
-              <div className="flex items-center gap-4">
-                <ProgressRing
-                  progress={Math.min(totalProgress, 100)}
-                  size="lg"
-                  color={health.color}
-                />
+              <div className="flex items-center gap-6 h-full min-h-[72px]">
+                <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                  <ProgressRing
+                    progress={Math.min(totalProgress, 100)}
+                    size="md"
+                    color={health.color}
+                  />
+                </div>
                 <div>
                   <p className="text-sm text-text-secondary font-medium">
                     Spent this month
@@ -209,8 +214,8 @@ export default function BudgetsPage() {
               transition={{ delay: 0.2 }}
               className="backdrop-blur-xl"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary-pale rounded-2xl">
+              <div className="flex items-center gap-4 h-full min-h-[72px]">
+                <div className="w-14 h-14 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                   <Icon name="flag" size={24} className="text-primary" />
                 </div>
                 <div>
@@ -228,8 +233,10 @@ export default function BudgetsPage() {
               transition={{ delay: 0.3 }}
               className="backdrop-blur-xl"
             >
-              <div className="flex items-center gap-4">
-                <div className="text-4xl">{health.emoji}</div>
+              <div className="flex items-center gap-4 h-full min-h-[72px]">
+                <div className="w-14 h-14 flex items-center justify-center flex-shrink-0 text-4xl">
+                  {health.emoji}
+                </div>
                 <div>
                   <p className="text-sm text-text-secondary font-medium">
                     Garden Status
@@ -263,7 +270,8 @@ export default function BudgetsPage() {
                 </Card>
               ))}
             </div>
-          ) : (budgets ?? []).length === 0 && (categories ?? []).length === 0 ? (
+          ) : (budgets ?? []).length === 0 &&
+            (categories ?? []).length === 0 ? (
             <EmptyState
               illustration="chart"
               title="No categories yet"

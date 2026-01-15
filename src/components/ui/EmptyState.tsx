@@ -70,82 +70,83 @@ const illustrations = {
   plant: (
     <svg viewBox="0 0 120 120" fill="none" className="w-full h-full">
       {/* Pot */}
-      <path d="M30 70 L35 100 L85 100 L90 70 Z" className="fill-primary" />
-      <path d="M25 65 L95 65 L93 75 L27 75 Z" className="fill-primary-dark" />
+      <path d="M30 75 L35 105 L85 105 L90 75 Z" className="fill-primary" />
+      <path d="M25 70 L95 70 L93 80 L27 80 Z" className="fill-primary-dark" />
       {/* Soil */}
-      <ellipse cx="60" cy="72" rx="28" ry="5" className="fill-bark" />
+      <ellipse cx="60" cy="77" rx="28" ry="5" className="fill-bark" />
       {/* Stem */}
       <path
-        d="M60 70 Q55 50 60 35"
+        d="M60 75 C58 60 62 45 60 30"
         className="stroke-growth-dark"
         strokeWidth="4"
         strokeLinecap="round"
         fill="none"
       />
-      {/* Leaves */}
+      {/* Leaves - positioned along the stem */}
       <ellipse
-        cx="45"
-        cy="45"
-        rx="15"
-        ry="8"
-        className="fill-growth"
-        transform="rotate(-30 45 45)"
-      />
-      <ellipse
-        cx="75"
-        cy="50"
-        rx="15"
-        ry="8"
-        className="fill-growth"
-        transform="rotate(30 75 50)"
-      />
-      <ellipse
-        cx="55"
-        cy="30"
-        rx="12"
+        cx="48"
+        cy="55"
+        rx="14"
         ry="7"
+        className="fill-growth"
+        transform="rotate(-35 48 55)"
+      />
+      <ellipse
+        cx="72"
+        cy="48"
+        rx="14"
+        ry="7"
+        className="fill-growth"
+        transform="rotate(35 72 48)"
+      />
+      <ellipse
+        cx="60"
+        cy="28"
+        rx="10"
+        ry="6"
         className="fill-growth-light"
-        transform="rotate(-15 55 30)"
+        transform="rotate(-5 60 28)"
       />
       {/* Sparkles */}
-      <circle cx="30" cy="30" r="2" className="fill-primary-light" />
-      <circle cx="90" cy="35" r="3" className="fill-growth-light" />
-      <circle cx="20" cy="55" r="2" className="fill-warning" />
+      <circle cx="28" cy="35" r="2" className="fill-primary-light" />
+      <circle cx="92" cy="40" r="3" className="fill-growth-light" />
+      <circle cx="22" cy="58" r="2" className="fill-warning" />
     </svg>
   ),
   search: (
     <svg viewBox="0 0 120 120" fill="none" className="w-full h-full">
-      {/* Magnifying glass */}
+      {/* Magnifying glass circle */}
       <circle
-        cx="50"
-        cy="50"
-        r="30"
-        className="stroke-border"
+        cx="48"
+        cy="48"
+        r="28"
+        className="stroke-clay"
         strokeWidth="8"
         fill="none"
       />
-      <circle cx="50" cy="50" r="22" className="fill-cream" />
-      {/* Handle */}
+      <circle cx="48" cy="48" r="20" className="fill-cream" />
+      {/* Handle - connected to glass at 45 degree angle */}
       <rect
-        x="72"
-        y="72"
+        x="64"
+        y="64"
         width="12"
-        height="35"
+        height="36"
         rx="6"
         className="fill-bark"
-        transform="rotate(45 72 72)"
+        transform="rotate(135 74 84)"
       />
       {/* Question mark inside */}
       <text
-        x="50"
-        y="58"
+        x="48"
+        y="56"
         textAnchor="middle"
         className="fill-muted text-2xl font-display font-bold"
       >
         ?
       </text>
-      {/* Sparkle */}
-      <circle cx="38" cy="38" r="4" className="fill-primary-light" />
+      {/* Sparkle/shine on glass */}
+      <circle cx="38" cy="38" r="4" className="fill-white opacity-60" />
+      <circle cx="34" cy="42" r="2" className="fill-white opacity-40" />
     </svg>
   ),
   chart: (

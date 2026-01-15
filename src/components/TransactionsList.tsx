@@ -226,7 +226,7 @@ export default function TransactionsList({
                       {/* Amount */}
                       <div className="text-right">
                         <span
-                          className={`font-mono font-bold ${
+                          className={`font-bold tabular-nums ${
                             t.amount > 0 ? "text-growth" : "text-foreground"
                           }`}
                         >

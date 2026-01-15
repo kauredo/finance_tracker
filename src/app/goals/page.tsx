@@ -92,7 +92,9 @@ export default function GoalsPage() {
   const overallProgress =
     totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
 
-  const activeGoals = (goals ?? []).filter((g) => g.currentAmount < g.targetAmount);
+  const activeGoals = (goals ?? []).filter(
+    (g) => g.currentAmount < g.targetAmount,
+  );
   const completedGoals = (goals ?? []).filter(
     (g) => g.currentAmount >= g.targetAmount,
   );
@@ -143,8 +145,8 @@ export default function GoalsPage() {
               transition={{ delay: 0.1 }}
               className="backdrop-blur-xl"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-growth-pale rounded-2xl">
+              <div className="flex items-center gap-4 h-full min-h-[64px]">
+                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-growth-pale rounded-2xl">
                   <Icon name="trending_up" size={24} className="text-growth" />
                 </div>
                 <div>
@@ -166,8 +168,8 @@ export default function GoalsPage() {
               transition={{ delay: 0.2 }}
               className="backdrop-blur-xl"
             >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary-pale rounded-2xl">
+              <div className="flex items-center gap-4 h-full min-h-[64px]">
+                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                   <Icon name="flag" size={24} className="text-primary" />
                 </div>
                 <div>
@@ -184,17 +186,19 @@ export default function GoalsPage() {
               transition={{ delay: 0.3 }}
               className="backdrop-blur-xl"
             >
-              <div className="flex items-center gap-4">
-                <ProgressRing
-                  progress={overallProgress}
-                  size="md"
-                  color={overallProgress >= 75 ? "growth" : "primary"}
-                />
+              <div className="flex items-center gap-6 h-full min-h-[64px]">
+                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                  <ProgressRing
+                    progress={overallProgress}
+                    size="md"
+                    color={overallProgress >= 75 ? "growth" : "primary"}
+                  />
+                </div>
                 <div>
                   <p className="text-sm text-text-secondary font-medium">
                     Garden Growth
                   </p>
-                  <p className="text-2xl font-bold text-foreground font-mono">
+                  <p className="text-2xl font-bold text-foreground tabular-nums">
                     {overallProgress.toFixed(0)}%
                   </p>
                 </div>

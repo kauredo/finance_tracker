@@ -155,7 +155,7 @@ export default function GoalCard({
           {/* Amount Display */}
           <div className="mb-4">
             <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-bold text-foreground font-mono">
+              <span className="text-3xl font-bold text-foreground tabular-nums">
                 €{goal.currentAmount.toLocaleString()}
               </span>
               <span className="text-sm text-text-secondary">

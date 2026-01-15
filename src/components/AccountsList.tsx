@@ -93,7 +93,7 @@ export default function AccountsList({
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Balance</p>
                   <p
-                    className={`text-xl font-bold font-mono ${
+                    className={`text-xl font-bold tabular-nums ${
                       account.balance == null
                         ? "text-text-secondary"
                         : account.balance >= 0

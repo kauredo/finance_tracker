@@ -181,7 +181,7 @@ export default function HouseholdPage() {
                 <p className="text-sm text-text-secondary mb-1">
                   Garden Partners
                 </p>
-                <p className="text-3xl font-bold text-foreground font-mono">
+                <p className="text-3xl font-bold text-foreground tabular-nums">
                   {members.length}
                 </p>
               </CardContent>
