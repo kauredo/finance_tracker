@@ -42,7 +42,9 @@ const intervalLabels: Record<string, string> = {
 export default function RecurringPage() {
   const { user, loading: authLoading } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editId, setEditId] = useState<Id<"recurringTransactions"> | undefined>(undefined);
+  const [editId, setEditId] = useState<Id<"recurringTransactions"> | undefined>(
+    undefined,
+  );
   const [suggestionData, setSuggestionData] = useState<any>(undefined);
 
   // Fetch recurring transactions from Convex

@@ -12,9 +12,7 @@ interface AccountsListProps {
   onAddClick?: () => void;
 }
 
-export default function AccountsList({
-  onAddClick,
-}: AccountsListProps) {
+export default function AccountsList({ onAddClick }: AccountsListProps) {
   // Fetch accounts using Convex - automatically reactive
   const accounts = useQuery(api.accounts.list);
 

@@ -19,7 +19,7 @@ export default function AddAccountModal({
 }: AddAccountModalProps) {
   const [accountName, setAccountName] = useState("");
   const [accountType, setAccountType] = useState<"personal" | "joint">(
-    "personal"
+    "personal",
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

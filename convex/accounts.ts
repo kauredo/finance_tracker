@@ -36,7 +36,7 @@ export const list = query({
 
     // Combine and sort by name
     return [...personalAccounts, ...householdAccounts].sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     );
   },
 });
@@ -74,7 +74,7 @@ export const create = mutation({
       v.literal("savings"),
       v.literal("credit"),
       v.literal("personal"),
-      v.literal("joint")
+      v.literal("joint"),
     ),
     balance: v.optional(v.number()),
     color: v.optional(v.string()),
@@ -139,8 +139,8 @@ export const update = mutation({
         v.literal("savings"),
         v.literal("credit"),
         v.literal("personal"),
-        v.literal("joint")
-      )
+        v.literal("joint"),
+      ),
     ),
     color: v.optional(v.string()),
     icon: v.optional(v.string()),

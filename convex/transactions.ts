@@ -42,7 +42,7 @@ export const list = query({
 
     // Filter by accessible accounts
     transactions = transactions.filter((t) =>
-      accessibleAccountIds.has(t.accountId)
+      accessibleAccountIds.has(t.accountId),
     );
 
     // Apply filters
@@ -51,7 +51,7 @@ export const list = query({
     }
     if (args.categoryId) {
       transactions = transactions.filter(
-        (t) => t.categoryId === args.categoryId
+        (t) => t.categoryId === args.categoryId,
       );
     }
     if (args.dateFrom) {
@@ -63,7 +63,7 @@ export const list = query({
     if (args.search) {
       const searchLower = args.search.toLowerCase();
       transactions = transactions.filter((t) =>
-        t.description.toLowerCase().includes(searchLower)
+        t.description.toLowerCase().includes(searchLower),
       );
     }
 
@@ -84,7 +84,7 @@ export const list = query({
           category,
           account,
         };
-      })
+      }),
     );
 
     return { transactions: enriched, total, limit, offset };
@@ -104,7 +104,11 @@ export const getById = query({
       throw new Error("Transaction not found");
     }
 
-    const hasAccess = await canAccessAccount(ctx, user._id, transaction.accountId);
+    const hasAccess = await canAccessAccount(
+      ctx,
+      user._id,
+      transaction.accountId,
+    );
     if (!hasAccess) {
       throw new Error("Access denied");
     }
@@ -276,7 +280,7 @@ export const bulkCreate = mutation({
         amount: v.number(),
         categoryId: v.optional(v.id("categories")),
         notes: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -300,7 +304,7 @@ export const bulkCreate = mutation({
           isRecurring: false,
           createdAt: now,
         });
-      })
+      }),
     );
 
     // Update account balance
@@ -336,7 +340,7 @@ export const getStats = query({
 
     // Filter by accessible accounts
     transactions = transactions.filter((t) =>
-      accessibleAccountIds.has(t.accountId)
+      accessibleAccountIds.has(t.accountId),
     );
 
     // Apply filters
@@ -379,7 +383,7 @@ export const getStats = query({
           category,
           amount,
         };
-      })
+      }),
     );
 
     return {

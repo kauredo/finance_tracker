@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Query for current user profile
   const userProfile = useQuery(
     api.users.getCurrentUserProfile,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   );
 
   // Mutation to create profile after signup
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string) => {
       await convexSignIn("password", { email, password, flow: "signIn" });
     },
-    [convexSignIn]
+    [convexSignIn],
   );
 
   const signUp = useCallback(
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Create the user profile after signup
       await createProfile({ email, fullName });
     },
-    [convexSignIn, createProfile]
+    [convexSignIn, createProfile],
   );
 
   const signOut = useCallback(async () => {

@@ -33,7 +33,9 @@ export default function RecurringTransactionModal({
   const [type, setType] = useState<"expense" | "income">("expense");
   const [categoryId, setCategoryId] = useState("");
   const [accountId, setAccountId] = useState("");
-  const [interval, setInterval] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
+  const [interval, setInterval] = useState<
+    "daily" | "weekly" | "monthly" | "yearly"
+  >("monthly");
   const [nextRunDate, setNextRunDate] = useState(
     new Date().toISOString().split("T")[0],
   );
@@ -46,13 +48,17 @@ export default function RecurringTransactionModal({
   const accounts = useQuery(api.accounts.list, isOpen ? {} : "skip");
   const existingRecurring = useQuery(
     api.recurring.getById,
-    isOpen && editId ? { id: editId } : "skip"
+    isOpen && editId ? { id: editId } : "skip",
   );
 
   const createRecurring = useMutation(api.recurring.create);
   const updateRecurring = useMutation(api.recurring.update);
 
-  const fetching = isOpen && (categories === undefined || accounts === undefined || (editId && existingRecurring === undefined));
+  const fetching =
+    isOpen &&
+    (categories === undefined ||
+      accounts === undefined ||
+      (editId && existingRecurring === undefined));
 
   // Initialize form when data loads
   useEffect(() => {
@@ -69,7 +75,9 @@ export default function RecurringTransactionModal({
       setDescription(initialData.description);
       setAmount(Math.abs(initialData.amount).toString());
       setType(initialData.amount >= 0 ? "income" : "expense");
-      setInterval(initialData.interval as "daily" | "weekly" | "monthly" | "yearly");
+      setInterval(
+        initialData.interval as "daily" | "weekly" | "monthly" | "yearly",
+      );
       setNextRunDate(new Date().toISOString().split("T")[0]);
     } else if (!isOpen) {
       resetForm();
@@ -267,7 +275,15 @@ export default function RecurringTransactionModal({
                 <select
                   required
                   value={interval}
-                  onChange={(e) => setInterval(e.target.value as "daily" | "weekly" | "monthly" | "yearly")}
+                  onChange={(e) =>
+                    setInterval(
+                      e.target.value as
+                        | "daily"
+                        | "weekly"
+                        | "monthly"
+                        | "yearly",
+                    )
+                  }
                   className="w-full px-4 py-2 bg-surface border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground appearance-none"
                 >
                   <option value="daily">Daily</option>

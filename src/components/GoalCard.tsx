@@ -170,7 +170,7 @@ export default function GoalCard({
                 style={{
                   backgroundColor: isComplete
                     ? "var(--growth)"
-                    : goal.color ?? "var(--primary)",
+                    : (goal.color ?? "var(--primary)"),
                 }}
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}

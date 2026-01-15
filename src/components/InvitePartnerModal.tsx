@@ -24,7 +24,7 @@ export default function InvitePartnerModal({
 
   // Check if user is owner
   const currentUserRole = household?.members?.find(
-    (m) => m.role === "owner"
+    (m) => m.role === "owner",
   )?.role;
   const isOwner = currentUserRole === "owner";
 

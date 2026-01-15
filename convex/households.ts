@@ -39,7 +39,7 @@ export const getCurrentHousehold = query({
           ...m,
           user: memberUser,
         };
-      })
+      }),
     );
 
     return {
@@ -115,7 +115,10 @@ export const createInvite = mutation({
     await requireHouseholdOwnership(ctx, user._id, householdId);
 
     // Generate a random invite code
-    const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const inviteCode = Math.random()
+      .toString(36)
+      .substring(2, 10)
+      .toUpperCase();
 
     // Expire in 7 days
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
@@ -246,7 +249,7 @@ export const removeMember = mutation({
     const membership = await ctx.db
       .query("householdMembers")
       .withIndex("by_user_and_household", (q) =>
-        q.eq("userId", args.userId).eq("householdId", args.householdId)
+        q.eq("userId", args.userId).eq("householdId", args.householdId),
       )
       .first();
 
@@ -271,7 +274,7 @@ export const leaveHousehold = mutation({
     const membership = await ctx.db
       .query("householdMembers")
       .withIndex("by_user_and_household", (q) =>
-        q.eq("userId", user._id).eq("householdId", args.householdId)
+        q.eq("userId", user._id).eq("householdId", args.householdId),
       )
       .first();
 
@@ -281,7 +284,7 @@ export const leaveHousehold = mutation({
 
     if (membership.role === "owner") {
       throw new Error(
-        "Owners cannot leave the household. Transfer ownership first or delete the household."
+        "Owners cannot leave the household. Transfer ownership first or delete the household.",
       );
     }
 
@@ -310,7 +313,7 @@ export const transferOwnership = mutation({
     const newOwnerMembership = await ctx.db
       .query("householdMembers")
       .withIndex("by_user_and_household", (q) =>
-        q.eq("userId", args.newOwnerId).eq("householdId", args.householdId)
+        q.eq("userId", args.newOwnerId).eq("householdId", args.householdId),
       )
       .first();
 
@@ -322,7 +325,7 @@ export const transferOwnership = mutation({
     const currentOwnerMembership = await ctx.db
       .query("householdMembers")
       .withIndex("by_user_and_household", (q) =>
-        q.eq("userId", user._id).eq("householdId", args.householdId)
+        q.eq("userId", user._id).eq("householdId", args.householdId),
       )
       .first();
 

@@ -28,12 +28,21 @@ export default function GlobalSearch() {
   // Only fetch data when search is open
   const transactionsData = useQuery(
     api.transactions.list,
-    isOpen ? { search: query.trim().length >= 2 ? query.trim() : undefined, limit: 5 } : "skip"
+    isOpen
+      ? {
+          search: query.trim().length >= 2 ? query.trim() : undefined,
+          limit: 5,
+        }
+      : "skip",
   );
   const accounts = useQuery(api.accounts.list, isOpen ? {} : "skip");
   const categories = useQuery(api.categories.list, isOpen ? {} : "skip");
 
-  const loading = isOpen && (transactionsData === undefined || accounts === undefined || categories === undefined);
+  const loading =
+    isOpen &&
+    (transactionsData === undefined ||
+      accounts === undefined ||
+      categories === undefined);
 
   // Compute search results
   const results = useMemo(() => {

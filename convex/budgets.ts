@@ -32,7 +32,7 @@ export const list = query({
           ...budget,
           category,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -69,7 +69,7 @@ export const upsert = mutation({
     period: v.union(
       v.literal("weekly"),
       v.literal("monthly"),
-      v.literal("yearly")
+      v.literal("yearly"),
     ),
   },
   handler: async (ctx, args) => {
@@ -90,7 +90,7 @@ export const upsert = mutation({
     const existing = await ctx.db
       .query("budgets")
       .withIndex("by_household_and_category", (q) =>
-        q.eq("householdId", householdId).eq("categoryId", args.categoryId)
+        q.eq("householdId", householdId).eq("categoryId", args.categoryId),
       )
       .first();
 
@@ -124,11 +124,7 @@ export const update = mutation({
     id: v.id("budgets"),
     amount: v.optional(v.number()),
     period: v.optional(
-      v.union(
-        v.literal("weekly"),
-        v.literal("monthly"),
-        v.literal("yearly")
-      )
+      v.union(v.literal("weekly"), v.literal("monthly"), v.literal("yearly")),
     ),
   },
   handler: async (ctx, args) => {
@@ -202,7 +198,7 @@ export const getProgress = query({
       .collect();
 
     const filteredTransactions = transactions.filter(
-      (t) => t.date >= args.dateFrom && t.date <= args.dateTo
+      (t) => t.date >= args.dateFrom && t.date <= args.dateTo,
     );
 
     // Calculate spent per category
@@ -219,7 +215,8 @@ export const getProgress = query({
       budgets.map(async (budget) => {
         const category = await ctx.db.get(budget.categoryId);
         const spent = spentByCategory[budget.categoryId] ?? 0;
-        const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+        const percentage =
+          budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
 
         return {
           ...budget,
@@ -229,7 +226,7 @@ export const getProgress = query({
           percentage: Math.min(100, percentage),
           isOverBudget: spent > budget.amount,
         };
-      })
+      }),
     );
 
     return progress;

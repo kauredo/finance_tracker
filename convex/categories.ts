@@ -24,7 +24,7 @@ export const list = query({
 
     // Combine and sort by name
     return [...defaultCategories, ...customCategories].sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     );
   },
 });
@@ -175,7 +175,7 @@ export const remove = mutation({
     if (transactionsWithCategory.length > 0) {
       if (!args.reassignTo) {
         throw new Error(
-          "Cannot delete category that is used by transactions. Please reassign transactions first."
+          "Cannot delete category that is used by transactions. Please reassign transactions first.",
         );
       }
 

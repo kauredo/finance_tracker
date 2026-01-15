@@ -30,7 +30,7 @@ export async function requireUser(ctx: QueryCtx | MutationCtx) {
  */
 export async function getUserHouseholdId(
   ctx: QueryCtx | MutationCtx,
-  userId: Id<"users">
+  userId: Id<"users">,
 ): Promise<Id<"households"> | null> {
   const membership = await ctx.db
     .query("householdMembers")
@@ -44,7 +44,7 @@ export async function getUserHouseholdId(
  */
 export async function getUserHouseholdIds(
   ctx: QueryCtx | MutationCtx,
-  userId: Id<"users">
+  userId: Id<"users">,
 ): Promise<Id<"households">[]> {
   const memberships = await ctx.db
     .query("householdMembers")
@@ -59,12 +59,12 @@ export async function getUserHouseholdIds(
 export async function canAccessHousehold(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
-  householdId: Id<"households">
+  householdId: Id<"households">,
 ): Promise<boolean> {
   const membership = await ctx.db
     .query("householdMembers")
     .withIndex("by_user_and_household", (q) =>
-      q.eq("userId", userId).eq("householdId", householdId)
+      q.eq("userId", userId).eq("householdId", householdId),
     )
     .first();
   return !!membership;
@@ -76,12 +76,12 @@ export async function canAccessHousehold(
 export async function isHouseholdOwner(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
-  householdId: Id<"households">
+  householdId: Id<"households">,
 ): Promise<boolean> {
   const membership = await ctx.db
     .query("householdMembers")
     .withIndex("by_user_and_household", (q) =>
-      q.eq("userId", userId).eq("householdId", householdId)
+      q.eq("userId", userId).eq("householdId", householdId),
     )
     .first();
   return membership?.role === "owner";
@@ -95,7 +95,7 @@ export async function isHouseholdOwner(
 export async function canAccessAccount(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
-  accountId: Id<"accounts">
+  accountId: Id<"accounts">,
 ): Promise<boolean> {
   const account = await ctx.db.get(accountId);
   if (!account) return false;
@@ -118,7 +118,7 @@ export async function canAccessAccount(
  */
 export async function getAccessibleAccountIds(
   ctx: QueryCtx | MutationCtx,
-  userId: Id<"users">
+  userId: Id<"users">,
 ): Promise<Set<Id<"accounts">>> {
   // Get personal accounts
   const personalAccounts = await ctx.db
@@ -150,7 +150,7 @@ export async function getAccessibleAccountIds(
 export async function requireAccountAccess(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
-  accountId: Id<"accounts">
+  accountId: Id<"accounts">,
 ) {
   const hasAccess = await canAccessAccount(ctx, userId, accountId);
   if (!hasAccess) {
@@ -164,7 +164,7 @@ export async function requireAccountAccess(
 export async function requireHouseholdAccess(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
-  householdId: Id<"households">
+  householdId: Id<"households">,
 ) {
   const hasAccess = await canAccessHousehold(ctx, userId, householdId);
   if (!hasAccess) {
@@ -178,12 +178,12 @@ export async function requireHouseholdAccess(
 export async function requireHouseholdOwnership(
   ctx: QueryCtx | MutationCtx,
   userId: Id<"users">,
-  householdId: Id<"households">
+  householdId: Id<"households">,
 ) {
   const isOwner = await isHouseholdOwner(ctx, userId, householdId);
   if (!isOwner) {
     throw new Error(
-      "Access denied: You must be the owner of this household to perform this action"
+      "Access denied: You must be the owner of this household to perform this action",
     );
   }
 }

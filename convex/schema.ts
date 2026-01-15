@@ -42,7 +42,7 @@ export default defineSchema({
       v.literal("savings"),
       v.literal("credit"),
       v.literal("personal"),
-      v.literal("joint")
+      v.literal("joint"),
     ),
     balance: v.optional(v.number()), // calculated from transactions
     color: v.optional(v.string()),
@@ -95,7 +95,7 @@ export default defineSchema({
     period: v.union(
       v.literal("weekly"),
       v.literal("monthly"),
-      v.literal("yearly")
+      v.literal("yearly"),
     ),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -128,7 +128,7 @@ export default defineSchema({
       v.literal("daily"),
       v.literal("weekly"),
       v.literal("monthly"),
-      v.literal("yearly")
+      v.literal("yearly"),
     ),
     dayOfMonth: v.optional(v.number()), // 1-31
     dayOfWeek: v.optional(v.number()), // 0-6 (Sunday = 0)

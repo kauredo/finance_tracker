@@ -25,7 +25,7 @@ function JoinContent() {
   // Fetch household info from Convex
   const household = useQuery(
     api.households.getInfo,
-    householdId ? { id: householdId } : "skip"
+    householdId ? { id: householdId } : "skip",
   );
   const joinHousehold = useMutation(api.households.joinByHouseholdId);
 
@@ -171,13 +171,14 @@ function JoinContent() {
                 </div>
 
                 {household.memberCount > 0 && (
-                    <div className="bg-sand/30 rounded-2xl p-4 mb-6">
-                      <p className="text-sm text-text-secondary flex items-center gap-2">
-                        <Icon name="user" size={16} />
-                        {household.memberCount} garden partner{household.memberCount > 1 ? "s" : ""} in this household
-                      </p>
-                    </div>
-                  )}
+                  <div className="bg-sand/30 rounded-2xl p-4 mb-6">
+                    <p className="text-sm text-text-secondary flex items-center gap-2">
+                      <Icon name="user" size={16} />
+                      {household.memberCount} garden partner
+                      {household.memberCount > 1 ? "s" : ""} in this household
+                    </p>
+                  </div>
+                )}
 
                 <Button
                   onClick={handleJoin}

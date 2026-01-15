@@ -103,12 +103,7 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
             ))}
           </div>
 
-          <Button
-            size="lg"
-            className="w-full"
-            onClick={handleNext}
-            autoFocus
-          >
+          <Button size="lg" className="w-full" onClick={handleNext} autoFocus>
             {step === steps.length - 1 ? "Let's Go!" : "Next"}
           </Button>
         </div>

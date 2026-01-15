@@ -44,7 +44,10 @@ export default function DataExportPage() {
 
   // Fetch transactions for export
   const transactionsData = useQuery(api.transactions.list, {
-    accountId: selectedAccount !== "all" ? (selectedAccount as Id<"accounts">) : undefined,
+    accountId:
+      selectedAccount !== "all"
+        ? (selectedAccount as Id<"accounts">)
+        : undefined,
     dateFrom: startDate || undefined,
     dateTo: endDate || undefined,
     limit: 10000, // Get all transactions for export
@@ -59,7 +62,14 @@ export default function DataExportPage() {
     setExporting(true);
     try {
       // Generate CSV content
-      const headers = ["Date", "Description", "Amount", "Category", "Account", "Type"];
+      const headers = [
+        "Date",
+        "Description",
+        "Amount",
+        "Category",
+        "Account",
+        "Type",
+      ];
       const rows = transactionsData.transactions.map((tx) => [
         tx.date,
         `"${tx.description.replace(/"/g, '""')}"`,
@@ -158,9 +168,7 @@ export default function DataExportPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 + index * 0.05 }}
-                      onClick={() =>
-                        setExportFormat(format.id as "csv")
-                      }
+                      onClick={() => setExportFormat(format.id as "csv")}
                       className={`p-5 rounded-2xl border-2 transition-all text-left ${
                         exportFormat === format.id
                           ? "border-primary bg-primary-pale shadow-md"

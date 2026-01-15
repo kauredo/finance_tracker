@@ -1,11 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import {
-  getCurrentUser,
-  requireUser,
-  getUserHouseholdId,
-} from "./lib/access";
+import { getCurrentUser, requireUser, getUserHouseholdId } from "./lib/access";
 
 /**
  * Get the current authenticated user's profile

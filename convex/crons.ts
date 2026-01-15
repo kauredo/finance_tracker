@@ -7,7 +7,7 @@ const crons = cronJobs();
 crons.daily(
   "process recurring transactions",
   { hourUTC: 0, minuteUTC: 0 },
-  internal.recurring.processAll
+  internal.recurring.processAll,
 );
 
 export default crons;

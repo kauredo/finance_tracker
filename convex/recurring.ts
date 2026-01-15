@@ -35,13 +35,11 @@ export const list = query({
           category,
           account,
         };
-      })
+      }),
     );
 
     // Sort by next run date
-    return enriched.sort((a, b) =>
-      a.nextRunDate.localeCompare(b.nextRunDate)
-    );
+    return enriched.sort((a, b) => a.nextRunDate.localeCompare(b.nextRunDate));
   },
 });
 
@@ -84,7 +82,7 @@ export const create = mutation({
       v.literal("daily"),
       v.literal("weekly"),
       v.literal("monthly"),
-      v.literal("yearly")
+      v.literal("yearly"),
     ),
     dayOfMonth: v.optional(v.number()),
     dayOfWeek: v.optional(v.number()),
@@ -96,7 +94,7 @@ export const create = mutation({
 
     if (!householdId) {
       throw new Error(
-        "You must be part of a household to create recurring transactions"
+        "You must be part of a household to create recurring transactions",
       );
     }
 
@@ -113,7 +111,9 @@ export const create = mutation({
 
     if (args.interval === "weekly" && args.dayOfWeek !== undefined) {
       if (args.dayOfWeek < 0 || args.dayOfWeek > 6) {
-        throw new Error("Day of week must be between 0 (Sunday) and 6 (Saturday)");
+        throw new Error(
+          "Day of week must be between 0 (Sunday) and 6 (Saturday)",
+        );
       }
     }
 
@@ -150,8 +150,8 @@ export const update = mutation({
         v.literal("daily"),
         v.literal("weekly"),
         v.literal("monthly"),
-        v.literal("yearly")
-      )
+        v.literal("yearly"),
+      ),
     ),
     dayOfMonth: v.optional(v.number()),
     dayOfWeek: v.optional(v.number()),
@@ -240,7 +240,7 @@ function calculateNextRunDate(
   currentDate: string,
   interval: "daily" | "weekly" | "monthly" | "yearly",
   dayOfMonth?: number,
-  dayOfWeek?: number
+  dayOfWeek?: number,
 ): string {
   const date = new Date(currentDate);
 
@@ -254,7 +254,12 @@ function calculateNextRunDate(
     case "monthly":
       date.setMonth(date.getMonth() + 1);
       if (dayOfMonth) {
-        date.setDate(Math.min(dayOfMonth, new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()));
+        date.setDate(
+          Math.min(
+            dayOfMonth,
+            new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(),
+          ),
+        );
       }
       break;
     case "yearly":
@@ -290,7 +295,7 @@ export const processAll = internalMutation({
       const householdMembers = await ctx.db
         .query("householdMembers")
         .withIndex("by_household", (q) =>
-          q.eq("householdId", recurring.householdId)
+          q.eq("householdId", recurring.householdId),
         )
         .collect();
 
@@ -323,7 +328,7 @@ export const processAll = internalMutation({
         recurring.nextRunDate,
         recurring.interval,
         recurring.dayOfMonth ?? undefined,
-        recurring.dayOfWeek ?? undefined
+        recurring.dayOfWeek ?? undefined,
       );
 
       await ctx.db.patch(recurring._id, {

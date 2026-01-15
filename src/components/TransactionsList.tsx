@@ -74,9 +74,8 @@ export default function TransactionsList({
   endDate,
 }: TransactionsListProps = {}) {
   const { isAuthenticated } = useAuth();
-  const [selectedTransactionId, setSelectedTransactionId] = useState<
-    Id<"transactions"> | null
-  >(null);
+  const [selectedTransactionId, setSelectedTransactionId] =
+    useState<Id<"transactions"> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -241,7 +240,7 @@ export default function TransactionsList({
                 ))}
               </div>
             </div>
-          )
+          ),
         )}
       </div>
 

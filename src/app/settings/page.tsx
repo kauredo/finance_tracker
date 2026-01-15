@@ -128,7 +128,9 @@ export default function SettingsPage() {
     try {
       // Note: Password update with Convex Auth requires special handling
       // For now, show a message that this feature needs to be implemented
-      showError("Password change is not yet available with the new auth system");
+      showError(
+        "Password change is not yet available with the new auth system",
+      );
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {

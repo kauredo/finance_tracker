@@ -127,8 +127,10 @@ export const update = mutation({
 
     const updates: Record<string, unknown> = { updatedAt: Date.now() };
     if (args.name !== undefined) updates.name = args.name.trim();
-    if (args.targetAmount !== undefined) updates.targetAmount = args.targetAmount;
-    if (args.currentAmount !== undefined) updates.currentAmount = args.currentAmount;
+    if (args.targetAmount !== undefined)
+      updates.targetAmount = args.targetAmount;
+    if (args.currentAmount !== undefined)
+      updates.currentAmount = args.currentAmount;
     if (args.targetDate !== undefined) updates.targetDate = args.targetDate;
     if (args.icon !== undefined) updates.icon = args.icon;
     if (args.color !== undefined) updates.color = args.color;
@@ -162,7 +164,7 @@ export const addFunds = mutation({
 
     const newAmount = Math.min(
       goal.currentAmount + args.amount,
-      goal.targetAmount
+      goal.targetAmount,
     );
 
     await ctx.db.patch(args.id, {
