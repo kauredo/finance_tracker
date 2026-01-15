@@ -1,37 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { createClient } from "@/utils/supabase/client";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import EditTransactionModal from "@/components/EditTransactionModal";
 import Icon from "@/components/icons/Icon";
 
 interface TransactionDetailModalProps {
-  transactionId: string;
+  transactionId: Id<"transactions">;
   onClose: () => void;
   onUpdate: () => void;
-}
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  created_at: string;
-  category: {
-    id: string;
-    name: string;
-    icon: string;
-    color: string;
-  } | null;
-  account: {
-    id: string;
-    name: string;
-    type: string;
-  };
 }
 
 export default function TransactionDetailModal({
@@ -40,67 +23,20 @@ export default function TransactionDetailModal({
   onUpdate,
 }: TransactionDetailModalProps) {
   const toast = useToast();
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchTransaction = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("transactions")
-        .select(
-          `
-          id,
-          date,
-          description,
-          amount,
-          created_at,
-          category:categories(id,name,color,icon),
-          account:accounts(id,name,type)
-        `,
-        )
-        .eq("id", transactionId)
-        .single();
+  // Fetch transaction using Convex
+  const transaction = useQuery(api.transactions.getById, { id: transactionId });
+  const deleteTransaction = useMutation(api.transactions.remove);
 
-      if (error) throw error;
-
-      // Handle potential array response for relations
-      const formattedData = {
-        ...data,
-        category: Array.isArray(data.category)
-          ? data.category[0]
-          : data.category,
-        account: Array.isArray(data.account) ? data.account[0] : data.account,
-      };
-
-      setTransaction(formattedData as Transaction);
-    } catch (error: any) {
-      console.error("Error fetching transaction:", error);
-      toast.error("Failed to load transaction details");
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  }, [transactionId, toast, onClose]);
-
-  useEffect(() => {
-    fetchTransaction();
-  }, [fetchTransaction]);
+  const loading = transaction === undefined;
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("id", transactionId);
-
-      if (error) throw error;
-
+      await deleteTransaction({ id: transactionId });
       toast.success("Transaction deleted successfully!");
       onUpdate();
       onClose();
@@ -200,7 +136,7 @@ export default function TransactionDetailModal({
               <div>
                 <div className="text-sm text-muted mb-1">Created</div>
                 <div className="text-foreground text-sm">
-                  {new Date(transaction.created_at).toLocaleDateString()}
+                  {new Date(transaction.createdAt).toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -211,7 +147,7 @@ export default function TransactionDetailModal({
               {transaction.category ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-surface-alt text-foreground">
                   <Icon
-                    name={transaction.category.icon as any}
+                    name={(transaction.category.icon as any) || "other"}
                     size={16}
                     className="mr-2"
                   />
@@ -229,16 +165,26 @@ export default function TransactionDetailModal({
                 <div className="flex items-center gap-2">
                   <Icon
                     name={
-                      transaction.account.type === "personal"
+                      transaction.account?.type === "personal"
                         ? "personal"
                         : "joint"
                     }
                     size={16}
                   />
-                  {transaction.account.name}
+                  {transaction.account?.name || "Unknown"}
                 </div>
               </div>
             </div>
+
+            {/* Notes */}
+            {transaction.notes && (
+              <div>
+                <div className="text-sm text-muted mb-1">Notes</div>
+                <div className="text-foreground text-sm">
+                  {transaction.notes}
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3 pt-4 border-t border-border">
@@ -270,8 +216,8 @@ export default function TransactionDetailModal({
           onClose={() => setShowEditModal(false)}
           onSuccess={() => {
             setShowEditModal(false);
-            fetchTransaction(); // Refresh details
-            onUpdate(); // Refresh parent list
+            // With Convex, data auto-refreshes!
+            onUpdate();
           }}
         />
       )}

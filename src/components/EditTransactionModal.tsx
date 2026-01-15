@@ -1,30 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { createClient } from "@/utils/supabase/client";
 import Icon from "@/components/icons/Icon";
 
 interface EditTransactionModalProps {
-  transactionId: string;
+  transactionId: Id<"transactions">;
   onClose: () => void;
   onSuccess: () => void;
-}
-
-interface Account {
-  id: string;
-  name: string;
-  type: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
 }
 
 export default function EditTransactionModal({
@@ -34,65 +23,42 @@ export default function EditTransactionModal({
 }: EditTransactionModalProps) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+
+  // Fetch data using Convex
+  const transaction = useQuery(api.transactions.getById, { id: transactionId });
+  const accounts = useQuery(api.accounts.list);
+  const categories = useQuery(api.categories.list);
+
+  // Mutation to update transaction
+  const updateTransaction = useMutation(api.transactions.update);
 
   const [formData, setFormData] = useState({
-    account_id: "",
+    accountId: "",
     date: "",
     description: "",
     amount: "",
-    category_id: "",
+    categoryId: "",
+    notes: "",
     transactionType: "expense",
   });
 
+  // Initialize form when transaction loads
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const supabase = createClient();
-        const [transactionRes, accountsRes, categoriesRes] = await Promise.all([
-          fetch(`/api/transactions/${transactionId}`),
-          supabase.from("accounts").select("id, name, type").order("name"),
-          supabase
-            .from("categories")
-            .select("id, name, icon, color")
-            .order("name"),
-        ]);
-
-        const transactionData = await transactionRes.json();
-        if (!transactionRes.ok) throw new Error(transactionData.error);
-
-        if (accountsRes.error) throw accountsRes.error;
-        if (categoriesRes.error) throw categoriesRes.error;
-
-        setAccounts(accountsRes.data || []);
-        setCategories(categoriesRes.data || []);
-
-        const tx = transactionData.transaction;
-        setFormData({
-          account_id: tx.account_id || "",
-          date: tx.date,
-          description: tx.description,
-          amount: Math.abs(tx.amount).toString(),
-          category_id: tx.category_id || "",
-          transactionType: tx.amount < 0 ? "expense" : "income",
-        });
-      } catch (error: any) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load transaction data");
-        onClose();
-      } finally {
-        setLoadingData(false);
-      }
-    };
-
-    fetchData();
-  }, [transactionId, toast, onClose]);
+    if (transaction) {
+      setFormData({
+        accountId: transaction.accountId || "",
+        date: transaction.date,
+        description: transaction.description,
+        amount: Math.abs(transaction.amount).toString(),
+        categoryId: transaction.categoryId || "",
+        notes: transaction.notes || "",
+        transactionType: transaction.amount < 0 ? "expense" : "income",
+      });
+    }
+  }, [transaction]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
@@ -101,22 +67,17 @@ export default function EditTransactionModal({
           ? -Math.abs(parseFloat(formData.amount))
           : Math.abs(parseFloat(formData.amount));
 
-      const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          account_id: formData.account_id,
-          date: formData.date,
-          description: formData.description,
-          amount: finalAmount,
-          category_id: formData.category_id || null,
-        }),
+      await updateTransaction({
+        id: transactionId,
+        accountId: formData.accountId as Id<"accounts">,
+        date: formData.date,
+        description: formData.description,
+        amount: finalAmount,
+        categoryId: formData.categoryId
+          ? (formData.categoryId as Id<"categories">)
+          : undefined,
+        notes: formData.notes || undefined,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update transaction");
-      }
 
       toast.success("Transaction updated successfully!");
       onSuccess();
@@ -128,6 +89,11 @@ export default function EditTransactionModal({
       setLoading(false);
     }
   };
+
+  const loadingData =
+    transaction === undefined ||
+    accounts === undefined ||
+    categories === undefined;
 
   if (loadingData) {
     return (
@@ -217,16 +183,16 @@ export default function EditTransactionModal({
               Account
             </label>
             <select
-              value={formData.account_id}
+              value={formData.accountId}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, account_id: e.target.value }))
+                setFormData((prev) => ({ ...prev, accountId: e.target.value }))
               }
               className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
             >
               <option value="">Select account</option>
               {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
+                <option key={account._id} value={account._id}>
                   {account.name} ({account.type})
                 </option>
               ))}
@@ -289,22 +255,38 @@ export default function EditTransactionModal({
               Category
             </label>
             <select
-              value={formData.category_id}
+              value={formData.categoryId}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  category_id: e.target.value,
+                  categoryId: e.target.value,
                 }))
               }
               className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="">Uncategorized</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.id}>
+                <option key={category._id} value={category._id}>
                   {category.name}
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Notes (Optional)
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, notes: e.target.value }))
+              }
+              placeholder="Add any additional details..."
+              rows={3}
+              className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            />
           </div>
 
           {/* Submit */}

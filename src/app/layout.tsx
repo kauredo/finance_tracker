@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -43,14 +44,16 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeProvider>
-          <AuthProvider>
-            <ToastProvider>
-              {children}
-              <ToastContainer />
-            </ToastProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <ConvexClientProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <ToastProvider>
+                {children}
+                <ToastContainer />
+              </ToastProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ConvexClientProvider>
       </body>
     </html>
   );

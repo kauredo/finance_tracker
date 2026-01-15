@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { createClient } from "@/utils/supabase/client";
 import NavBar from "@/components/NavBar";
 import TransactionsList from "@/components/TransactionsList";
 import AddTransactionModal from "@/components/AddTransactionModal";
@@ -18,7 +19,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function TransactionsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
@@ -30,40 +31,17 @@ export default function TransactionsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const { dateRange, setDateRange, setPreset } = useDateRange("month");
 
-  const [accounts, setAccounts] = useState<Array<{ id: string; name: string }>>(
-    [],
-  );
-  const [categories, setCategories] = useState<
-    Array<{ id: string; name: string; icon: string }>
-  >([]);
+  // Fetch accounts and categories using Convex
+  const accounts = useQuery(api.accounts.list);
+  const categories = useQuery(api.categories.list);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !isAuthenticated) {
       router.push("/auth");
     }
-  }, [user, authLoading, router]);
+  }, [isAuthenticated, authLoading, router]);
 
-  useEffect(() => {
-    if (user) {
-      const fetchFiltersData = async () => {
-        const supabase = createClient();
-        try {
-          const [accountsRes, categoriesRes] = await Promise.all([
-            supabase.from("accounts").select("id, name").order("name"),
-            supabase.from("categories").select("id, name, icon").order("name"),
-          ]);
-
-          if (accountsRes.data) setAccounts(accountsRes.data);
-          if (categoriesRes.data) setCategories(categoriesRes.data);
-        } catch (error) {
-          console.error("Error fetching filter data:", error);
-        }
-      };
-      fetchFiltersData();
-    }
-  }, [user]);
-
-  if (authLoading || !user) {
+  if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <motion.div
@@ -184,8 +162,8 @@ export default function TransactionsPage() {
                         onChange={(e) => setSelectedAccount(e.target.value)}
                       >
                         <option value="all">All Accounts</option>
-                        {accounts.map((account) => (
-                          <option key={account.id} value={account.id}>
+                        {accounts?.map((account) => (
+                          <option key={account._id} value={account._id}>
                             {account.name}
                           </option>
                         ))}
@@ -199,8 +177,8 @@ export default function TransactionsPage() {
                         onChange={(e) => setSelectedCategory(e.target.value)}
                       >
                         <option value="all">All Categories</option>
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id}>
+                        {categories?.map((category) => (
+                          <option key={category._id} value={category._id}>
                             {category.name}
                           </option>
                         ))}

@@ -1,29 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { useToast } from "@/contexts/ToastContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { createClient } from "@/utils/supabase/client";
 import Icon from "@/components/icons/Icon";
 
 interface AddTransactionModalProps {
   onClose: () => void;
   onSuccess: () => void;
-}
-
-interface Account {
-  id: string;
-  name: string;
-  type: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
 }
 
 export default function AddTransactionModal({
@@ -32,63 +21,39 @@ export default function AddTransactionModal({
 }: AddTransactionModalProps) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
-  const [_error, setError] = useState<string | null>(null);
+
+  // Fetch accounts and categories using Convex queries
+  const accounts = useQuery(api.accounts.list);
+  const categories = useQuery(api.categories.list);
+
+  // Mutation to create transaction
+  const createTransaction = useMutation(api.transactions.create);
 
   const [formData, setFormData] = useState({
-    account_id: "",
+    accountId: "" as string,
     date: new Date().toISOString().split("T")[0],
     description: "",
     amount: "",
-    category_id: "",
+    categoryId: "" as string,
     notes: "",
     transactionType: "expense", // expense or income
   });
 
+  // Auto-select first account when accounts load
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const supabase = createClient();
-        const [accountsRes, categoriesRes] = await Promise.all([
-          supabase.from("accounts").select("id, name, type").order("name"),
-          supabase
-            .from("categories")
-            .select("id, name, icon, color")
-            .order("name"),
-        ]);
-
-        if (accountsRes.error) throw accountsRes.error;
-        if (categoriesRes.error) throw categoriesRes.error;
-
-        setAccounts(accountsRes.data || []);
-        setCategories(categoriesRes.data || []);
-
-        // Auto-select first account if available
-        if (accountsRes.data && accountsRes.data.length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            account_id: accountsRes.data[0].id,
-          }));
-        }
-      } catch (error: any) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load accounts and categories");
-      } finally {
-        setLoadingData(false);
-      }
-    };
-
-    fetchData();
-  }, [toast]);
+    if (accounts && accounts.length > 0 && !formData.accountId) {
+      setFormData((prev) => ({
+        ...prev,
+        accountId: accounts[0]._id,
+      }));
+    }
+  }, [accounts, formData.accountId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null); // Clear previous errors
 
-    if (!formData.account_id || !formData.description || !formData.amount) {
+    if (!formData.accountId || !formData.description || !formData.amount) {
       toast.warning("Please fill in all required fields");
       setLoading(false);
       return;
@@ -101,23 +66,16 @@ export default function AddTransactionModal({
           ? -Math.abs(parseFloat(formData.amount))
           : Math.abs(parseFloat(formData.amount));
 
-      const response = await fetch("/api/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          account_id: formData.account_id,
-          date: formData.date,
-          description: formData.description,
-          amount: finalAmount,
-          category_id: formData.category_id || null,
-          notes: formData.notes || null,
-        }),
+      await createTransaction({
+        accountId: formData.accountId as Id<"accounts">,
+        date: formData.date,
+        description: formData.description,
+        amount: finalAmount,
+        categoryId: formData.categoryId
+          ? (formData.categoryId as Id<"categories">)
+          : undefined,
+        notes: formData.notes || undefined,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create transaction");
-      }
 
       toast.success("Transaction created successfully!");
       onSuccess();
@@ -130,7 +88,8 @@ export default function AddTransactionModal({
     }
   };
 
-  if (loadingData) {
+  // Loading state
+  if (accounts === undefined || categories === undefined) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <Card variant="glass" className="w-full max-w-md">
@@ -218,16 +177,16 @@ export default function AddTransactionModal({
               Account *
             </label>
             <select
-              value={formData.account_id}
+              value={formData.accountId}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, account_id: e.target.value }))
+                setFormData((prev) => ({ ...prev, accountId: e.target.value }))
               }
               className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
             >
               <option value="">Select account</option>
               {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
+                <option key={account._id} value={account._id}>
                   {account.name} ({account.type})
                 </option>
               ))}
@@ -292,18 +251,18 @@ export default function AddTransactionModal({
               Category
             </label>
             <select
-              value={formData.category_id}
+              value={formData.categoryId}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  category_id: e.target.value,
+                  categoryId: e.target.value,
                 }))
               }
               className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="">Uncategorized</option>
               {categories.map((category) => (
-                <option key={category.id} value={category.id}>
+                <option key={category._id} value={category._id}>
                   {category.name}
                 </option>
               ))}

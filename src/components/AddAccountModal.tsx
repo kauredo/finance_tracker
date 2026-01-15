@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -18,10 +19,12 @@ export default function AddAccountModal({
 }: AddAccountModalProps) {
   const [accountName, setAccountName] = useState("");
   const [accountType, setAccountType] = useState<"personal" | "joint">(
-    "personal",
+    "personal"
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const createAccount = useMutation(api.accounts.create);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,38 +32,16 @@ export default function AddAccountModal({
     setError("");
 
     try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("No active session");
-      }
-
-      // Call server-side API to create account (bypasses RLS issues)
-      const response = await fetch("/api/create-account", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          accountName,
-          accountType,
-        }),
+      await createAccount({
+        name: accountName,
+        type: accountType,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create account");
-      }
 
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("Error creating account:", err);
-      setError(err.message);
+      setError(err.message || "Failed to create account");
     } finally {
       setLoading(false);
     }

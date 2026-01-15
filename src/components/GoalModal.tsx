@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -8,13 +11,13 @@ import { useToast } from "@/contexts/ToastContext";
 import Icon, { IconName } from "@/components/icons/Icon";
 
 interface Goal {
-  id: string;
+  _id: Id<"goals">;
   name: string;
-  target_amount: number;
-  current_amount: number;
-  target_date: string | null;
-  color: string;
-  icon: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate?: string;
+  color?: string;
+  icon?: string;
 }
 
 interface GoalModalProps {
@@ -57,18 +60,22 @@ export default function GoalModal({
   const { error: showError, success: showSuccess } = useToast();
   const [loading, setLoading] = useState(false);
 
+  // Convex mutations
+  const createGoal = useMutation(api.goals.create);
+  const updateGoal = useMutation(api.goals.update);
+
   const [formData, setFormData] = useState<{
     name: string;
-    target_amount: string | number;
-    current_amount: string | number;
-    target_date: string;
+    targetAmount: string | number;
+    currentAmount: string | number;
+    targetDate: string;
     color: string;
     icon: string;
   }>({
     name: goal?.name || "",
-    target_amount: goal?.target_amount || "",
-    current_amount: goal?.current_amount || 0,
-    target_date: goal?.target_date || "",
+    targetAmount: goal?.targetAmount || "",
+    currentAmount: goal?.currentAmount || 0,
+    targetDate: goal?.targetDate || "",
     color: goal?.color || "#10b981",
     icon: goal?.icon || "savings",
   });
@@ -78,30 +85,32 @@ export default function GoalModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.target_amount) {
+    if (!formData.name || !formData.targetAmount) {
       showError("Please fill in required fields");
       return;
     }
 
     setLoading(true);
     try {
-      const url = isEdit ? `/api/goals/${goal.id}` : "/api/goals";
-      const method = isEdit ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          target_amount: Number(formData.target_amount),
-          current_amount: Number(formData.current_amount),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save goal");
+      if (isEdit) {
+        await updateGoal({
+          id: goal._id,
+          name: formData.name,
+          targetAmount: Number(formData.targetAmount),
+          currentAmount: Number(formData.currentAmount),
+          targetDate: formData.targetDate || undefined,
+          color: formData.color,
+          icon: formData.icon,
+        });
+      } else {
+        await createGoal({
+          name: formData.name,
+          targetAmount: Number(formData.targetAmount),
+          currentAmount: Number(formData.currentAmount),
+          targetDate: formData.targetDate || undefined,
+          color: formData.color,
+          icon: formData.icon,
+        });
       }
 
       showSuccess(`Goal ${isEdit ? "updated" : "created"} successfully`);
@@ -160,9 +169,9 @@ export default function GoalModal({
               </label>
               <Input
                 type="number"
-                value={formData.target_amount}
+                value={formData.targetAmount}
                 onChange={(e) =>
-                  setFormData({ ...formData, target_amount: e.target.value })
+                  setFormData({ ...formData, targetAmount: e.target.value })
                 }
                 placeholder="0.00"
                 min="0"
@@ -176,9 +185,9 @@ export default function GoalModal({
               </label>
               <Input
                 type="number"
-                value={formData.current_amount}
+                value={formData.currentAmount}
                 onChange={(e) =>
-                  setFormData({ ...formData, current_amount: e.target.value })
+                  setFormData({ ...formData, currentAmount: e.target.value })
                 }
                 placeholder="0.00"
                 min="0"
@@ -194,9 +203,9 @@ export default function GoalModal({
             </label>
             <Input
               type="date"
-              value={formData.target_date || ""}
+              value={formData.targetDate || ""}
               onChange={(e) =>
-                setFormData({ ...formData, target_date: e.target.value })
+                setFormData({ ...formData, targetDate: e.target.value })
               }
             />
           </div>

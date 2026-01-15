@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import BudgetCard from "@/components/BudgetCard";
@@ -10,23 +13,8 @@ import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { motion } from "motion/react";
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
-
-interface Budget {
-  id: string;
-  category_id: string;
-  amount: number;
-  period: string;
-}
 
 // Get overall budget health
 function getOverallHealth(percentage: number): {
@@ -65,93 +53,61 @@ function getOverallHealth(percentage: number): {
 }
 
 export default function BudgetsPage() {
-  const { user, loading: authLoading } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [spending, setSpending] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const { loading: authLoading, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
+  // Get current month date range
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    return {
+      from: format(startOfMonth(now), "yyyy-MM-dd"),
+      to: format(endOfMonth(now), "yyyy-MM-dd"),
+    };
+  }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+  // Fetch data using Convex
+  const categories = useQuery(api.categories.list);
+  const budgets = useQuery(api.budgets.list);
+  const budgetProgress = useQuery(api.budgets.getProgress, {
+    dateFrom: dateRange.from,
+    dateTo: dateRange.to,
+  });
+
+  // Mutations
+  const upsertBudget = useMutation(api.budgets.upsert);
+  const deleteBudget = useMutation(api.budgets.remove);
+
+  // Calculate spending per category from budget progress
+  const spending = useMemo(() => {
+    const spendMap: Record<string, number> = {};
+    budgetProgress?.forEach((bp) => {
+      spendMap[bp.categoryId] = bp.spent;
+    });
+    return spendMap;
+  }, [budgetProgress]);
+
+  const handleSaveBudget = async (categoryId: Id<"categories">, amount: number) => {
     try {
-      const supabase = createClient();
-
-      // 1. Fetch Categories
-      const { data: cats } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name");
-
-      if (cats) setCategories(cats);
-
-      // 2. Fetch Budgets via API
-      const budgetRes = await fetch("/api/budgets");
-      const budgetData = await budgetRes.json();
-      if (budgetData.budgets) setBudgets(budgetData.budgets);
-
-      // 3. Fetch Current Month Spending
-      const start = startOfMonth(new Date()).toISOString();
-      const end = endOfMonth(new Date()).toISOString();
-
-      const { data: transactions } = await supabase
-        .from("transactions")
-        .select("amount, category_id")
-        .gte("date", start)
-        .lte("date", end);
-
-      // Calculate spending per category (only expenses, so negative amounts)
-      const spendMap: Record<string, number> = {};
-      transactions?.forEach((t: any) => {
-        if (t.category_id && parseFloat(t.amount) < 0) {
-          const amount = Math.abs(parseFloat(t.amount));
-          spendMap[t.category_id] = (spendMap[t.category_id] || 0) + amount;
-        }
+      await upsertBudget({
+        categoryId,
+        amount,
+        period: "monthly",
       });
-      setSpending(spendMap);
-    } catch (error) {
-      console.error("Error fetching budget data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveBudget = async (categoryId: string, amount: number) => {
-    try {
-      const res = await fetch("/api/budgets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category_id: categoryId, amount }),
-      });
-
-      if (res.ok) {
-        fetchData();
-      }
     } catch (error) {
       console.error("Error saving budget:", error);
     }
   };
 
-  const handleDeleteBudget = async (budgetId: string) => {
+  const handleDeleteBudget = async (budgetId: Id<"budgets">) => {
     try {
-      const res = await fetch(`/api/budgets/${budgetId}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        fetchData();
-      }
+      await deleteBudget({ id: budgetId });
     } catch (error) {
       console.error("Error deleting budget:", error);
     }
   };
 
-  if (authLoading || !user) {
+  const loading = categories === undefined || budgets === undefined;
+
+  if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <motion.div
@@ -165,22 +121,22 @@ export default function BudgetsPage() {
   }
 
   // Sort categories: Active budgets first, then alphabetical
-  const sortedCategories = [...categories].sort((a, b) => {
-    const hasBudgetA = budgets.some((bg) => bg.category_id === a.id);
-    const hasBudgetB = budgets.some((bg) => bg.category_id === b.id);
+  const sortedCategories = [...(categories ?? [])].sort((a, b) => {
+    const hasBudgetA = (budgets ?? []).some((bg) => bg.categoryId === a._id);
+    const hasBudgetB = (budgets ?? []).some((bg) => bg.categoryId === b._id);
     if (hasBudgetA && !hasBudgetB) return -1;
     if (!hasBudgetA && hasBudgetB) return 1;
     return a.name.localeCompare(b.name);
   });
 
   const categoriesWithBudgets = sortedCategories.filter((c) =>
-    budgets.some((b) => b.category_id === c.id),
+    (budgets ?? []).some((b) => b.categoryId === c._id),
   );
   const categoriesWithoutBudgets = sortedCategories.filter(
-    (c) => !budgets.some((b) => b.category_id === c.id),
+    (c) => !(budgets ?? []).some((b) => b.categoryId === c._id),
   );
 
-  const totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
+  const totalBudget = (budgets ?? []).reduce((sum, b) => sum + b.amount, 0);
   const totalSpent = Object.values(spending).reduce((sum, val) => sum + val, 0);
   const totalProgress = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   const remaining = totalBudget - totalSpent;
@@ -307,7 +263,7 @@ export default function BudgetsPage() {
                 </Card>
               ))}
             </div>
-          ) : budgets.length === 0 && categories.length === 0 ? (
+          ) : (budgets ?? []).length === 0 && (categories ?? []).length === 0 ? (
             <EmptyState
               illustration="chart"
               title="No categories yet"
@@ -338,21 +294,21 @@ export default function BudgetsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {categoriesWithBudgets.map((category, index) => {
-                      const budget = budgets.find(
-                        (b) => b.category_id === category.id,
+                      const budget = (budgets ?? []).find(
+                        (b) => b.categoryId === category._id,
                       );
-                      const spent = spending[category.id] || 0;
+                      const spent = spending[category._id] || 0;
 
                       return (
                         <BudgetCard
-                          key={category.id}
+                          key={category._id}
                           category={category}
                           budget={budget}
                           spent={spent}
                           onSave={(amount) =>
-                            handleSaveBudget(category.id, amount)
+                            handleSaveBudget(category._id, amount)
                           }
-                          onDelete={() => handleDeleteBudget(budget!.id)}
+                          onDelete={() => handleDeleteBudget(budget!._id)}
                           index={index}
                         />
                       );
@@ -381,16 +337,16 @@ export default function BudgetsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {categoriesWithoutBudgets.map((category, index) => {
-                      const spent = spending[category.id] || 0;
+                      const spent = spending[category._id] || 0;
 
                       return (
                         <BudgetCard
-                          key={category.id}
+                          key={category._id}
                           category={category}
                           budget={undefined}
                           spent={spent}
                           onSave={(amount) =>
-                            handleSaveBudget(category.id, amount)
+                            handleSaveBudget(category._id, amount)
                           }
                           onDelete={async () => {}}
                           index={index}

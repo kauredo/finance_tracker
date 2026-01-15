@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient } from "@/utils/supabase/client";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
@@ -11,19 +13,21 @@ import { format, isToday, isYesterday, isThisWeek } from "date-fns";
 import { motion } from "motion/react";
 
 interface Transaction {
-  id: string;
+  _id: Id<"transactions">;
   date: string;
   description: string;
   amount: number;
   category: {
+    _id: Id<"categories">;
     name: string;
-    color: string;
-    icon: string;
+    color?: string;
+    icon?: string;
   } | null;
   account: {
+    _id: Id<"accounts">;
     name: string;
-  };
-  notes?: string | null;
+  } | null;
+  notes?: string;
 }
 
 interface TransactionsListProps {
@@ -69,101 +73,36 @@ export default function TransactionsList({
   startDate,
   endDate,
 }: TransactionsListProps = {}) {
-  const { user } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
   const [selectedTransactionId, setSelectedTransactionId] = useState<
-    string | null
+    Id<"transactions"> | null
   >(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
 
-  const fetchTransactions = useCallback(async () => {
-    try {
-      const supabase = createClient();
+  // Build query args
+  const queryArgs = {
+    accountId:
+      accountFilter && accountFilter !== "all"
+        ? (accountFilter as Id<"accounts">)
+        : undefined,
+    categoryId:
+      categoryFilter && categoryFilter !== "all"
+        ? (categoryFilter as Id<"categories">)
+        : undefined,
+    dateFrom: startDate || undefined,
+    dateTo: endDate || undefined,
+    search: searchQuery || undefined,
+    limit: itemsPerPage,
+    offset: (currentPage - 1) * itemsPerPage,
+  };
 
-      let countQuery = supabase
-        .from("transactions")
-        .select("*", { count: "exact", head: true });
+  // Fetch transactions using Convex
+  const result = useQuery(api.transactions.list, queryArgs);
 
-      let query = supabase
-        .from("transactions")
-        .select(
-          `
-          id,
-          date,
-          description,
-          amount,
-          notes,
-          category:categories(name,color,icon),
-          account:accounts(name,id)
-        `,
-        )
-        .order("date", { ascending: false });
-
-      if (searchQuery) {
-        query = query.ilike("description", `%${searchQuery}%`);
-        countQuery = countQuery.ilike("description", `%${searchQuery}%`);
-      }
-
-      if (accountFilter && accountFilter !== "all") {
-        query = query.eq("account_id", accountFilter);
-        countQuery = countQuery.eq("account_id", accountFilter);
-      }
-
-      if (categoryFilter && categoryFilter !== "all") {
-        query = query.eq("category_id", categoryFilter);
-        countQuery = countQuery.eq("category_id", categoryFilter);
-      }
-
-      if (startDate) {
-        query = query.gte("date", startDate);
-        countQuery = countQuery.gte("date", startDate);
-      }
-      if (endDate) {
-        query = query.lte("date", endDate);
-        countQuery = countQuery.lte("date", endDate);
-      }
-
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
-      query = query.range(from, to);
-
-      const [{ data, error }, { count }] = await Promise.all([
-        query,
-        countQuery,
-      ]);
-
-      if (error) throw error;
-
-      const formattedData = (data || []).map((t: any) => ({
-        ...t,
-        account: Array.isArray(t.account) ? t.account[0] : t.account,
-      })) as unknown as Transaction[];
-
-      setTransactions(formattedData);
-      setTotalCount(count || 0);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    searchQuery,
-    accountFilter,
-    categoryFilter,
-    startDate,
-    endDate,
-    currentPage,
-    itemsPerPage,
-  ]);
-
-  useEffect(() => {
-    if (user) {
-      fetchTransactions();
-    }
-  }, [user, fetchTransactions]);
+  const loading = result === undefined;
+  const transactions = (result?.transactions || []) as Transaction[];
+  const totalCount = result?.total || 0;
 
   if (loading) {
     return (
@@ -231,7 +170,7 @@ export default function TransactionsList({
               <div className="space-y-2">
                 {txs.map((t, index) => (
                   <motion.div
-                    key={t.id}
+                    key={t._id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -239,7 +178,7 @@ export default function TransactionsList({
                     }}
                   >
                     <div
-                      onClick={() => setSelectedTransactionId(t.id)}
+                      onClick={() => setSelectedTransactionId(t._id)}
                       className="group flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-sand/50 border border-transparent hover:border-border transition-all cursor-pointer"
                     >
                       {/* Category Icon */}
@@ -302,7 +241,7 @@ export default function TransactionsList({
                 ))}
               </div>
             </div>
-          ),
+          )
         )}
       </div>
 
@@ -324,11 +263,11 @@ export default function TransactionsList({
       {/* Transaction Detail Modal */}
       {selectedTransactionId && (
         <TransactionDetailModal
-          transactionId={selectedTransactionId!}
+          transactionId={selectedTransactionId}
           onClose={() => setSelectedTransactionId(null)}
           onUpdate={() => {
             setSelectedTransactionId(null);
-            fetchTransactions();
+            // With Convex, data refetches automatically!
           }}
         />
       )}

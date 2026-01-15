@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
@@ -12,48 +14,31 @@ import { MotionCard } from "@/components/ui/Card";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
 import { motion } from "motion/react";
 
 export default function AccountsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [totalBalance, setTotalBalance] = useState<number | null>(null);
-  const [accountCount, setAccountCount] = useState(0);
+
+  // Fetch accounts using Convex - automatically reactive
+  const accounts = useQuery(api.accounts.list);
+
+  // Calculate stats from accounts
+  const accountCount = accounts?.length ?? 0;
+  const totalBalance = accounts
+    ? accounts.reduce((sum, acc) => sum + (acc.balance || 0), 0)
+    : null;
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !isAuthenticated) {
       router.push("/auth");
     }
-  }, [user, authLoading, router]);
+  }, [isAuthenticated, authLoading, router]);
 
-  useEffect(() => {
-    if (user) {
-      fetchStats();
-    }
-  }, [user]);
-
-  const fetchStats = async () => {
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase.from("accounts").select("balance");
-
-      if (error) throw error;
-
-      if (data) {
-        setAccountCount(data.length);
-        const total = data.reduce((sum, acc) => sum + (acc.balance || 0), 0);
-        setTotalBalance(total);
-      }
-    } catch (error) {
-      console.error("Error fetching account stats:", error);
-    }
-  };
-
-  if (authLoading || !user) {
+  if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <motion.div
@@ -158,7 +143,7 @@ export default function AccountsPage() {
               Your Pots
             </h2>
           </div>
-          <AccountsList onRefresh={fetchStats} />
+          <AccountsList onAddClick={() => setShowAddModal(true)} />
         </MotionCard>
 
         {/* Floating Add Button (Mobile) */}
@@ -185,7 +170,7 @@ export default function AccountsPage() {
           onSuccess={() => {
             setShowAddModal(false);
             toast.success("New pot added to your collection!");
-            fetchStats();
+            // Convex auto-refreshes data
           }}
         />
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { Id } from "../../convex/_generated/dataModel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ProgressRing } from "@/components/ui/ProgressRing";
@@ -8,13 +9,13 @@ import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "motion/react";
 
 interface Goal {
-  id: string;
+  _id: Id<"goals">;
   name: string;
-  target_amount: number;
-  current_amount: number;
-  target_date: string | null;
-  color: string;
-  icon: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate?: string;
+  color?: string;
+  icon?: string;
 }
 
 interface GoalCardProps {
@@ -66,10 +67,10 @@ export default function GoalCard({
   index = 0,
 }: GoalCardProps) {
   const progress = Math.min(
-    (goal.current_amount / goal.target_amount) * 100,
+    (goal.currentAmount / goal.targetAmount) * 100,
     100,
   );
-  const remaining = Math.max(goal.target_amount - goal.current_amount, 0);
+  const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0);
   const { emoji, label, description } = getGrowthStage(progress);
   const isComplete = progress >= 100;
 
@@ -102,9 +103,9 @@ export default function GoalCard({
                 />
                 <div
                   className="absolute inset-0 flex items-center justify-center"
-                  style={{ color: goal.color }}
+                  style={{ color: goal.color ?? "#10b981" }}
                 >
-                  <Icon name={goal.icon as IconName} size={20} />
+                  <Icon name={(goal.icon ?? "savings") as IconName} size={20} />
                 </div>
               </div>
 
@@ -155,10 +156,10 @@ export default function GoalCard({
           <div className="mb-4">
             <div className="flex items-baseline gap-2 mb-3">
               <span className="text-3xl font-bold text-foreground font-mono">
-                €{goal.current_amount.toLocaleString()}
+                €{goal.currentAmount.toLocaleString()}
               </span>
               <span className="text-sm text-text-secondary">
-                / €{goal.target_amount.toLocaleString()}
+                / €{goal.targetAmount.toLocaleString()}
               </span>
             </div>
 
@@ -169,7 +170,7 @@ export default function GoalCard({
                 style={{
                   backgroundColor: isComplete
                     ? "var(--growth)"
-                    : goal.color || "var(--primary)",
+                    : goal.color ?? "var(--primary)",
                 }}
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
@@ -196,7 +197,7 @@ export default function GoalCard({
           </div>
 
           {/* Target Date */}
-          {goal.target_date && (
+          {goal.targetDate && (
             <div className="mb-4 p-3 bg-sand/50 rounded-xl">
               <div className="flex items-center gap-2 text-sm">
                 <Icon
@@ -206,11 +207,11 @@ export default function GoalCard({
                 />
                 <span className="text-text-secondary">Target:</span>
                 <span className="text-foreground font-medium">
-                  {format(new Date(goal.target_date), "MMM d, yyyy")}
+                  {format(new Date(goal.targetDate), "MMM d, yyyy")}
                 </span>
                 <span className="text-text-secondary">
                   (
-                  {formatDistanceToNow(new Date(goal.target_date), {
+                  {formatDistanceToNow(new Date(goal.targetDate), {
                     addSuffix: true,
                   })}
                   )

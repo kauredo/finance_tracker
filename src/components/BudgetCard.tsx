@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Id } from "../../convex/_generated/dataModel";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -10,17 +11,17 @@ import { useToast } from "@/contexts/ToastContext";
 import { motion } from "motion/react";
 
 interface Category {
-  id: string;
+  _id: Id<"categories">;
   name: string;
-  icon: string;
-  color: string;
+  icon?: string;
+  color?: string;
 }
 
 interface Budget {
-  id: string;
-  category_id: string;
+  _id: Id<"budgets">;
+  categoryId: Id<"categories">;
   amount: number;
-  period: string;
+  period: "weekly" | "monthly" | "yearly";
 }
 
 interface BudgetCardProps {
@@ -115,11 +116,11 @@ export default function BudgetCard({
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center"
               style={{
-                backgroundColor: `${category.color}15`,
-                color: category.color,
+                backgroundColor: `${category.color ?? "#888"}15`,
+                color: category.color ?? "#888",
               }}
             >
-              <Icon name={category.icon as IconName} size={24} />
+              <Icon name={(category.icon ?? "other") as IconName} size={24} />
             </div>
             <div>
               <h3 className="font-display font-bold text-foreground">
@@ -228,9 +229,9 @@ export default function BudgetCard({
             />
             <div
               className="absolute inset-0 flex items-center justify-center"
-              style={{ color: category.color }}
+              style={{ color: category.color ?? "#888" }}
             >
-              <Icon name={category.icon as IconName} size={24} />
+              <Icon name={(category.icon ?? "other") as IconName} size={24} />
             </div>
           </div>
 

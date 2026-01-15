@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
@@ -17,49 +20,28 @@ import Image from "next/image";
 import { motion } from "motion/react";
 
 interface Goal {
-  id: string;
+  _id: Id<"goals">;
   name: string;
-  target_amount: number;
-  current_amount: number;
-  target_date: string | null;
-  color: string;
-  icon: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate?: string;
+  color?: string;
+  icon?: string;
 }
 
 export default function GoalsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const { error: showError, success: showSuccess } = useToast();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | undefined>(undefined);
   const [deletingGoal, setDeletingGoal] = useState<Goal | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchGoals = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/goals");
-      const data = await response.json();
+  // Fetch goals using Convex
+  const goals = useQuery(api.goals.list) as Goal[] | undefined;
+  const deleteGoal = useMutation(api.goals.remove);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch goals");
-      }
-
-      setGoals(data.goals || []);
-    } catch (error) {
-      console.error("Error fetching goals:", error);
-      showError("Failed to load goals");
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
-
-  useEffect(() => {
-    if (user) {
-      fetchGoals();
-    }
-  }, [user, fetchGoals]);
+  const loading = goals === undefined;
 
   const handleCreate = () => {
     setEditingGoal(undefined);
@@ -81,17 +63,8 @@ export default function GoalsPage() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/goals/${deletingGoal.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to delete goal");
-      }
-
+      await deleteGoal({ id: deletingGoal._id });
       showSuccess("Goal removed from your garden");
-      fetchGoals();
       setDeletingGoal(null);
     } catch (error) {
       console.error("Error deleting goal:", error);
@@ -101,7 +74,7 @@ export default function GoalsPage() {
     }
   };
 
-  if (authLoading || !user) {
+  if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <motion.div
@@ -114,14 +87,14 @@ export default function GoalsPage() {
     );
   }
 
-  const totalSaved = goals.reduce((sum, g) => sum + g.current_amount, 0);
-  const totalTarget = goals.reduce((sum, g) => sum + g.target_amount, 0);
+  const totalSaved = (goals ?? []).reduce((sum, g) => sum + g.currentAmount, 0);
+  const totalTarget = (goals ?? []).reduce((sum, g) => sum + g.targetAmount, 0);
   const overallProgress =
     totalTarget > 0 ? (totalSaved / totalTarget) * 100 : 0;
 
-  const activeGoals = goals.filter((g) => g.current_amount < g.target_amount);
-  const completedGoals = goals.filter(
-    (g) => g.current_amount >= g.target_amount,
+  const activeGoals = (goals ?? []).filter((g) => g.currentAmount < g.targetAmount);
+  const completedGoals = (goals ?? []).filter(
+    (g) => g.currentAmount >= g.targetAmount,
   );
 
   return (
@@ -240,7 +213,7 @@ export default function GoalsPage() {
                 </Card>
               ))}
             </div>
-          ) : goals.length === 0 ? (
+          ) : (goals ?? []).length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -279,7 +252,7 @@ export default function GoalsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activeGoals.map((goal, index) => (
                       <GoalCard
-                        key={goal.id}
+                        key={goal._id}
                         goal={goal}
                         onEdit={handleEdit}
                         onDelete={() => setDeletingGoal(goal)}
@@ -312,7 +285,7 @@ export default function GoalsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {completedGoals.map((goal, index) => (
                       <GoalCard
-                        key={goal.id}
+                        key={goal._id}
                         goal={goal}
                         onEdit={handleEdit}
                         onDelete={() => setDeletingGoal(goal)}
@@ -354,7 +327,7 @@ export default function GoalsPage() {
               onSuccess={() => {
                 setShowModal(false);
                 setEditingGoal(undefined);
-                fetchGoals();
+                // Convex auto-refreshes data
               }}
             />
           )}

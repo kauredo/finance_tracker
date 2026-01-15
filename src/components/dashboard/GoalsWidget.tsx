@@ -1,20 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 import { motion } from "motion/react";
-
-interface Goal {
-  id: string;
-  name: string;
-  target_amount: number;
-  current_amount: number;
-  color: string;
-  icon: string;
-}
 
 // Plant growth stages based on progress
 function getGrowthStage(progress: number): { emoji: string; label: string } {
@@ -26,26 +18,10 @@ function getGrowthStage(progress: number): { emoji: string; label: string } {
 }
 
 export default function GoalsWidget() {
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Fetch goals using Convex - automatically reactive
+  const goals = useQuery(api.goals.list);
 
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = async () => {
-    try {
-      const response = await fetch("/api/goals");
-      const data = await response.json();
-      if (response.ok) {
-        setGoals(data.goals || []);
-      }
-    } catch (error) {
-      console.error("Error fetching goals:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = goals === undefined;
 
   if (loading)
     return (
@@ -60,12 +36,12 @@ export default function GoalsWidget() {
       </Card>
     );
 
-  const activeGoals = goals
-    .filter((g) => g.current_amount < g.target_amount)
+  const activeGoals = (goals ?? [])
+    .filter((g) => g.currentAmount < g.targetAmount)
     .slice(0, 3);
 
-  const completedGoals = goals.filter(
-    (g) => g.current_amount >= g.target_amount,
+  const completedGoals = (goals ?? []).filter(
+    (g) => g.currentAmount >= g.targetAmount,
   );
 
   return (
@@ -98,15 +74,15 @@ export default function GoalsWidget() {
           <div className="space-y-4">
             {activeGoals.map((goal, index) => {
               const progress = Math.min(
-                (goal.current_amount / goal.target_amount) * 100,
+                (goal.currentAmount / goal.targetAmount) * 100,
                 100,
               );
               const { emoji, label } = getGrowthStage(progress);
-              const remaining = goal.target_amount - goal.current_amount;
+              const remaining = goal.targetAmount - goal.currentAmount;
 
               return (
                 <motion.div
-                  key={goal.id}
+                  key={goal._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
@@ -134,10 +110,10 @@ export default function GoalsWidget() {
                       </div>
                       <div className="flex items-baseline gap-1 text-sm">
                         <span className="font-mono font-bold text-foreground">
-                          €{goal.current_amount.toLocaleString()}
+                          €{goal.currentAmount.toLocaleString()}
                         </span>
                         <span className="text-muted">
-                          / €{goal.target_amount.toLocaleString()}
+                          / €{goal.targetAmount.toLocaleString()}
                         </span>
                       </div>
                     </div>

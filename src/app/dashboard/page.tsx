@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import FileUpload from "@/components/FileUpload";
@@ -27,17 +29,6 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { motion } from "motion/react";
 import Icon from "@/components/icons/Icon";
 
-import { createClient } from "@/utils/supabase/client";
-
-interface DashboardStats {
-  totalExpenses: number;
-  monthlyExpenses: number;
-  savings: number;
-  totalBudget: number;
-  budgetSpent: number;
-  totalIncome: number;
-}
-
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -46,138 +37,71 @@ function getGreeting(): string {
 }
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [showUpload, setShowUpload] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
-  const [userName, setUserName] = useState("");
 
-  // Filters
-  const dateRange = {
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    to: new Date(),
-  };
-  const selectedAccount = "all";
+  // Get current month date range for monthly stats
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    return {
+      from: firstDay.toISOString().split("T")[0],
+      to: now.toISOString().split("T")[0],
+    };
+  }, []);
 
-  const [stats, setStats] = useState<DashboardStats>({
-    totalExpenses: 0,
-    monthlyExpenses: 0,
-    savings: 0,
-    totalBudget: 0,
-    budgetSpent: 0,
-    totalIncome: 0,
+  // Fetch user profile using Convex
+  const userProfile = useQuery(api.users.getCurrentUserProfile);
+
+  // Fetch all-time stats
+  const allTimeStats = useQuery(api.transactions.getStats, {});
+
+  // Fetch monthly stats
+  const monthlyStats = useQuery(api.transactions.getStats, {
+    dateFrom: dateRange.from,
+    dateTo: dateRange.to,
   });
 
+  // Fetch budgets
+  const budgets = useQuery(api.budgets.list);
+
+  // Mark welcome tour as seen mutation
+  const markWelcomeTourSeen = useMutation(api.users.markWelcomeTourSeen);
+
+  // Calculate derived stats
+  const stats = useMemo(() => {
+    const totalBudget = budgets?.reduce((sum, b) => sum + b.amount, 0) ?? 0;
+    return {
+      totalExpenses: allTimeStats?.expenses ?? 0,
+      monthlyExpenses: monthlyStats?.expenses ?? 0,
+      savings: allTimeStats?.net ?? 0,
+      totalBudget,
+      budgetSpent: monthlyStats?.expenses ?? 0,
+      totalIncome: allTimeStats?.income ?? 0,
+    };
+  }, [allTimeStats, monthlyStats, budgets]);
+
+  // Check welcome tour when user profile loads
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const supabase = createClient();
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user!.id)
-          .single();
-
-        if (profile?.full_name) {
-          setUserName(profile.full_name.split(" ")[0]);
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-
-    const checkWelcomeTour = async () => {
-      try {
-        const supabase = createClient();
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("has_seen_welcome_tour")
-          .eq("id", user!.id)
-          .single();
-
-        if (profile && !profile.has_seen_welcome_tour) {
-          setShowWelcomeTour(true);
-        }
-      } catch (error) {
-        console.error("Error checking welcome tour:", error);
-      }
-    };
-
-    const fetchDashboardData = async () => {
-      try {
-        const supabase = createClient();
-
-        // Trigger recurring transaction processing (no recursive call to avoid infinite loop)
-        fetch("/api/recurring/process", { method: "POST" })
-          .then((res) => res.json())
-          .catch((err) => console.error("Error processing recurring:", err));
-
-        // Fetch transactions
-        const { data: transactionsData, error: transactionsError } =
-          await supabase.from("transactions").select("amount, date");
-
-        if (transactionsError) throw transactionsError;
-
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-
-        const newStats = (transactionsData || []).reduce(
-          (acc: any, curr: any) => {
-            const amount = curr.amount;
-            const date = new Date(curr.date);
-
-            if (amount < 0) {
-              acc.totalExpenses += Math.abs(amount);
-              if (
-                date.getMonth() === currentMonth &&
-                date.getFullYear() === currentYear
-              ) {
-                acc.monthlyExpenses += Math.abs(amount);
-              }
-            } else {
-              acc.totalIncome += amount;
-            }
-            acc.savings += amount;
-            return acc;
-          },
-          {
-            totalExpenses: 0,
-            monthlyExpenses: 0,
-            savings: 0,
-            totalBudget: 0,
-            budgetSpent: 0,
-            totalIncome: 0,
-          },
-        );
-
-        // Fetch Budgets
-        const { data: budgets } = await supabase
-          .from("budgets")
-          .select("amount");
-
-        if (budgets) {
-          newStats.totalBudget = budgets.reduce((sum, b) => sum + b.amount, 0);
-          newStats.budgetSpent = newStats.monthlyExpenses;
-        }
-
-        setStats(newStats);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      }
-    };
-
-    if (!loading && !user) {
-      router.push("/auth");
-    } else if (user) {
-      fetchDashboardData();
-      checkWelcomeTour();
-      fetchUserProfile();
+    if (userProfile && !userProfile.hasSeenWelcomeTour) {
+      setShowWelcomeTour(true);
     }
-  }, [user, loading, router, dateRange, selectedAccount]);
+  }, [userProfile]);
+
+  // Get user's first name
+  const userName = userProfile?.fullName?.split(" ")[0] ?? "";
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/auth");
+    }
+  }, [loading, isAuthenticated, router]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -198,7 +122,7 @@ export default function DashboardPage() {
     },
   ]);
 
-  if (loading || !user) {
+  if (loading || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
         <NavBar />
@@ -601,7 +525,12 @@ export default function DashboardPage() {
         <InvitePartnerModal onClose={() => setShowInviteModal(false)} />
       )}
       {showWelcomeTour && (
-        <WelcomeTour onClose={() => setShowWelcomeTour(false)} />
+        <WelcomeTour
+          onClose={() => {
+            setShowWelcomeTour(false);
+            markWelcomeTourSeen({});
+          }}
+        />
       )}
     </div>
   );
