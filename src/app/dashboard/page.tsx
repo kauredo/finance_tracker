@@ -204,7 +204,7 @@ export default function DashboardPage() {
                   variant={stats.savings >= 0 ? "income" : "expense"}
                   animated
                 />
-                <div className="flex items-center gap-4 mt-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-growth" />
                     <span className="text-sm text-text-secondary">
@@ -225,22 +225,24 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Button
                   variant="bloom"
                   pill
                   onClick={() => setShowAddTransaction(true)}
+                  className="w-full sm:w-auto justify-center"
                 >
                   <Icon name="plus" size={18} />
-                  Add Transaction
+                  <span>Add Transaction</span>
                 </Button>
                 <Button
                   variant="soft"
                   pill
                   onClick={() => setShowUploadStatement(true)}
+                  className="w-full sm:w-auto justify-center"
                 >
                   <Icon name="upload" size={18} />
-                  Upload Statement
+                  <span>Upload Statement</span>
                 </Button>
               </div>
             </div>
@@ -414,17 +416,18 @@ export default function DashboardPage() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 <Tooltip content="Add a new transaction (Press 'n')">
                   <Button
                     variant="ghost"
                     onClick={() => setShowAddTransaction(true)}
-                    className="flex flex-col items-center gap-3 p-6 h-auto rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
+                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
                   >
-                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <Icon name="plus" size={24} className="text-primary" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <Icon name="plus" size={20} className="text-primary sm:hidden" />
+                      <Icon name="plus" size={24} className="text-primary hidden sm:block" />
                     </div>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                       Add Transaction
                     </span>
                   </Button>
@@ -433,12 +436,13 @@ export default function DashboardPage() {
                   <Button
                     variant="ghost"
                     onClick={() => setShowUploadStatement(true)}
-                    className="flex flex-col items-center gap-3 p-6 h-auto rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
+                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
                   >
-                    <div className="p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
-                      <Icon name="upload" size={24} className="text-growth" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
+                      <Icon name="upload" size={20} className="text-growth sm:hidden" />
+                      <Icon name="upload" size={24} className="text-growth hidden sm:block" />
                     </div>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                       Upload Statement
                     </span>
                   </Button>
@@ -447,12 +451,13 @@ export default function DashboardPage() {
                   <Button
                     variant="ghost"
                     onClick={() => setShowAccountModal(true)}
-                    className="flex flex-col items-center gap-3 p-6 h-auto rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
+                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
                   >
-                    <div className="p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
-                      <Icon name="wallet" size={24} className="text-info" />
+                    <div className="p-2 sm:p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
+                      <Icon name="wallet" size={20} className="text-info sm:hidden" />
+                      <Icon name="wallet" size={24} className="text-info hidden sm:block" />
                     </div>
-                    <span className="text-sm font-medium text-foreground">
+                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
                       Add Account
                     </span>
                   </Button>
