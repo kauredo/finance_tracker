@@ -98,12 +98,14 @@ export default function DashboardPage() {
   // Get user's first name
   const userName = userProfile?.fullName?.split(" ")[0] ?? "";
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated, or pending if not confirmed
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push("/auth");
+    } else if (!loading && user && !user.isConfirmed) {
+      router.push("/pending");
     }
-  }, [loading, isAuthenticated, router]);
+  }, [loading, isAuthenticated, user, router]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([

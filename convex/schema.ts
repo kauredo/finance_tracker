@@ -12,6 +12,8 @@ export default defineSchema({
     currency: v.optional(v.string()), // default 'EUR'
     dateFormat: v.optional(v.string()), // default 'DD/MM/YYYY'
     hasSeenWelcomeTour: v.optional(v.boolean()),
+    isAdmin: v.optional(v.boolean()), // Admin users can manage other users
+    isConfirmed: v.optional(v.boolean()), // Users must be confirmed to use the app
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_email", ["email"]),

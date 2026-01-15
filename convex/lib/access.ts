@@ -26,6 +26,28 @@ export async function requireUser(ctx: QueryCtx | MutationCtx) {
 }
 
 /**
+ * Get the current user and require they are confirmed
+ */
+export async function requireConfirmedUser(ctx: QueryCtx | MutationCtx) {
+  const user = await requireUser(ctx);
+  if (!user.isConfirmed) {
+    throw new Error("Access denied: Your account is pending confirmation");
+  }
+  return user;
+}
+
+/**
+ * Get the current user and require they are an admin
+ */
+export async function requireAdmin(ctx: QueryCtx | MutationCtx) {
+  const user = await requireConfirmedUser(ctx);
+  if (!user.isAdmin) {
+    throw new Error("Access denied: Admin privileges required");
+  }
+  return user;
+}
+
+/**
  * Get the household ID for a user (first household they're a member of)
  */
 export async function getUserHouseholdId(

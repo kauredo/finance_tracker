@@ -56,7 +56,9 @@ export default function InvitePartnerModal({
       setExpiresAt(result.expiresAt);
 
       if (typeof window !== "undefined") {
-        setInviteLink(`${window.location.origin}/join?code=${result.inviteCode}`);
+        setInviteLink(
+          `${window.location.origin}/join?code=${result.inviteCode}`,
+        );
       }
     } catch (err: any) {
       setError(err.message || "Failed to generate invite");
@@ -148,7 +150,9 @@ export default function InvitePartnerModal({
               <div className="space-y-4">
                 {/* Invite Code */}
                 <div className="bg-primary-pale/50 rounded-2xl p-4 text-center">
-                  <p className="text-xs text-text-secondary mb-2">Invite Code</p>
+                  <p className="text-xs text-text-secondary mb-2">
+                    Invite Code
+                  </p>
                   <button
                     onClick={handleCopyCode}
                     className="text-2xl font-mono font-bold text-primary tracking-widest hover:opacity-80 transition-opacity"
@@ -190,7 +194,11 @@ export default function InvitePartnerModal({
                 {/* Sharing tips */}
                 <div className="bg-sand/50 rounded-xl p-3">
                   <p className="text-xs text-text-secondary flex items-start gap-2">
-                    <Icon name="tip" size={14} className="mt-0.5 flex-shrink-0" />
+                    <Icon
+                      name="tip"
+                      size={14}
+                      className="mt-0.5 flex-shrink-0"
+                    />
                     <span>
                       Share via WhatsApp, iMessage, or any messaging app. Your
                       partner will need to sign up or log in to join.

@@ -28,7 +28,8 @@ export const getCurrentUserProfile = query({
 });
 
 /**
- * Create a new user profile (called after signup)
+ * Create or update a user profile (called after signup)
+ * The auth system creates the user first, so we need to update missing fields
  */
 export const createProfile = mutation({
   args: {
@@ -36,23 +37,45 @@ export const createProfile = mutation({
     fullName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Check if user already exists
+    const now = Date.now();
+
+    // Check if user already exists (created by auth callback)
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
     if (existingUser) {
+      // Update the user with fullName and default fields if missing
+      const updates: Record<string, unknown> = { updatedAt: now };
+
+      // Set fullName if provided and not already set
+      if (args.fullName && !existingUser.fullName) {
+        updates.fullName = args.fullName;
+      }
+
+      // Set default fields if missing (auth callback doesn't set these)
+      if (existingUser.currency === undefined) updates.currency = "EUR";
+      if (existingUser.dateFormat === undefined)
+        updates.dateFormat = "DD/MM/YYYY";
+      if (existingUser.hasSeenWelcomeTour === undefined)
+        updates.hasSeenWelcomeTour = false;
+      if (existingUser.isAdmin === undefined) updates.isAdmin = false;
+      if (existingUser.isConfirmed === undefined) updates.isConfirmed = false;
+
+      await ctx.db.patch(existingUser._id, updates);
       return existingUser._id;
     }
 
-    const now = Date.now();
+    // Create new user (fallback, shouldn't normally happen)
     return ctx.db.insert("users", {
       email: args.email,
       fullName: args.fullName,
       currency: "EUR",
       dateFormat: "DD/MM/YYYY",
       hasSeenWelcomeTour: false,
+      isAdmin: false,
+      isConfirmed: false,
       createdAt: now,
       updatedAt: now,
     });

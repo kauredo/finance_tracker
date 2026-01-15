@@ -21,7 +21,7 @@ export default function NavBar() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
 
-  const navigation: { name: string; href: string; icon: IconName }[] = [
+  const baseNavigation: { name: string; href: string; icon: IconName }[] = [
     { name: "Transactions", href: "/transactions", icon: "transactions" },
     { name: "Categories", href: "/categories", icon: "tag" },
     { name: "Budgets", href: "/budgets", icon: "chart" },
@@ -29,6 +29,14 @@ export default function NavBar() {
     { name: "Recurring", href: "/recurring", icon: "calendar" },
     { name: "Reports", href: "/reports", icon: "reports" },
   ];
+
+  // Add Admin link for admin users
+  const navigation = user?.isAdmin
+    ? [
+        ...baseNavigation,
+        { name: "Admin", href: "/admin", icon: "shield" as IconName },
+      ]
+    : baseNavigation;
 
   const mobileNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" as IconName },

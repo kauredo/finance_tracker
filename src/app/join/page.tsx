@@ -173,7 +173,8 @@ function JoinContent() {
                   Oops!
                 </h2>
                 <p className="text-text-secondary mb-6">
-                  {error || "This invite is invalid, expired, or has already been used."}
+                  {error ||
+                    "This invite is invalid, expired, or has already been used."}
                 </p>
                 <Button
                   onClick={() => router.push("/dashboard")}
@@ -206,7 +207,8 @@ function JoinContent() {
                   <div className="bg-sand/30 rounded-2xl p-4 mb-6">
                     <p className="text-sm text-text-secondary flex items-center gap-2">
                       <Icon name="user" size={16} />
-                      Invited by {invite.invitedBy.fullName || invite.invitedBy.email}
+                      Invited by{" "}
+                      {invite.invitedBy.fullName || invite.invitedBy.email}
                     </p>
                   </div>
                 )}

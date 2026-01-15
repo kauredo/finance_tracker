@@ -15,6 +15,8 @@ interface User {
   dateFormat?: string;
   hasSeenWelcomeTour?: boolean;
   householdId?: Id<"households"> | null;
+  isAdmin?: boolean;
+  isConfirmed?: boolean;
 }
 
 interface AuthContextType {
@@ -71,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dateFormat: userProfile.dateFormat,
         hasSeenWelcomeTour: userProfile.hasSeenWelcomeTour,
         householdId: userProfile.householdId,
+        isAdmin: userProfile.isAdmin,
+        isConfirmed: userProfile.isConfirmed,
       }
     : null;
 
