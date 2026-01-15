@@ -41,7 +41,14 @@ export const processStatement = action({
     fileName: v.string(),
     fileType: v.string(),
   },
-  handler: async (ctx, args): Promise<{ success: boolean; transactionCount: number; statementId: string }> => {
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    transactionCount: number;
+    statementId: string;
+  }> => {
     // Get current user
     const userId = await ctx.runQuery(api.statements.getCurrentUserId);
     if (!userId) {
@@ -65,32 +72,48 @@ export const processStatement = action({
 
     // Process based on file type
     if (["csv", "tsv"].includes(fileExt)) {
-      // Text-based files
-      const text = await response.text();
+      // Text-based files - try to detect encoding
+      const arrayBuffer = await response.arrayBuffer();
+      const text = decodeTextWithFallback(arrayBuffer);
       transactions = await parseStatementWithAI(text, fileExt as "csv" | "tsv");
     } else if (["png", "jpg", "jpeg"].includes(fileExt)) {
       // Image files
       const arrayBuffer = await response.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
-      transactions = await parseStatementWithVision([base64]);
+      const mimeType = fileExt === "png" ? "image/png" : "image/jpeg";
+      transactions = await parseStatementWithVision([{ base64, mimeType }]);
     } else if (fileExt === "pdf") {
-      // PDF files - convert to image approach or extract text
-      // For now, we'll try the vision approach with PDF
+      // PDF files - extract text and use text-based parsing
+      // Note: OpenAI Vision API doesn't support PDFs directly
+      // We'll extract what text we can and send to the text parser
       const arrayBuffer = await response.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString("base64");
-      transactions = await parseStatementWithVision([base64]);
+      const pdfText = await extractTextFromPDF(arrayBuffer);
+      if (pdfText && pdfText.trim().length > 100) {
+        // If we got meaningful text, use text parsing
+        transactions = await parseStatementWithAI(pdfText, "csv");
+      } else {
+        // PDF text extraction failed or not enough text
+        throw new Error(
+          "Could not extract text from PDF. Please try converting to an image (PNG/JPEG) or CSV format first.",
+        );
+      }
     } else {
       throw new Error(`Unsupported file type: ${fileExt}`);
     }
 
     if (transactions.length === 0) {
-      throw new Error("No transactions found in the statement. Please check the file format.");
+      throw new Error(
+        "No transactions found in the statement. Please check the file format.",
+      );
     }
 
     // Get categories to map names to IDs
     const categories = await ctx.runQuery(api.categories.list);
     const categoryMap = new Map<string, Id<"categories">>(
-      categories.map((c: { name: string; _id: Id<"categories"> }) => [c.name.toLowerCase(), c._id])
+      categories.map((c: { name: string; _id: Id<"categories"> }) => [
+        c.name.toLowerCase(),
+        c._id,
+      ]),
     );
 
     // Find "other" category as fallback
@@ -98,7 +121,8 @@ export const processStatement = action({
 
     // Map transactions to include category IDs
     const transactionsWithCategories = transactions.map((t) => {
-      const categoryId = categoryMap.get(t.category.toLowerCase()) || otherCategoryId;
+      const categoryId =
+        categoryMap.get(t.category.toLowerCase()) || otherCategoryId;
       return {
         date: t.date,
         description: t.description,
@@ -109,14 +133,17 @@ export const processStatement = action({
     });
 
     // Create the statement record first
-    const statementId = await ctx.runMutation(internal.statements.createStatementRecord, {
-      accountId: args.accountId,
-      fileName: args.fileName,
-      storageId: args.storageId,
-      fileType: args.fileType,
-      transactionCount: transactions.length,
-      userId,
-    });
+    const statementId = await ctx.runMutation(
+      internal.statements.createStatementRecord,
+      {
+        accountId: args.accountId,
+        fileName: args.fileName,
+        storageId: args.storageId,
+        fileType: args.fileType,
+        transactionCount: transactions.length,
+        userId,
+      },
+    );
 
     // Bulk create the transactions
     await ctx.runMutation(api.transactions.bulkCreate, {
@@ -171,7 +198,7 @@ export const list = query({
       return [];
     }
 
-    let statementsQuery = ctx.db
+    const statementsQuery = ctx.db
       .query("statements")
       .withIndex("by_user", (q) => q.eq("userId", userId));
 
@@ -187,6 +214,84 @@ export const list = query({
 });
 
 // ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Decode text with fallback encodings for non-UTF8 files
+ * Common with Portuguese/European bank statements
+ */
+function decodeTextWithFallback(arrayBuffer: ArrayBuffer): string {
+  const uint8Array = new Uint8Array(arrayBuffer);
+
+  // Try UTF-8 first
+  try {
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    return decoder.decode(uint8Array);
+  } catch {
+    // Fall back to ISO-8859-1 (Latin-1) which is common for European files
+    try {
+      const decoder = new TextDecoder("iso-8859-1");
+      return decoder.decode(uint8Array);
+    } catch {
+      // Last resort: Windows-1252
+      const decoder = new TextDecoder("windows-1252");
+      return decoder.decode(uint8Array);
+    }
+  }
+}
+
+/**
+ * Extract text from PDF using basic text extraction
+ * Note: This is a simple approach - complex PDFs may need more sophisticated parsing
+ */
+async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
+  // Convert to string and look for text content
+  const uint8Array = new Uint8Array(arrayBuffer);
+  let text = "";
+
+  // Simple PDF text extraction - looks for text between BT and ET markers
+  // This works for simple text-based PDFs but not scanned documents
+  const pdfString = new TextDecoder("latin1").decode(uint8Array);
+
+  // Look for stream content
+  const streamMatches = pdfString.match(
+    /stream[\r\n]+([\s\S]*?)[\r\n]+endstream/g,
+  );
+  if (streamMatches) {
+    for (const match of streamMatches) {
+      // Extract text from the stream - look for text show operators
+      const textMatches = match.match(/\(([^)]+)\)/g);
+      if (textMatches) {
+        for (const textMatch of textMatches) {
+          const extracted = textMatch.slice(1, -1);
+          // Filter out binary/control characters
+          const cleanText = extracted.replace(/[^\x20-\x7E\xA0-\xFF]/g, " ");
+          if (cleanText.trim()) {
+            text += cleanText + " ";
+          }
+        }
+      }
+    }
+  }
+
+  // Also try to find plain text content
+  const plainTextMatches = pdfString.match(/\/T[cj]\s*\[([^\]]+)\]/g);
+  if (plainTextMatches) {
+    for (const match of plainTextMatches) {
+      const textParts = match.match(/\(([^)]+)\)/g);
+      if (textParts) {
+        for (const part of textParts) {
+          text += part.slice(1, -1) + " ";
+        }
+      }
+    }
+  }
+
+  return text.trim();
+}
+
+// ============================================
 // AI Parsing Functions
 // ============================================
 
@@ -197,13 +302,30 @@ interface ParsedTransaction {
   category: string;
 }
 
+interface ImageData {
+  base64: string;
+  mimeType: string;
+}
+
 async function parseStatementWithAI(
   fileContent: string,
-  fileType: "csv" | "tsv"
+  fileType: "csv" | "tsv",
 ): Promise<ParsedTransaction[]> {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "OpenAI API key not configured. Please set OPENAI_API_KEY in your Convex environment.",
+    );
+  }
+
+  const openai = new OpenAI({ apiKey });
+
+  // Truncate very long content to avoid token limits
+  const maxLength = 50000;
+  const truncatedContent =
+    fileContent.length > maxLength
+      ? fileContent.slice(0, maxLength) + "\n... (truncated)"
+      : fileContent;
 
   const prompt = `You are a financial data extraction expert. Parse the following bank statement and extract all transactions.
 
@@ -213,6 +335,7 @@ IMPORTANT RULES:
 - Transactions marked as "Crédito" or "Credit" are money IN (income) - these should have POSITIVE amounts
 - Transaction descriptions may span multiple lines - combine them into a single description
 - Each row may contain a running account balance - ignore this balance column when extracting transactions
+- Dates may be in various formats (DD/MM/YYYY, DD-MM-YYYY, etc.) - convert to ISO format YYYY-MM-DD
 
 For each transaction, provide:
 - date (ISO format YYYY-MM-DD)
@@ -222,7 +345,7 @@ For each transaction, provide:
 
 File type: ${fileType}
 Content:
-${fileContent}
+${truncatedContent}
 
 Return ONLY valid JSON array of transactions, no markdown or explanations.
 Format: {"transactions": [{"date": "2024-01-15", "description": "Store Name", "amount": -45.50, "category": "shopping"}]}`;
@@ -237,18 +360,30 @@ Format: {"transactions": [{"date": "2024-01-15", "description": "Store Name", "a
   const content = response.choices[0].message.content;
   if (!content) throw new Error("No response from OpenAI");
 
-  const parsed = JSON.parse(content);
-  return parsed.transactions || [];
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.transactions || [];
+  } catch (e) {
+    console.error("Failed to parse OpenAI response:", content);
+    throw new Error(
+      "Failed to parse AI response. The statement format may not be supported.",
+    );
+  }
 }
 
 async function parseStatementWithVision(
-  imageBase64Array: string[]
+  images: ImageData[],
 ): Promise<ParsedTransaction[]> {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "OpenAI API key not configured. Please set OPENAI_API_KEY in your Convex environment.",
+    );
+  }
 
-  const prompt = `Analyze this bank statement and extract ALL transactions.
+  const openai = new OpenAI({ apiKey });
+
+  const prompt = `Analyze this bank statement image and extract ALL transactions.
 
 IMPORTANT RULES:
 - The document may be in Portuguese or English
@@ -256,7 +391,8 @@ IMPORTANT RULES:
   * "Débito" / "Debit" = money OUT (expenses) - use NEGATIVE amounts (e.g., -50.00)
   * "Crédito" / "Credit" = money IN (income) - use POSITIVE amounts (e.g., +100.00)
 - Transaction descriptions may span multiple lines - combine them into a single description
-- Ignore running balance columns
+- Ignore running balance columns (often labeled "Saldo")
+- Dates may be in various formats - convert to ISO format YYYY-MM-DD
 
 Extract each transaction with:
 - date (ISO format YYYY-MM-DD)
@@ -265,7 +401,7 @@ Extract each transaction with:
 - category (one of: groceries, dining, transport, utilities, entertainment, shopping, healthcare, income, other)
 
 CRITICAL:
-- Extract ALL transactions from ALL pages
+- Extract ALL transactions visible in the image(s)
 - Pay careful attention to which column the amount appears in
 - Transactions in debit columns should be NEGATIVE amounts
 - Transactions in credit columns should be POSITIVE amounts
@@ -277,12 +413,12 @@ You MUST respond with valid JSON only, in this EXACT format:
     { type: "text", text: prompt },
   ];
 
-  // Add all images
-  for (const base64 of imageBase64Array) {
+  // Add all images with correct MIME types
+  for (const image of images) {
     content.push({
       type: "image_url",
       image_url: {
-        url: `data:image/png;base64,${base64}`,
+        url: `data:${image.mimeType};base64,${image.base64}`,
         detail: "high",
       },
     });
@@ -314,6 +450,13 @@ You MUST respond with valid JSON only, in this EXACT format:
     cleanContent = cleanContent.replace(/^```\n/, "").replace(/\n```$/, "");
   }
 
-  const parsed = JSON.parse(cleanContent);
-  return parsed.transactions || [];
+  try {
+    const parsed = JSON.parse(cleanContent);
+    return parsed.transactions || [];
+  } catch (e) {
+    console.error("Failed to parse OpenAI response:", cleanContent);
+    throw new Error(
+      "Failed to parse AI response. The image may not be clear enough.",
+    );
+  }
 }
