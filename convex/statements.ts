@@ -212,8 +212,7 @@ export const processStatement = action({
       success: true,
       transactionCount: transactionsWithCategories.length,
       statementId,
-      skippedDuplicates:
-        skippedDuplicates > 0 ? skippedDuplicates : undefined,
+      skippedDuplicates: skippedDuplicates > 0 ? skippedDuplicates : undefined,
     };
   },
 });
@@ -768,7 +767,9 @@ IMPORTANT:
     // Clean up markdown if present
     let cleanContent = responseContent.trim();
     if (cleanContent.startsWith("```json")) {
-      cleanContent = cleanContent.replace(/^```json\n/, "").replace(/\n```$/, "");
+      cleanContent = cleanContent
+        .replace(/^```json\n/, "")
+        .replace(/\n```$/, "");
     } else if (cleanContent.startsWith("```")) {
       cleanContent = cleanContent.replace(/^```\n/, "").replace(/\n```$/, "");
     }
