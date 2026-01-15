@@ -7,6 +7,7 @@ import Icon from "@/components/icons/Icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 
 export default function UserMenu() {
   const { user, signOut } = useAuth();
@@ -37,19 +38,18 @@ export default function UserMenu() {
 
   if (!user) return null;
 
-  // Get initials from email
-  const initials = user.email?.substring(0, 2).toUpperCase() || "U";
-
   return (
     <div className="relative" ref={menuRef}>
-      <Button
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        variant="ghost"
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 p-0"
+        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-full transition-transform hover:scale-105"
         aria-label="User menu"
       >
-        <span className="font-semibold text-sm">{initials}</span>
-      </Button>
+        <Avatar
+          name={user.fullName || user.email || "User"}
+          size="sm"
+        />
+      </button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-surface border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">

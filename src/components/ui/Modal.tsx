@@ -3,9 +3,9 @@
 import {
   ReactNode,
   forwardRef,
-  HTMLAttributes,
   createContext,
   useContext,
+  HTMLAttributes,
 } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,9 @@ function Modal({ open, onOpenChange, children }: ModalProps) {
 const ModalTrigger = DialogPrimitive.Trigger;
 
 // Portal + Overlay + Content wrapper
-interface ModalContentProps extends HTMLAttributes<HTMLDivElement> {
+interface ModalContentProps {
+  className?: string;
+  children?: ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "full";
   showCloseButton?: boolean;
   preventClose?: boolean;
@@ -49,7 +51,6 @@ const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
       size = "md",
       showCloseButton = true,
       preventClose = false,
-      ...props
     },
     ref,
   ) => {
@@ -94,7 +95,6 @@ const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
               className,
             )}
             onClick={(e) => e.stopPropagation()}
-            {...props}
           >
             {showCloseButton && (
               <DialogPrimitive.Close asChild>

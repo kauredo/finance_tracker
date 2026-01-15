@@ -18,6 +18,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
+import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { format } from "date-fns";
 import { motion } from "motion/react";
 
@@ -224,17 +226,11 @@ export default function HouseholdPage() {
                       className="flex items-center justify-between p-4 bg-sand/30 rounded-2xl group hover:bg-sand/50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-primary-pale flex items-center justify-center">
-                          {memberIsOwner ? (
-                            <span className="text-2xl">👑</span>
-                          ) : (
-                            <Icon
-                              name="user"
-                              size={24}
-                              className="text-primary"
-                            />
-                          )}
-                        </div>
+                        <Avatar
+                          name={memberUser?.fullName || memberUser?.email || "?"}
+                          size="md"
+                          status={memberIsOwner ? "online" : undefined}
+                        />
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-display font-bold text-foreground">
@@ -243,14 +239,14 @@ export default function HouseholdPage() {
                                 "Unknown"}
                             </span>
                             {memberIsOwner && (
-                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                              <Badge variant="primary" size="sm" pill>
                                 Owner
-                              </span>
+                              </Badge>
                             )}
                             {isCurrentUser && (
-                              <span className="px-2 py-0.5 bg-growth-pale text-growth text-xs font-medium rounded-full">
+                              <Badge variant="growth" size="sm" pill>
                                 You
-                              </span>
+                              </Badge>
                             )}
                           </div>
                           <p className="text-sm text-text-secondary">

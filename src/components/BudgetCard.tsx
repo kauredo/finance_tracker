@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import Icon, { IconName } from "@/components/icons/Icon";
+import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/contexts/ToastContext";
 import { motion } from "motion/react";
 
@@ -243,19 +244,21 @@ export default function BudgetCard({
               <span className="text-lg">{emoji}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              <Badge
+                variant={
                   status === "thriving"
-                    ? "bg-growth-pale text-growth"
+                    ? "growth"
                     : status === "growing"
-                      ? "bg-primary-pale text-primary"
+                      ? "primary"
                       : status === "attention"
-                        ? "bg-warning/20 text-warning"
-                        : "bg-expense/10 text-expense"
-                }`}
+                        ? "warning"
+                        : "danger"
+                }
+                size="sm"
+                pill
               >
                 {label}
-              </span>
+              </Badge>
             </div>
           </div>
         </div>

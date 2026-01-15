@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
+import { Badge } from "@/components/ui/Badge";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -247,10 +248,9 @@ export default function GoalsPage() {
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Growing
                     </h2>
-                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
-                      {activeGoals.length} goal
-                      {activeGoals.length > 1 ? "s" : ""}
-                    </span>
+                    <Badge variant="default" pill className="ml-2">
+                      {activeGoals.length} goal{activeGoals.length > 1 ? "s" : ""}
+                    </Badge>
                   </motion.div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -281,9 +281,9 @@ export default function GoalsPage() {
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Bloomed
                     </h2>
-                    <span className="text-sm text-growth bg-growth-pale px-3 py-1 rounded-full ml-2">
+                    <Badge variant="growth" pill className="ml-2">
                       {completedGoals.length} achieved!
-                    </span>
+                    </Badge>
                   </motion.div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

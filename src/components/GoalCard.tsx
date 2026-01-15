@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import Icon, { IconName } from "@/components/icons/Icon";
+import { Badge } from "@/components/ui/Badge";
 import { format, formatDistanceToNow } from "date-fns";
 import { motion } from "motion/react";
 
@@ -117,9 +118,9 @@ export default function GoalCard({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{emoji}</span>
-                  <span className="text-xs text-text-secondary bg-sand px-2 py-0.5 rounded-full font-medium">
+                  <Badge variant="default" size="sm" pill>
                     {label}
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </div>

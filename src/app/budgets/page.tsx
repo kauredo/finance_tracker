@@ -11,6 +11,7 @@ import { Card, MotionCard } from "@/components/ui/Card";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Badge } from "@/components/ui/Badge";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { startOfMonth, endOfMonth, format } from "date-fns";
@@ -295,9 +296,9 @@ export default function BudgetsPage() {
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Active Budgets
                     </h2>
-                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                    <Badge variant="default" pill className="ml-2">
                       {categoriesWithBudgets.length} planted
-                    </span>
+                    </Badge>
                   </motion.div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -338,9 +339,9 @@ export default function BudgetsPage() {
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Ready to Plant
                     </h2>
-                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                    <Badge variant="default" pill className="ml-2">
                       {categoriesWithoutBudgets.length} available
-                    </span>
+                    </Badge>
                   </motion.div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

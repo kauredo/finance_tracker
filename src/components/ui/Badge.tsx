@@ -110,7 +110,25 @@ const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
 Badge.displayName = "Badge";
 
 // Animated Badge variant with spring animation
-const MotionBadge = forwardRef<HTMLSpanElement, BadgeProps>(
+interface MotionBadgeProps {
+  className?: string;
+  variant?:
+    | "default"
+    | "primary"
+    | "growth"
+    | "warning"
+    | "danger"
+    | "info"
+    | "outline";
+  size?: "sm" | "md" | "lg";
+  pill?: boolean;
+  icon?: ReactNode;
+  removable?: boolean;
+  onRemove?: () => void;
+  children?: ReactNode;
+}
+
+const MotionBadge = forwardRef<HTMLSpanElement, MotionBadgeProps>(
   (
     {
       className,
@@ -121,7 +139,6 @@ const MotionBadge = forwardRef<HTMLSpanElement, BadgeProps>(
       removable = false,
       onRemove,
       children,
-      ...props
     },
     ref,
   ) => {
@@ -165,7 +182,6 @@ const MotionBadge = forwardRef<HTMLSpanElement, BadgeProps>(
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
         transition={{ type: "spring", stiffness: 500, damping: 25 }}
-        {...props}
       >
         {icon && <span className={iconSizes[size]}>{icon}</span>}
         {children}

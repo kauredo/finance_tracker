@@ -9,6 +9,7 @@ import NavBar from "@/components/NavBar";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Badge } from "@/components/ui/Badge";
 import Icon, { IconName } from "@/components/icons/Icon";
 import RecurringTransactionModal from "@/components/RecurringTransactionModal";
 import Image from "next/image";
@@ -224,9 +225,9 @@ export default function RecurringPage() {
                     <h2 className="text-lg font-display font-bold text-foreground">
                       Active
                     </h2>
-                    <span className="text-sm text-text-secondary bg-growth-pale text-growth px-2 py-0.5 rounded-full">
+                    <Badge variant="growth" size="sm" pill>
                       {activeRecurring.length}
-                    </span>
+                    </Badge>
                   </motion.div>
 
                   <div className="space-y-3">
@@ -259,9 +260,9 @@ export default function RecurringPage() {
                     <h2 className="text-lg font-display font-bold text-foreground">
                       Paused
                     </h2>
-                    <span className="text-sm text-text-secondary bg-sand px-2 py-0.5 rounded-full">
+                    <Badge variant="default" size="sm" pill>
                       {pausedRecurring.length}
-                    </span>
+                    </Badge>
                   </motion.div>
 
                   <div className="space-y-3">

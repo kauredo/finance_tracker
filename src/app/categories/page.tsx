@@ -10,6 +10,7 @@ import NavBar from "@/components/NavBar";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Badge } from "@/components/ui/Badge";
 import Icon, { IconName } from "@/components/icons/Icon";
 import CategoryModal from "@/components/CategoryModal";
 import DeleteCategoryModal from "@/components/DeleteCategoryModal";
@@ -164,9 +165,9 @@ export default function CategoriesPage() {
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       My Categories
                     </h2>
-                    <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                    <Badge variant="default" pill className="ml-2">
                       {customCategories.length} custom
-                    </span>
+                    </Badge>
                   </motion.div>
 
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -216,9 +217,9 @@ export default function CategoriesPage() {
                             <h3 className="font-display font-bold text-foreground text-center">
                               {category.name}
                             </h3>
-                            <span className="text-xs text-text-secondary bg-sand/50 px-2 py-0.5 rounded-full">
+                            <Badge variant="default" size="sm" pill>
                               Custom
-                            </span>
+                            </Badge>
                           </div>
                         </Card>
                       </motion.div>
@@ -281,9 +282,9 @@ export default function CategoriesPage() {
                   <h2 className="text-2xl font-display font-bold text-foreground">
                     Default Categories
                   </h2>
-                  <span className="text-sm text-text-secondary bg-sand px-3 py-1 rounded-full ml-2">
+                  <Badge variant="default" pill className="ml-2">
                     {defaultCategories.length} built-in
-                  </span>
+                  </Badge>
                 </motion.div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
