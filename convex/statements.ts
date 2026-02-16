@@ -62,164 +62,6 @@ export const getCurrentUserId = query({
 });
 
 /**
- * Process an uploaded statement file with AI
- */
-export const processStatement = action({
-  args: {
-    storageId: v.id("_storage"),
-    accountId: v.id("accounts"),
-    fileName: v.string(),
-    fileType: v.string(),
-  },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{
-    success: boolean;
-    transactionCount: number;
-    statementId: string;
-    skippedDuplicates?: number;
-  }> => {
-    // Get current user
-    const userId = await ctx.runQuery(api.statements.getCurrentUserId);
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
-
-    // Get the file from storage
-    const fileUrl = await ctx.storage.getUrl(args.storageId);
-    if (!fileUrl) {
-      throw new Error("File not found in storage");
-    }
-
-    // Fetch the file content
-    const response = await fetch(fileUrl);
-    if (!response.ok) {
-      throw new Error("Failed to fetch file from storage");
-    }
-
-    const fileExt = args.fileName.split(".").pop()?.toLowerCase() || "";
-    let transactions: ParsedTransaction[] = [];
-
-    // Process based on file type
-    if (["csv", "tsv"].includes(fileExt)) {
-      const arrayBuffer = await response.arrayBuffer();
-      const text = decodeTextWithFallback(arrayBuffer);
-      transactions = await parseStatementWithAI(text, fileExt as "csv" | "tsv");
-    } else if (["png", "jpg", "jpeg"].includes(fileExt)) {
-      const arrayBuffer = await response.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString("base64");
-      const mimeType = fileExt === "png" ? "image/png" : "image/jpeg";
-      transactions = await parseStatementWithVision([{ base64, mimeType }]);
-    } else if (fileExt === "pdf") {
-      const arrayBuffer = await response.arrayBuffer();
-      const pdfText = await extractTextFromPDF(arrayBuffer);
-      if (pdfText && pdfText.trim().length > 100) {
-        transactions = await parseStatementWithAI(pdfText, "csv");
-      } else {
-        // Fallback: try vision mode for PDFs with non-extractable text
-        const base64 = Buffer.from(arrayBuffer).toString("base64");
-        transactions = await parseStatementWithVision([
-          { base64, mimeType: "application/pdf" },
-        ]);
-      }
-    } else {
-      throw new Error(`Unsupported file type: ${fileExt}`);
-    }
-
-    // Validate and clean transactions
-    const validatedTransactions = validateTransactions(transactions);
-
-    if (validatedTransactions.length === 0) {
-      throw new Error(
-        "No valid transactions found in the statement. Please check the file format.",
-      );
-    }
-
-    // Get categories to map names to IDs
-    const categories = await ctx.runQuery(api.categories.list);
-    const categoryMap = new Map<string, Id<"categories">>(
-      categories.map((c: { name: string; _id: Id<"categories"> }) => [
-        c.name.toLowerCase(),
-        c._id,
-      ]),
-    );
-
-    // Find "other" category as fallback
-    const otherCategoryId = categoryMap.get("other");
-
-    // Check for existing transactions to avoid duplicates
-    const existingTransactions = await ctx.runQuery(api.transactions.list, {
-      accountId: args.accountId,
-      limit: 1000,
-      offset: 0,
-    });
-
-    const existingSet = new Set(
-      (existingTransactions?.transactions || []).map(
-        (t: { date: string; amount: number; description: string }) =>
-          `${t.date}|${t.amount}|${t.description.toLowerCase().slice(0, 30)}`,
-      ),
-    );
-
-    // Filter out duplicates and map categories
-    let skippedDuplicates = 0;
-    const transactionsWithCategories = validatedTransactions
-      .filter((t) => {
-        const key = `${t.date}|${t.amount}|${t.description.toLowerCase().slice(0, 30)}`;
-        if (existingSet.has(key)) {
-          skippedDuplicates++;
-          return false;
-        }
-        return true;
-      })
-      .map((t) => {
-        const categoryId =
-          categoryMap.get(t.category.toLowerCase()) || otherCategoryId;
-        return {
-          date: t.date,
-          description: t.description,
-          amount: t.amount,
-          categoryId: categoryId as Id<"categories"> | undefined,
-          notes: `Imported from ${args.fileName}`,
-        };
-      });
-
-    if (transactionsWithCategories.length === 0) {
-      throw new Error(
-        `All ${validatedTransactions.length} transactions were already imported. No new transactions to add.`,
-      );
-    }
-
-    // Create the statement record
-    const statementId = await ctx.runMutation(
-      internal.statements.createStatementRecord,
-      {
-        accountId: args.accountId,
-        fileName: args.fileName,
-        storageId: args.storageId,
-        fileType: args.fileType,
-        transactionCount: transactionsWithCategories.length,
-        userId,
-      },
-    );
-
-    // Bulk create the transactions
-    await ctx.runMutation(api.transactions.bulkCreate, {
-      accountId: args.accountId,
-      transactions: transactionsWithCategories,
-    });
-
-    return {
-      success: true,
-      transactionCount: transactionsWithCategories.length,
-      statementId,
-      skippedDuplicates: skippedDuplicates > 0 ? skippedDuplicates : undefined,
-    };
-  },
-});
-
-/**
  * Parse a statement and return extracted transactions for review (no commit).
  */
 export const parseStatement = action({
@@ -298,10 +140,10 @@ export const parseStatement = action({
     );
     const otherCategory = categoryMap.get("other");
 
-    // Check for duplicates
+    // Check for duplicates (high limit to catch older entries)
     const existingTransactions = await ctx.runQuery(api.transactions.list, {
       accountId: args.accountId,
-      limit: 1000,
+      limit: 10000,
       offset: 0,
     });
     const existingSet = new Set(
@@ -369,6 +211,25 @@ export const commitStatement = action({
 
     if (args.transactions.length === 0) {
       throw new Error("No transactions selected for import.");
+    }
+
+    // Validate each transaction before saving
+    for (const t of args.transactions) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(t.date)) {
+        throw new Error(
+          `Invalid date format: "${t.date}". Expected YYYY-MM-DD.`,
+        );
+      }
+      if (!t.description || t.description.trim().length < 2) {
+        throw new Error(
+          `Description too short: "${t.description}". Must be at least 2 characters.`,
+        );
+      }
+      if (!isFinite(t.amount) || t.amount === 0) {
+        throw new Error(
+          `Invalid amount: ${t.amount}. Must be a non-zero number.`,
+        );
+      }
     }
 
     const transactionsWithNotes = args.transactions.map((t) => ({

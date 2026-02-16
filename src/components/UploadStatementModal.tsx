@@ -61,6 +61,9 @@ export default function UploadStatementModal({
   const [transactionCount, setTransactionCount] = useState(0);
 
   // Review state
+  const [originalTransactions, setOriginalTransactions] = useState<
+    PreviewTransaction[]
+  >([]);
   const [previewTransactions, setPreviewTransactions] = useState<
     PreviewTransaction[]
   >([]);
@@ -102,6 +105,14 @@ export default function UploadStatementModal({
     async (file: File) => {
       if (!selectedAccountId) {
         setError("Please select an account first");
+        return;
+      }
+
+      const maxSizeMB = 10;
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        setError(
+          `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is ${maxSizeMB}MB.`,
+        );
         return;
       }
 
@@ -157,6 +168,7 @@ export default function UploadStatementModal({
           }),
         );
 
+        setOriginalTransactions(preview);
         setPreviewTransactions(preview);
         setAvailableCategories(result.availableCategories as CategoryOption[]);
         setStep("review");
@@ -175,6 +187,22 @@ export default function UploadStatementModal({
     const selected = previewTransactions.filter((t) => t.selected);
     if (selected.length === 0) {
       toast.warning("Select at least one transaction to import.");
+      return;
+    }
+
+    const invalid = selected.filter(
+      (t) =>
+        !t.date ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(t.date) ||
+        !t.description ||
+        t.description.trim().length < 2 ||
+        !isFinite(t.amount) ||
+        t.amount === 0,
+    );
+    if (invalid.length > 0) {
+      toast.error(
+        `${invalid.length} selected transaction${invalid.length !== 1 ? "s have" : " has"} invalid data. Check dates, descriptions, and amounts.`,
+      );
       return;
     }
 
@@ -233,6 +261,7 @@ export default function UploadStatementModal({
     setStep("select");
     setError(null);
     setTransactionCount(0);
+    setOriginalTransactions([]);
     setPreviewTransactions([]);
     setUploadedStorageId(null);
   };
@@ -282,6 +311,26 @@ export default function UploadStatementModal({
             }
           : t,
       ),
+    );
+  };
+
+  const resetTransaction = (index: number) => {
+    const orig = originalTransactions[index];
+    if (!orig) return;
+    setPreviewTransactions((prev) =>
+      prev.map((t, i) => (i === index ? { ...orig, selected: t.selected } : t)),
+    );
+  };
+
+  const isRowModified = (index: number) => {
+    const orig = originalTransactions[index];
+    const curr = previewTransactions[index];
+    if (!orig || !curr) return false;
+    return (
+      orig.date !== curr.date ||
+      orig.description !== curr.description ||
+      orig.amount !== curr.amount ||
+      orig.categoryId !== curr.categoryId
     );
   };
 
@@ -346,10 +395,14 @@ export default function UploadStatementModal({
               </div>
 
               <div className="flex items-start gap-2 p-3 rounded-xl bg-warning-light/50 border border-warning/20 text-sm text-text-secondary">
-                <Icon name="tip" size={16} className="text-warning flex-shrink-0 mt-0.5" />
+                <Icon
+                  name="tip"
+                  size={16}
+                  className="text-warning flex-shrink-0 mt-0.5"
+                />
                 <span>
-                  AI extraction may contain errors. Please verify amounts, dates,
-                  and descriptions before importing.
+                  AI extraction may contain errors. Click any value to edit it.
+                  Negative amounts are expenses, positive are income.
                 </span>
               </div>
 
@@ -362,6 +415,7 @@ export default function UploadStatementModal({
                       <th className="p-3">Description</th>
                       <th className="p-3">Category</th>
                       <th className="p-3 text-right">Amount</th>
+                      <th className="p-3 w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -442,6 +496,17 @@ export default function UploadStatementModal({
                               t.amount > 0 ? "text-growth" : "text-foreground",
                             )}
                           />
+                        </td>
+                        <td className="p-3">
+                          {isRowModified(i) && !t.isDuplicate && (
+                            <button
+                              onClick={() => resetTransaction(i)}
+                              className="text-muted hover:text-primary transition-colors"
+                              title="Reset to original"
+                            >
+                              <Icon name="close" size={14} />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
