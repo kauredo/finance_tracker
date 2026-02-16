@@ -13,24 +13,31 @@ const OPENAI_MODEL = "gpt-4o";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
-// Valid categories that the AI can assign
-const VALID_CATEGORIES = [
-  "groceries",
-  "dining",
-  "transport",
-  "utilities",
-  "entertainment",
-  "shopping",
-  "healthcare",
-  "income",
-  "subscriptions",
-  "travel",
-  "education",
-  "personal",
-  "other",
-] as const;
-
-type ValidCategory = (typeof VALID_CATEGORIES)[number];
+const TRANSACTION_SCHEMA = {
+  name: "statement_transactions",
+  strict: true,
+  schema: {
+    type: "object" as const,
+    properties: {
+      transactions: {
+        type: "array" as const,
+        items: {
+          type: "object" as const,
+          properties: {
+            date: { type: "string" as const },
+            description: { type: "string" as const },
+            amount: { type: "number" as const },
+            category: { type: "string" as const },
+          },
+          required: ["date", "description", "amount", "category"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["transactions"],
+    additionalProperties: false,
+  },
+};
 
 // ============================================
 // Mutations and Queries
@@ -85,9 +92,14 @@ export const parseStatement = action({
     }>;
     availableCategories: Array<{ id: Id<"categories">; name: string }>;
     storageId: Id<"_storage">;
+    wasTruncated: boolean;
   }> => {
     const userId = await ctx.runQuery(api.statements.getCurrentUserId);
     if (!userId) throw new Error("Unauthorized");
+
+    // Fetch user's categories first so we can pass them to the AI
+    const categories = await ctx.runQuery(api.categories.list);
+    const categoryNames = categories.map((c: { name: string }) => c.name);
 
     const fileUrl = await ctx.storage.getUrl(args.storageId);
     if (!fileUrl) throw new Error("File not found in storage");
@@ -97,27 +109,43 @@ export const parseStatement = action({
 
     const fileExt = args.fileName.split(".").pop()?.toLowerCase() || "";
     let transactions: ParsedTransaction[] = [];
+    let wasTruncated = false;
 
     if (["csv", "tsv"].includes(fileExt)) {
       const arrayBuffer = await response.arrayBuffer();
       const text = decodeTextWithFallback(arrayBuffer);
-      transactions = await parseStatementWithAI(text, fileExt as "csv" | "tsv");
+      const result = await parseStatementWithAI(
+        text,
+        fileExt as "csv" | "tsv",
+        categoryNames,
+      );
+      transactions = result.transactions;
+      wasTruncated = result.wasTruncated;
     } else if (["png", "jpg", "jpeg"].includes(fileExt)) {
       const arrayBuffer = await response.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
       const mimeType = fileExt === "png" ? "image/png" : "image/jpeg";
-      transactions = await parseStatementWithVision([{ base64, mimeType }]);
+      transactions = await parseStatementWithVision(
+        [{ base64, mimeType }],
+        categoryNames,
+      );
     } else if (fileExt === "pdf") {
       const arrayBuffer = await response.arrayBuffer();
       const pdfText = await extractTextFromPDF(arrayBuffer);
       if (pdfText && pdfText.trim().length > 100) {
-        transactions = await parseStatementWithAI(pdfText, "csv");
+        const result = await parseStatementWithAI(
+          pdfText,
+          "text",
+          categoryNames,
+        );
+        transactions = result.transactions;
+        wasTruncated = result.wasTruncated;
       } else {
-        // Fallback: try vision mode for PDFs with non-extractable text
         const base64 = Buffer.from(arrayBuffer).toString("base64");
-        transactions = await parseStatementWithVision([
-          { base64, mimeType: "application/pdf" },
-        ]);
+        transactions = await parseStatementWithVision(
+          [{ base64, mimeType: "application/pdf" }],
+          categoryNames,
+        );
       }
     } else {
       throw new Error(`Unsupported file type: ${fileExt}`);
@@ -129,9 +157,6 @@ export const parseStatement = action({
         "No valid transactions found in the statement. Please check the file format.",
       );
     }
-
-    // Get categories to map names to IDs
-    const categories = await ctx.runQuery(api.categories.list);
     const categoryMap = new Map<string, { id: Id<"categories">; name: string }>(
       categories.map((c: { name: string; _id: Id<"categories"> }) => [
         c.name.toLowerCase(),
@@ -176,7 +201,12 @@ export const parseStatement = action({
       }),
     );
 
-    return { preview, availableCategories, storageId: args.storageId };
+    return {
+      preview,
+      availableCategories,
+      storageId: args.storageId,
+      wasTruncated,
+    };
   },
 });
 
@@ -422,14 +452,11 @@ function validateTransactions(
       const description = cleanDescription(t.description);
       if (!description) return null;
 
-      // Validate category
-      const category = validateCategory(t.category);
-
       return {
         date,
         description,
         amount,
-        category: category as string,
+        category: (t.category || "Other").trim(),
       };
     })
     .filter((t): t is ParsedTransaction => t !== null);
@@ -533,67 +560,6 @@ function cleanDescription(description: string): string | null {
   return cleaned;
 }
 
-/**
- * Validate category against allowed list
- */
-function validateCategory(category: string): ValidCategory {
-  if (!category) return "other";
-
-  const normalized = category.toLowerCase().trim();
-
-  if (VALID_CATEGORIES.includes(normalized as ValidCategory)) {
-    return normalized as ValidCategory;
-  }
-
-  // Map common variations
-  const categoryMappings: Record<string, ValidCategory> = {
-    food: "groceries",
-    supermarket: "groceries",
-    restaurant: "dining",
-    cafe: "dining",
-    coffee: "dining",
-    taxi: "transport",
-    uber: "transport",
-    lyft: "transport",
-    gas: "transport",
-    fuel: "transport",
-    electric: "utilities",
-    water: "utilities",
-    internet: "utilities",
-    phone: "utilities",
-    mobile: "utilities",
-    movies: "entertainment",
-    games: "entertainment",
-    music: "entertainment",
-    streaming: "subscriptions",
-    netflix: "subscriptions",
-    spotify: "subscriptions",
-    amazon: "shopping",
-    clothes: "shopping",
-    clothing: "shopping",
-    doctor: "healthcare",
-    pharmacy: "healthcare",
-    medical: "healthcare",
-    hospital: "healthcare",
-    salary: "income",
-    wages: "income",
-    transfer: "other",
-    atm: "other",
-    withdrawal: "other",
-    hotel: "travel",
-    flight: "travel",
-    airline: "travel",
-    school: "education",
-    university: "education",
-    course: "education",
-    gym: "personal",
-    beauty: "personal",
-    haircut: "personal",
-  };
-
-  return categoryMappings[normalized] || "other";
-}
-
 // ============================================
 // AI Parsing Functions with Retry Logic
 // ============================================
@@ -635,8 +601,9 @@ async function withRetry<T>(
  */
 async function parseStatementWithAI(
   fileContent: string,
-  fileType: "csv" | "tsv",
-): Promise<ParsedTransaction[]> {
+  fileType: "csv" | "tsv" | "text",
+  categoryNames: string[],
+): Promise<{ transactions: ParsedTransaction[]; wasTruncated: boolean }> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -646,66 +613,42 @@ async function parseStatementWithAI(
 
   const openai = new OpenAI({ apiKey });
 
-  // Truncate very long content to avoid token limits
   const maxLength = 50000;
-  const truncatedContent =
-    fileContent.length > maxLength
-      ? fileContent.slice(0, maxLength) + "\n... (truncated)"
-      : fileContent;
+  const wasTruncated = fileContent.length > maxLength;
+  const truncatedContent = wasTruncated
+    ? fileContent.slice(0, maxLength) + "\n... (truncated)"
+    : fileContent;
 
-  const systemPrompt = `You are an expert financial data extraction system. Your job is to parse bank statements and extract transaction data with high accuracy.
+  const fileLabel =
+    fileType === "text"
+      ? "extracted text from a PDF bank statement"
+      : `${fileType.toUpperCase()} bank statement`;
 
-CORE RULES:
+  const systemPrompt = `You are an expert financial data extraction system. Parse bank statements and extract transactions with high accuracy.
+
+RULES:
 1. SIGN CONVENTION (CRITICAL):
    - Debits/Expenses/Purchases = NEGATIVE amounts (money going OUT)
    - Credits/Income/Deposits = POSITIVE amounts (money coming IN)
-   - If a column is labeled "Débito"/"Debit"/"Saída" → use NEGATIVE
-   - If a column is labeled "Crédito"/"Credit"/"Entrada" → use POSITIVE
+   - If a column is labeled "Débito"/"Debit"/"Saída" → NEGATIVE
+   - If a column is labeled "Crédito"/"Credit"/"Entrada" → POSITIVE
 
-2. DATE FORMAT:
-   - Always output dates as YYYY-MM-DD (ISO 8601)
-   - European dates (DD/MM/YYYY): 15/01/2024 → 2024-01-15
-   - Handle various separators: /, -, .
+2. DATE FORMAT: Always YYYY-MM-DD. Convert DD/MM/YYYY → YYYY-MM-DD.
 
-3. DESCRIPTION CLEANING:
-   - Combine multi-line descriptions into single line
-   - Remove excessive whitespace
-   - Keep merchant/payee names clear and readable
+3. DESCRIPTIONS: Combine multi-line into single line. Keep merchant names readable.
 
-4. CATEGORY ASSIGNMENT:
-   Use ONLY these categories: ${VALID_CATEGORIES.join(", ")}
+4. CATEGORIES: Assign each transaction to the best match from this list: ${categoryNames.join(", ")}. If none fit, use "Other".
 
-5. IGNORE:
-   - Running balances (Saldo)
-   - Account numbers
-   - Headers and footers
+5. IGNORE: Running balances, account numbers, headers, footers.`;
 
-EXAMPLES:
-- "SUPERMERCADO CONTINENTE" → groceries, negative amount
-- "TRANSFERENCIA RECEBIDA" → income, positive amount
-- "PAGAMENTO SERVICO LUZ" → utilities, negative amount
-- "UBER *TRIP" → transport, negative amount`;
-
-  const userPrompt = `Parse this ${fileType.toUpperCase()} bank statement and extract all transactions.
+  const userPrompt = `Parse this ${fileLabel} and extract all transactions.
 
 Content:
 ${truncatedContent}
 
-Return JSON with this exact structure:
-{
-  "transactions": [
-    {
-      "date": "YYYY-MM-DD",
-      "description": "Merchant or description",
-      "amount": -99.99,
-      "category": "category_name"
-    }
-  ]
-}
+Debits are NEGATIVE, Credits are POSITIVE.`;
 
-Remember: Debits are NEGATIVE, Credits are POSITIVE.`;
-
-  return withRetry(async () => {
+  const transactions = await withRetry(async () => {
     const response = await openai.chat.completions.create({
       model: OPENAI_MODEL,
       messages: [
@@ -713,21 +656,23 @@ Remember: Debits are NEGATIVE, Credits are POSITIVE.`;
         { role: "user", content: userPrompt },
       ],
       temperature: 0.1,
-      response_format: { type: "json_object" },
+      response_format: {
+        type: "json_schema",
+        json_schema: TRANSACTION_SCHEMA,
+      },
     });
 
     const content = response.choices[0].message.content;
     if (!content) throw new Error("No response from OpenAI");
 
     const parsed = JSON.parse(content);
-    const transactions = parsed.transactions || [];
-
-    if (!Array.isArray(transactions)) {
+    if (!Array.isArray(parsed.transactions)) {
       throw new Error("Invalid response format: transactions is not an array");
     }
-
-    return transactions;
+    return parsed.transactions;
   });
+
+  return { transactions, wasTruncated };
 }
 
 /**
@@ -735,6 +680,7 @@ Remember: Debits are NEGATIVE, Credits are POSITIVE.`;
  */
 async function parseStatementWithVision(
   images: ImageData[],
+  categoryNames: string[],
 ): Promise<ParsedTransaction[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -747,36 +693,21 @@ async function parseStatementWithVision(
 
   const systemPrompt = `You are an expert at reading bank statements from images. Extract every visible transaction with high accuracy.
 
-CRITICAL RULES:
+RULES:
 1. SIGN CONVENTION:
    - Money OUT (Débito/Debit/Saída column) = NEGATIVE amount
    - Money IN (Crédito/Credit/Entrada column) = POSITIVE amount
    - Look at which column the amount appears in to determine sign
 
-2. DATE FORMAT: Always output as YYYY-MM-DD
+2. DATE FORMAT: Always YYYY-MM-DD.
 
-3. READ CAREFULLY:
-   - Examine each row of the statement
-   - Look for amount columns (usually 2: debit and credit)
-   - Combine multi-line descriptions
+3. READ CAREFULLY: Examine each row. Look for debit/credit columns. Combine multi-line descriptions.
 
-4. CATEGORIES: ${VALID_CATEGORIES.join(", ")}
+4. CATEGORIES: Assign each transaction to the best match from: ${categoryNames.join(", ")}. If none fit, use "Other".
 
-5. IGNORE: Balance columns (Saldo), account numbers, headers`;
+5. IGNORE: Balance columns, account numbers, headers.`;
 
-  const userPrompt = `Extract ALL transactions from this bank statement image.
-
-Return JSON:
-{
-  "transactions": [
-    {"date": "YYYY-MM-DD", "description": "...", "amount": -99.99, "category": "..."}
-  ]
-}
-
-IMPORTANT:
-- Debit column amounts should be NEGATIVE
-- Credit column amounts should be POSITIVE
-- Extract EVERY visible transaction`;
+  const userPrompt = `Extract ALL transactions from this bank statement. Debit amounts are NEGATIVE, credit amounts are POSITIVE. Extract EVERY visible transaction.`;
 
   const content: OpenAI.Chat.ChatCompletionContentPart[] = [
     { type: "text", text: userPrompt },
@@ -800,32 +731,20 @@ IMPORTANT:
         { role: "user", content },
       ],
       temperature: 0.1,
-      max_tokens: 4096,
-      response_format: { type: "json_object" },
+      max_tokens: 16384,
+      response_format: {
+        type: "json_schema",
+        json_schema: TRANSACTION_SCHEMA,
+      },
     });
 
     const responseContent = response.choices[0].message.content;
-    if (!responseContent) {
-      throw new Error("No response from OpenAI");
-    }
+    if (!responseContent) throw new Error("No response from OpenAI");
 
-    // Clean up markdown if present
-    let cleanContent = responseContent.trim();
-    if (cleanContent.startsWith("```json")) {
-      cleanContent = cleanContent
-        .replace(/^```json\n/, "")
-        .replace(/\n```$/, "");
-    } else if (cleanContent.startsWith("```")) {
-      cleanContent = cleanContent.replace(/^```\n/, "").replace(/\n```$/, "");
-    }
-
-    const parsed = JSON.parse(cleanContent);
-    const transactions = parsed.transactions || [];
-
-    if (!Array.isArray(transactions)) {
+    const parsed = JSON.parse(responseContent);
+    if (!Array.isArray(parsed.transactions)) {
       throw new Error("Invalid response format: transactions is not an array");
     }
-
-    return transactions;
+    return parsed.transactions;
   });
 }

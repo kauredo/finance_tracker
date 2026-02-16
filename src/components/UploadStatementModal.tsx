@@ -70,6 +70,7 @@ export default function UploadStatementModal({
   const [availableCategories, setAvailableCategories] = useState<
     CategoryOption[]
   >([]);
+  const [wasTruncated, setWasTruncated] = useState(false);
   const [uploadedStorageId, setUploadedStorageId] =
     useState<Id<"_storage"> | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState("");
@@ -171,6 +172,7 @@ export default function UploadStatementModal({
         setOriginalTransactions(preview);
         setPreviewTransactions(preview);
         setAvailableCategories(result.availableCategories as CategoryOption[]);
+        setWasTruncated(result.wasTruncated);
         setStep("review");
       } catch (err: any) {
         console.error("Error processing statement:", err);
@@ -264,6 +266,7 @@ export default function UploadStatementModal({
     setOriginalTransactions([]);
     setPreviewTransactions([]);
     setUploadedStorageId(null);
+    setWasTruncated(false);
   };
 
   const toggleTransaction = (index: number) => {
@@ -405,6 +408,20 @@ export default function UploadStatementModal({
                   Negative amounts are expenses, positive are income.
                 </span>
               </div>
+
+              {wasTruncated && (
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/5 border border-danger/20 text-sm text-text-secondary">
+                  <Icon
+                    name="close"
+                    size={16}
+                    className="text-danger flex-shrink-0 mt-0.5"
+                  />
+                  <span>
+                    Your file was too large to process entirely. Some
+                    transactions at the end may be missing.
+                  </span>
+                </div>
+              )}
 
               <div className="max-h-[50vh] overflow-y-auto border border-border rounded-xl">
                 <table className="w-full text-sm">
