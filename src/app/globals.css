@@ -222,7 +222,7 @@ body {
 }
 
 .transition-transform-smooth {
-  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Custom scrollbar - warmer */
@@ -310,16 +310,6 @@ body {
   }
 }
 
-@keyframes bounce-soft {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
 @keyframes grow {
   from {
     transform: scaleY(0);
@@ -345,19 +335,6 @@ body {
   }
 }
 
-@keyframes wiggle {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-3deg);
-  }
-  75% {
-    transform: rotate(3deg);
-  }
-}
-
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -367,23 +344,13 @@ body {
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
 /* Animation utilities */
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-slide-down {
@@ -395,15 +362,11 @@ body {
 }
 
 .animate-scale-in {
-  animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-bounce-soft {
-  animation: bounce-soft 1s ease-in-out infinite;
 }
 
 .animate-grow {
@@ -411,11 +374,7 @@ body {
 }
 
 .animate-bloom {
-  animation: bloom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.animate-wiggle {
-  animation: wiggle 0.4s ease-in-out;
+  animation: bloom 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-shimmer {
@@ -427,10 +386,6 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
 }
 
 /* Stagger animation delays */
@@ -476,17 +431,6 @@ body {
     var(--primary) 0%,
     var(--primary-dark) 100%
   );
-}
-
-/* Glass effect */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.dark .glass {
-  background: rgba(45, 37, 32, 0.8);
 }
 
 /* Focus ring utilities */

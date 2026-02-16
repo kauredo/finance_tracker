@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
 import BudgetCard from "@/components/BudgetCard";
 import { Card, MotionCard } from "@/components/ui/Card";
@@ -16,6 +17,7 @@ import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { motion } from "motion/react";
+import { useCurrency } from "@/hooks/useCurrency";
 
 // Get overall budget health
 function getOverallHealth(percentage: number): {
@@ -55,6 +57,8 @@ function getOverallHealth(percentage: number): {
 
 export default function BudgetsPage() {
   const { loading: authLoading, isAuthenticated } = useAuth();
+  const toast = useToast();
+  const { currency, formatAmount } = useCurrency();
 
   // Get current month date range
   const dateRange = useMemo(() => {
@@ -96,16 +100,20 @@ export default function BudgetsPage() {
         amount,
         period: "monthly",
       });
+      toast.success("Budget saved!");
     } catch (error) {
       console.error("Error saving budget:", error);
+      toast.error("Failed to save budget");
     }
   };
 
   const handleDeleteBudget = async (budgetId: Id<"budgets">) => {
     try {
       await deleteBudget({ id: budgetId });
+      toast.success("Budget removed");
     } catch (error) {
       console.error("Error deleting budget:", error);
+      toast.error("Failed to remove budget");
     }
   };
 
@@ -185,7 +193,6 @@ export default function BudgetsPage() {
             <MotionCard
               variant="glass"
               transition={{ delay: 0.1 }}
-              className="backdrop-blur-xl"
             >
               <div className="flex items-center gap-6 h-full min-h-[72px]">
                 <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
@@ -201,7 +208,7 @@ export default function BudgetsPage() {
                   </p>
                   <AmountDisplay
                     value={totalSpent}
-                    currency="EUR"
+                    currency={currency}
                     size="md"
                     variant={totalSpent > totalBudget ? "expense" : "default"}
                   />
@@ -213,7 +220,6 @@ export default function BudgetsPage() {
             <MotionCard
               variant="glass"
               transition={{ delay: 0.2 }}
-              className="backdrop-blur-xl"
             >
               <div className="flex items-center gap-4 h-full min-h-[72px]">
                 <div className="w-14 h-14 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
@@ -223,7 +229,11 @@ export default function BudgetsPage() {
                   <p className="text-sm text-text-secondary font-medium">
                     Total Budget
                   </p>
-                  <AmountDisplay value={totalBudget} currency="EUR" size="md" />
+                  <AmountDisplay
+                    value={totalBudget}
+                    currency={currency}
+                    size="md"
+                  />
                 </div>
               </div>
             </MotionCard>
@@ -232,7 +242,6 @@ export default function BudgetsPage() {
             <MotionCard
               variant="glass"
               transition={{ delay: 0.3 }}
-              className="backdrop-blur-xl"
             >
               <div className="flex items-center gap-4 h-full min-h-[72px]">
                 <div className="w-14 h-14 flex items-center justify-center flex-shrink-0 text-4xl">
@@ -247,8 +256,8 @@ export default function BudgetsPage() {
                   </p>
                   <p className="text-xs text-text-secondary">
                     {remaining > 0
-                      ? `€${remaining.toFixed(2)} remaining`
-                      : `€${Math.abs(remaining).toFixed(2)} over budget`}
+                      ? `${formatAmount(remaining)} remaining`
+                      : `${formatAmount(Math.abs(remaining))} over budget`}
                   </p>
                 </div>
               </div>

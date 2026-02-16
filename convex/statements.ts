@@ -117,9 +117,11 @@ export const processStatement = action({
       if (pdfText && pdfText.trim().length > 100) {
         transactions = await parseStatementWithAI(pdfText, "csv");
       } else {
-        throw new Error(
-          "Could not extract text from PDF. Please try converting to an image (PNG/JPEG) or CSV format first.",
-        );
+        // Fallback: try vision mode for PDFs with non-extractable text
+        const base64 = Buffer.from(arrayBuffer).toString("base64");
+        transactions = await parseStatementWithVision([
+          { base64, mimeType: "application/pdf" },
+        ]);
       }
     } else {
       throw new Error(`Unsupported file type: ${fileExt}`);
@@ -213,6 +215,188 @@ export const processStatement = action({
       transactionCount: transactionsWithCategories.length,
       statementId,
       skippedDuplicates: skippedDuplicates > 0 ? skippedDuplicates : undefined,
+    };
+  },
+});
+
+/**
+ * Parse a statement and return extracted transactions for review (no commit).
+ */
+export const parseStatement = action({
+  args: {
+    storageId: v.id("_storage"),
+    accountId: v.id("accounts"),
+    fileName: v.string(),
+    fileType: v.string(),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    preview: Array<{
+      date: string;
+      description: string;
+      amount: number;
+      category: string;
+      categoryId: Id<"categories"> | undefined;
+      isDuplicate: boolean;
+    }>;
+    availableCategories: Array<{ id: Id<"categories">; name: string }>;
+    storageId: Id<"_storage">;
+  }> => {
+    const userId = await ctx.runQuery(api.statements.getCurrentUserId);
+    if (!userId) throw new Error("Unauthorized");
+
+    const fileUrl = await ctx.storage.getUrl(args.storageId);
+    if (!fileUrl) throw new Error("File not found in storage");
+
+    const response = await fetch(fileUrl);
+    if (!response.ok) throw new Error("Failed to fetch file from storage");
+
+    const fileExt = args.fileName.split(".").pop()?.toLowerCase() || "";
+    let transactions: ParsedTransaction[] = [];
+
+    if (["csv", "tsv"].includes(fileExt)) {
+      const arrayBuffer = await response.arrayBuffer();
+      const text = decodeTextWithFallback(arrayBuffer);
+      transactions = await parseStatementWithAI(text, fileExt as "csv" | "tsv");
+    } else if (["png", "jpg", "jpeg"].includes(fileExt)) {
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      const mimeType = fileExt === "png" ? "image/png" : "image/jpeg";
+      transactions = await parseStatementWithVision([{ base64, mimeType }]);
+    } else if (fileExt === "pdf") {
+      const arrayBuffer = await response.arrayBuffer();
+      const pdfText = await extractTextFromPDF(arrayBuffer);
+      if (pdfText && pdfText.trim().length > 100) {
+        transactions = await parseStatementWithAI(pdfText, "csv");
+      } else {
+        // Fallback: try vision mode for PDFs with non-extractable text
+        const base64 = Buffer.from(arrayBuffer).toString("base64");
+        transactions = await parseStatementWithVision([
+          { base64, mimeType: "application/pdf" },
+        ]);
+      }
+    } else {
+      throw new Error(`Unsupported file type: ${fileExt}`);
+    }
+
+    const validatedTransactions = validateTransactions(transactions);
+    if (validatedTransactions.length === 0) {
+      throw new Error(
+        "No valid transactions found in the statement. Please check the file format.",
+      );
+    }
+
+    // Get categories to map names to IDs
+    const categories = await ctx.runQuery(api.categories.list);
+    const categoryMap = new Map<string, { id: Id<"categories">; name: string }>(
+      categories.map((c: { name: string; _id: Id<"categories"> }) => [
+        c.name.toLowerCase(),
+        { id: c._id, name: c.name },
+      ]),
+    );
+    const otherCategory = categoryMap.get("other");
+
+    // Check for duplicates
+    const existingTransactions = await ctx.runQuery(api.transactions.list, {
+      accountId: args.accountId,
+      limit: 1000,
+      offset: 0,
+    });
+    const existingSet = new Set(
+      (existingTransactions?.transactions || []).map(
+        (t: { date: string; amount: number; description: string }) =>
+          `${t.date}|${t.amount}|${t.description.toLowerCase().slice(0, 30)}`,
+      ),
+    );
+
+    // Return transactions with duplicate flags and category info
+    const preview = validatedTransactions.map((t) => {
+      const key = `${t.date}|${t.amount}|${t.description.toLowerCase().slice(0, 30)}`;
+      const isDuplicate = existingSet.has(key);
+      const mapped = categoryMap.get(t.category.toLowerCase());
+      return {
+        date: t.date,
+        description: t.description,
+        amount: t.amount,
+        category: mapped?.name || otherCategory?.name || "Other",
+        categoryId: mapped?.id || otherCategory?.id || undefined,
+        isDuplicate,
+      };
+    });
+
+    // Also return available categories for the review UI
+    const availableCategories = categories.map(
+      (c: { _id: Id<"categories">; name: string }) => ({
+        id: c._id,
+        name: c.name,
+      }),
+    );
+
+    return { preview, availableCategories, storageId: args.storageId };
+  },
+});
+
+/**
+ * Commit reviewed transactions from a parsed statement.
+ */
+export const commitStatement = action({
+  args: {
+    storageId: v.id("_storage"),
+    accountId: v.id("accounts"),
+    fileName: v.string(),
+    fileType: v.string(),
+    transactions: v.array(
+      v.object({
+        date: v.string(),
+        description: v.string(),
+        amount: v.number(),
+        categoryId: v.optional(v.id("categories")),
+      }),
+    ),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    success: boolean;
+    transactionCount: number;
+    statementId: string;
+  }> => {
+    const userId = await ctx.runQuery(api.statements.getCurrentUserId);
+    if (!userId) throw new Error("Unauthorized");
+
+    if (args.transactions.length === 0) {
+      throw new Error("No transactions selected for import.");
+    }
+
+    const transactionsWithNotes = args.transactions.map((t) => ({
+      ...t,
+      notes: `Imported from ${args.fileName}`,
+    }));
+
+    const statementId = await ctx.runMutation(
+      internal.statements.createStatementRecord,
+      {
+        accountId: args.accountId,
+        fileName: args.fileName,
+        storageId: args.storageId,
+        fileType: args.fileType,
+        transactionCount: transactionsWithNotes.length,
+        userId,
+      },
+    );
+
+    await ctx.runMutation(api.transactions.bulkCreate, {
+      accountId: args.accountId,
+      transactions: transactionsWithNotes,
+    });
+
+    return {
+      success: true,
+      transactionCount: transactionsWithNotes.length,
+      statementId,
     };
   },
 });

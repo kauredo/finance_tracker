@@ -26,6 +26,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface ReportsModalProps {
   onClose: () => void;
@@ -56,6 +57,7 @@ const COLORS = [
 ];
 
 export default function ReportsModal({ onClose }: ReportsModalProps) {
+  const { formatAmount } = useCurrency();
   const [view, setView] = useState<"category" | "monthly">("category");
 
   // Fetch all transactions from Convex
@@ -171,7 +173,7 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                                 cy="50%"
                                 labelLine={false}
                                 label={(entry) =>
-                                  `${entry.name}: €${entry.value}`
+                                  `${entry.name}: ${formatAmount(entry.value)}`
                                 }
                                 outerRadius={100}
                                 fill="#8884d8"
@@ -184,7 +186,11 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                                   />
                                 ))}
                               </Pie>
-                              <Tooltip formatter={(value) => `€${value}`} />
+                              <Tooltip
+                                formatter={(value) =>
+                                  formatAmount(Number(value))
+                                }
+                              />
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
@@ -209,7 +215,9 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                               />
                               <YAxis tick={{ fill: "var(--text-secondary)" }} />
                               <Tooltip
-                                formatter={(value) => `€${value}`}
+                                formatter={(value) =>
+                                  formatAmount(Number(value))
+                                }
                                 contentStyle={{
                                   backgroundColor: "var(--surface)",
                                   border: "1px solid var(--border)",
@@ -249,7 +257,7 @@ export default function ReportsModal({ onClose }: ReportsModalProps) {
                         />
                         <YAxis tick={{ fill: "var(--text-secondary)" }} />
                         <Tooltip
-                          formatter={(value) => `€${value}`}
+                          formatter={(value) => formatAmount(Number(value))}
                           contentStyle={{
                             backgroundColor: "var(--surface)",
                             border: "1px solid var(--border)",

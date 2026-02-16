@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -19,9 +20,27 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
 
   const { signIn, signUp, user, loading: authLoading } = useAuth();
+  const { signIn: convexSignIn } = useAuthActions();
   const router = useRouter();
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await convexSignIn("password", { email: resetEmail, flow: "reset" });
+      setResetSent(true);
+    } catch {
+      setError("Unable to send reset email. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -102,7 +121,7 @@ export default function AuthPage() {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="mb-8"
           >
             <Image
@@ -335,6 +354,22 @@ export default function AuthPage() {
                         }
                       />
 
+                      {isLogin && !showForgotPassword && (
+                        <div className="text-right -mt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowForgotPassword(true);
+                              setResetEmail(email);
+                              setError("");
+                            }}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Forgot password?
+                          </button>
+                        </div>
+                      )}
+
                       <Button
                         type="submit"
                         isLoading={loading}
@@ -345,6 +380,87 @@ export default function AuthPage() {
                         {isLogin ? "Sign In" : "Create Account"}
                       </Button>
                     </form>
+
+                    {/* Forgot Password Inline */}
+                    <AnimatePresence>
+                      {showForgotPassword && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-6 pt-6 border-t border-border">
+                            {resetSent ? (
+                              <div className="text-center space-y-3">
+                                <div className="w-12 h-12 mx-auto bg-growth-pale rounded-full flex items-center justify-center">
+                                  <Icon
+                                    name="check"
+                                    size={24}
+                                    className="text-growth"
+                                  />
+                                </div>
+                                <p className="text-sm text-text-secondary">
+                                  If an account exists for{" "}
+                                  <strong>{resetEmail}</strong>, we sent a
+                                  password reset link.
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setShowForgotPassword(false);
+                                    setResetSent(false);
+                                    setResetEmail("");
+                                  }}
+                                >
+                                  Back to login
+                                </Button>
+                              </div>
+                            ) : (
+                              <form
+                                onSubmit={handleForgotPassword}
+                                className="space-y-4"
+                              >
+                                <p className="text-sm text-text-secondary">
+                                  Enter your email and we'll send a reset link.
+                                </p>
+                                <Input
+                                  type="email"
+                                  value={resetEmail}
+                                  onChange={(e) =>
+                                    setResetEmail(e.target.value)
+                                  }
+                                  placeholder="you@example.com"
+                                  required
+                                  error={!!error}
+                                  helperText={error}
+                                />
+                                <div className="flex gap-3">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setShowForgotPassword(false);
+                                      setError("");
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    type="submit"
+                                    isLoading={loading}
+                                    className="flex-1"
+                                  >
+                                    Send Reset Link
+                                  </Button>
+                                </div>
+                              </form>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Footer text */}
                     <p className="text-center text-sm text-text-secondary mt-6">

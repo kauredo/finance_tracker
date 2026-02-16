@@ -89,6 +89,11 @@ export function ProgressRing({
         "relative inline-flex items-center justify-center",
         className,
       )}
+      role="progressbar"
+      aria-valuenow={Math.round(clampedProgress)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label || `${Math.round(clampedProgress)}%`}
     >
       <svg
         width={dimension}
@@ -117,7 +122,7 @@ export function ProgressRing({
             strokeDasharray={circumference}
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset: offset }}
-            transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           />
         ) : (
           <circle
@@ -224,7 +229,7 @@ export function MultiProgressRing({
                 animate={{ strokeDashoffset: dashOffset }}
                 transition={{
                   duration: 1,
-                  ease: [0.34, 1.56, 0.64, 1],
+                  ease: [0.16, 1, 0.3, 1],
                   delay: index * 0.1,
                 }}
               />
@@ -295,7 +300,7 @@ export function Gauge({
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         />
       </svg>
       {/* Value display */}

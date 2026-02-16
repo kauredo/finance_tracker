@@ -295,7 +295,7 @@ export function EmptyState({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         "flex flex-col items-center justify-center text-center py-12 px-6",
         className,
@@ -305,7 +305,7 @@ export function EmptyState({
       <motion.div
         initial={{ scale: 0.8 }}
         animate={{ scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="w-32 h-32 mb-6"
       >
         {icon || illustrations[illustration]}

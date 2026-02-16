@@ -16,6 +16,7 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 import Icon from "@/components/icons/Icon";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface AddTransactionModalProps {
   onClose: () => void;
@@ -27,6 +28,7 @@ export default function AddTransactionModal({
   onSuccess,
 }: AddTransactionModalProps) {
   const toast = useToast();
+  const { symbol } = useCurrency();
   const [loading, setLoading] = useState(false);
 
   // Fetch accounts and categories using Convex queries
@@ -66,12 +68,19 @@ export default function AddTransactionModal({
       return;
     }
 
+    const parsedAmount = parseFloat(formData.amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.warning("Please enter a valid amount");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Calculate final amount (negative for expenses, positive for income)
       const finalAmount =
         formData.transactionType === "expense"
-          ? -Math.abs(parseFloat(formData.amount))
-          : Math.abs(parseFloat(formData.amount));
+          ? -Math.abs(parsedAmount)
+          : Math.abs(parsedAmount);
 
       await createTransaction({
         accountId: formData.accountId as Id<"accounts">,
@@ -223,7 +232,7 @@ export default function AddTransactionModal({
             {/* Amount */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Amount (€) *
+                {`Amount (${symbol}) *`}
               </label>
               <Input
                 type="number"

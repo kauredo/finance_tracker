@@ -16,6 +16,7 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 import Icon from "@/components/icons/Icon";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface RecurringTransactionModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export default function RecurringTransactionModal({
   editId,
   initialData,
 }: RecurringTransactionModalProps) {
+  const { symbol } = useCurrency();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"expense" | "income">("expense");
@@ -106,11 +108,16 @@ export default function RecurringTransactionModal({
     e.preventDefault();
     setLoading(true);
 
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      error("Please enter a valid amount");
+      setLoading(false);
+      return;
+    }
+
     try {
       const finalAmount =
-        type === "expense"
-          ? -Math.abs(parseFloat(amount))
-          : Math.abs(parseFloat(amount));
+        type === "expense" ? -Math.abs(parsedAmount) : Math.abs(parsedAmount);
       const dateObj = new Date(nextRunDate);
 
       if (editId) {
@@ -220,7 +227,7 @@ export default function RecurringTransactionModal({
               {/* Amount */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Amount (€) *
+                  {`Amount (${symbol}) *`}
                 </label>
                 <Input
                   type="number"

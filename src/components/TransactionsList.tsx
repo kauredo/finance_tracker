@@ -5,6 +5,8 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useDateFormat } from "@/hooks/useDateFormat";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
@@ -41,7 +43,10 @@ interface TransactionsListProps {
 }
 
 // Group transactions by date
-function groupTransactionsByDate(transactions: Transaction[]) {
+function groupTransactionsByDate(
+  transactions: Transaction[],
+  longFormat: string,
+) {
   const groups: { [key: string]: Transaction[] } = {};
 
   transactions.forEach((t) => {
@@ -55,7 +60,7 @@ function groupTransactionsByDate(transactions: Transaction[]) {
     } else if (isThisWeek(date)) {
       label = format(date, "EEEE");
     } else {
-      label = format(date, "MMMM d, yyyy");
+      label = format(date, longFormat);
     }
 
     if (!groups[label]) {
@@ -76,6 +81,8 @@ export default function TransactionsList({
   showPagination = true,
 }: TransactionsListProps = {}) {
   const { isAuthenticated } = useAuth();
+  const { formatAmount } = useCurrency();
+  const { longFormat } = useDateFormat();
   const [selectedTransactionId, setSelectedTransactionId] =
     useState<Id<"transactions"> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -142,7 +149,7 @@ export default function TransactionsList({
     );
   }
 
-  const groupedTransactions = groupTransactionsByDate(transactions);
+  const groupedTransactions = groupTransactionsByDate(transactions, longFormat);
 
   return (
     <div className="p-6">
@@ -231,10 +238,8 @@ export default function TransactionsList({
                             t.amount > 0 ? "text-growth" : "text-foreground"
                           }`}
                         >
-                          {t.amount > 0 ? "+" : ""}€
-                          {Math.abs(t.amount).toLocaleString("de-DE", {
-                            minimumFractionDigits: 2,
-                          })}
+                          {t.amount > 0 ? "+" : ""}
+                          {formatAmount(Math.abs(t.amount))}
                         </span>
                       </div>
                     </div>

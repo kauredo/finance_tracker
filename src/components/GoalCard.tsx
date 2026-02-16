@@ -7,6 +7,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { Badge } from "@/components/ui/Badge";
 import { format, formatDistanceToNow } from "date-fns";
+import { useCurrency } from "@/hooks/useCurrency";
 import { motion } from "motion/react";
 
 interface Goal {
@@ -67,6 +68,7 @@ export default function GoalCard({
   onAddMoney,
   index = 0,
 }: GoalCardProps) {
+  const { formatAmount } = useCurrency();
   const progress = Math.min(
     (goal.currentAmount / goal.targetAmount) * 100,
     100,
@@ -157,10 +159,10 @@ export default function GoalCard({
           <div className="mb-4">
             <div className="flex items-baseline gap-2 mb-3">
               <span className="text-3xl font-bold text-foreground tabular-nums">
-                €{goal.currentAmount.toLocaleString()}
+                {formatAmount(goal.currentAmount, 0)}
               </span>
               <span className="text-sm text-text-secondary">
-                / €{goal.targetAmount.toLocaleString()}
+                / {formatAmount(goal.targetAmount, 0)}
               </span>
             </div>
 
@@ -186,7 +188,7 @@ export default function GoalCard({
               </span>
               {remaining > 0 ? (
                 <span className="text-foreground font-medium">
-                  €{remaining.toLocaleString()} to go
+                  {formatAmount(remaining, 0)} to go
                 </span>
               ) : (
                 <span className="text-growth font-medium flex items-center gap-1">

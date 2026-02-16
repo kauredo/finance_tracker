@@ -15,9 +15,11 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import Icon from "@/components/icons/Icon";
+import { useCurrency } from "@/hooks/useCurrency";
 
 export default function AccountDetailPage() {
   const { loading: authLoading, isAuthenticated } = useAuth();
+  const { formatAmount } = useCurrency();
   const router = useRouter();
   const params = useParams();
   const toast = useToast();
@@ -66,8 +68,14 @@ export default function AccountDetailPage() {
               <Skeleton variant="text" className="w-24 h-5" />
             </div>
             <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-              <Skeleton variant="rectangle" className="flex-1 sm:flex-none sm:w-24 h-10 rounded-md" />
-              <Skeleton variant="rectangle" className="flex-1 sm:flex-none sm:w-24 h-10 rounded-md" />
+              <Skeleton
+                variant="rectangle"
+                className="flex-1 sm:flex-none sm:w-24 h-10 rounded-md"
+              />
+              <Skeleton
+                variant="rectangle"
+                className="flex-1 sm:flex-none sm:w-24 h-10 rounded-md"
+              />
             </div>
           </div>
           <Card className="mb-6">
@@ -147,7 +155,7 @@ export default function AccountDetailPage() {
               <div
                 className={`text-3xl font-bold ${(account.balance ?? 0) >= 0 ? "text-success" : "text-danger"}`}
               >
-                €{(account.balance ?? 0).toFixed(2)}
+                {formatAmount(account.balance ?? 0)}
               </div>
             </CardContent>
           </Card>

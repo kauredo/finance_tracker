@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
 import { motion, AnimatePresence } from "motion/react";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface CategoryData {
   name: string;
@@ -39,6 +40,7 @@ interface ReportsChartsProps {
 
 // Custom tooltip styles matching our theme
 const CustomTooltip = ({ active, payload, label }: any) => {
+  const { formatAmount } = useCurrency();
   if (active && payload && payload.length) {
     return (
       <div className="bg-surface border border-border rounded-xl p-3 shadow-lg">
@@ -47,7 +49,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}:{" "}
             <span className="font-bold tabular-nums">
-              €{entry.value.toLocaleString()}
+              {formatAmount(Number(entry.value))}
             </span>
           </p>
         ))}
@@ -58,6 +60,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const PieTooltip = ({ active, payload }: any) => {
+  const { formatAmount } = useCurrency();
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -67,7 +70,7 @@ const PieTooltip = ({ active, payload }: any) => {
           className="text-sm font-bold tabular-nums"
           style={{ color: data.payload.color }}
         >
-          €{data.value.toLocaleString()}
+          {formatAmount(Number(data.value))}
         </p>
       </div>
     );
@@ -79,6 +82,7 @@ export default function ReportsCharts({
   categoryData,
   monthlyData,
 }: ReportsChartsProps) {
+  const { formatAmount } = useCurrency();
   const [view, setView] = useState<"category" | "monthly">("category");
 
   return (
@@ -200,7 +204,7 @@ export default function ReportsCharts({
                                 {category.name}
                               </span>
                               <span className="text-sm text-foreground tabular-nums">
-                                €{category.value.toLocaleString()}
+                                {formatAmount(category.value)}
                               </span>
                             </div>
                             <div className="h-2 bg-sand rounded-full overflow-hidden">
@@ -302,7 +306,7 @@ export default function ReportsCharts({
                           tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
                           axisLine={false}
                           tickLine={false}
-                          tickFormatter={(value) => `€${value}`}
+                          tickFormatter={(value) => formatAmount(Number(value))}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend
@@ -360,7 +364,8 @@ export default function ReportsCharts({
                             <p
                               className={`font-bold tabular-nums ${net >= 0 ? "text-growth" : "text-expense"}`}
                             >
-                              {net >= 0 ? "+" : ""}€{net.toLocaleString()}
+                              {net >= 0 ? "+" : ""}
+                              {formatAmount(Math.abs(net))}
                             </p>
                           </motion.div>
                         );

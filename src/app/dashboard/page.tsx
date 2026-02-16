@@ -22,11 +22,11 @@ import {
   MotionCard,
 } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Tooltip } from "@/components/ui/Tooltip";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import GoalsWidget from "@/components/dashboard/GoalsWidget";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useCurrency } from "@/hooks/useCurrency";
 import { motion } from "motion/react";
 import Icon from "@/components/icons/Icon";
 
@@ -106,6 +106,8 @@ export default function DashboardPage() {
       router.push("/pending");
     }
   }, [loading, isAuthenticated, user, router]);
+
+  const { currency, formatAmount } = useCurrency();
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -202,6 +204,7 @@ export default function DashboardPage() {
                 </p>
                 <AmountDisplay
                   value={stats.savings}
+                  currency={currency}
                   size="hero"
                   variant={stats.savings >= 0 ? "income" : "expense"}
                   animated
@@ -212,7 +215,7 @@ export default function DashboardPage() {
                     <span className="text-sm text-text-secondary">
                       Income:{" "}
                       <span className="text-growth font-medium">
-                        €{stats.totalIncome.toFixed(0)}
+                        {formatAmount(stats.totalIncome, 0)}
                       </span>
                     </span>
                   </div>
@@ -221,7 +224,7 @@ export default function DashboardPage() {
                     <span className="text-sm text-text-secondary">
                       Expenses:{" "}
                       <span className="text-expense font-medium">
-                        €{stats.totalExpenses.toFixed(0)}
+                        {formatAmount(stats.totalExpenses, 0)}
                       </span>
                     </span>
                   </div>
@@ -246,6 +249,15 @@ export default function DashboardPage() {
                   <Icon name="upload" size={18} />
                   <span>Upload Statement</span>
                 </Button>
+                <Button
+                  variant="soft"
+                  pill
+                  onClick={() => setShowAccountModal(true)}
+                  className="w-full sm:w-auto justify-center"
+                >
+                  <Icon name="wallet" size={18} />
+                  <span>Add Account</span>
+                </Button>
               </div>
             </div>
           </Card>
@@ -256,7 +268,7 @@ export default function DashboardPage() {
           <MotionCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.1 }}
           >
             <CardContent>
               <div className="flex items-start justify-between">
@@ -266,6 +278,7 @@ export default function DashboardPage() {
                   </p>
                   <AmountDisplay
                     value={stats.monthlyExpenses}
+                    currency={currency}
                     size="lg"
                     animated
                   />
@@ -284,7 +297,7 @@ export default function DashboardPage() {
           <MotionCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
+            transition={{ delay: 0.12 }}
           >
             <CardContent>
               <div className="flex items-start justify-between">
@@ -295,11 +308,12 @@ export default function DashboardPage() {
                   <div className="flex items-baseline gap-2">
                     <AmountDisplay
                       value={stats.budgetSpent}
+                      currency={currency}
                       size="lg"
                       animated
                     />
                     <span className="text-text-secondary text-sm">
-                      / €{stats.totalBudget.toFixed(0)}
+                      / {formatAmount(stats.totalBudget, 0)}
                     </span>
                   </div>
                 </div>
@@ -315,7 +329,7 @@ export default function DashboardPage() {
           <MotionCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.15 }}
             variant="warm"
           >
             <CardContent>
@@ -326,6 +340,7 @@ export default function DashboardPage() {
                   </p>
                   <AmountDisplay
                     value={Math.max(0, stats.savings)}
+                    currency={currency}
                     size="lg"
                     variant="income"
                     animated
@@ -345,7 +360,7 @@ export default function DashboardPage() {
           <MotionCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
+            transition={{ delay: 0.18 }}
             className="h-full"
           >
             <CardHeader>
@@ -372,13 +387,13 @@ export default function DashboardPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Spent</span>
                       <span className="font-medium">
-                        €{stats.budgetSpent.toFixed(2)}
+                        {formatAmount(stats.budgetSpent)}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-text-secondary">Budget</span>
                       <span className="font-medium">
-                        €{stats.totalBudget.toFixed(2)}
+                        {formatAmount(stats.totalBudget)}
                       </span>
                     </div>
                     <div className="pt-3 border-t border-border">
@@ -387,7 +402,7 @@ export default function DashboardPage() {
                         <span
                           className={`font-bold ${stats.totalBudget - stats.budgetSpent >= 0 ? "text-growth" : "text-expense"}`}
                         >
-                          €{(stats.totalBudget - stats.budgetSpent).toFixed(2)}
+                          {formatAmount(stats.totalBudget - stats.budgetSpent)}
                         </span>
                       </div>
                     </div>
@@ -401,103 +416,17 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.2 }}
           >
             <GoalsWidget />
           </motion.div>
         </div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-        >
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                <Tooltip content="Add a new transaction (Press 'n')">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowAddTransaction(true)}
-                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-primary-pale hover:bg-primary-light/30 transition-all group w-full"
-                  >
-                    <div className="p-2 sm:p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <Icon
-                        name="plus"
-                        size={20}
-                        className="text-primary sm:hidden"
-                      />
-                      <Icon
-                        name="plus"
-                        size={24}
-                        className="text-primary hidden sm:block"
-                      />
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
-                      Add Transaction
-                    </span>
-                  </Button>
-                </Tooltip>
-                <Tooltip content="Upload a bank statement (Press 'u')">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowUploadStatement(true)}
-                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-growth-pale hover:bg-growth-light/30 transition-all group w-full"
-                  >
-                    <div className="p-2 sm:p-3 rounded-xl bg-growth/10 group-hover:bg-growth/20 transition-colors">
-                      <Icon
-                        name="upload"
-                        size={20}
-                        className="text-growth sm:hidden"
-                      />
-                      <Icon
-                        name="upload"
-                        size={24}
-                        className="text-growth hidden sm:block"
-                      />
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
-                      Upload Statement
-                    </span>
-                  </Button>
-                </Tooltip>
-                <Tooltip content="Create a new account">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowAccountModal(true)}
-                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 h-auto rounded-2xl bg-info-light hover:bg-info/20 transition-all group w-full"
-                  >
-                    <div className="p-2 sm:p-3 rounded-xl bg-info/10 group-hover:bg-info/20 transition-colors">
-                      <Icon
-                        name="wallet"
-                        size={20}
-                        className="text-info sm:hidden"
-                      />
-                      <Icon
-                        name="wallet"
-                        size={24}
-                        className="text-info hidden sm:block"
-                      />
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-foreground text-center leading-tight">
-                      Add Account
-                    </span>
-                  </Button>
-                </Tooltip>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Recent Transactions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.25 }}
         >
           <Card>
             <CardHeader>

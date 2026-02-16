@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/NavBar";
 import ReportsCharts from "@/components/reports/ReportsCharts";
+import DateRangePicker from "@/components/DateRangePicker";
 import { Card, MotionCard, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { useCurrency } from "@/hooks/useCurrency";
+import { useDateRange } from "@/hooks/useDateRange";
 
 interface CategoryData {
   name: string;
@@ -41,11 +45,18 @@ const COLORS = [
 
 export default function ReportsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { currency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
+  const { dateRange, setDateRange, setPreset } = useDateRange("all");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch all transactions from Convex
-  const transactionsData = useQuery(api.transactions.list, { limit: 1000 });
+  // Fetch transactions from Convex with date filtering
+  const transactionsData = useQuery(api.transactions.list, {
+    limit: 1000,
+    dateFrom: dateRange.startDate || undefined,
+    dateTo: dateRange.endDate || undefined,
+  });
   const loading = transactionsData === undefined;
 
   // Process data for charts and summary
@@ -228,6 +239,52 @@ export default function ReportsPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-6">
+        {/* Date Range Filter */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className={showDatePicker ? "ring-2 ring-primary/30" : ""}
+            >
+              <Icon name="calendar" size={18} />
+              {dateRange.startDate ? "Custom Range" : "All Time"}
+            </Button>
+            {dateRange.startDate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPreset("all")}
+              >
+                Clear filter
+              </Button>
+            )}
+          </div>
+          <AnimatePresence>
+            {showDatePicker && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 overflow-hidden"
+              >
+                <Card className="bg-sand/30">
+                  <CardContent className="p-4">
+                    <DateRangePicker
+                      startDate={dateRange.startDate}
+                      endDate={dateRange.endDate}
+                      onChange={(start, end) =>
+                        setDateRange({ startDate: start, endDate: end })
+                      }
+                      onPresetChange={setPreset}
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             {[...Array(4)].map((_, i) => (
@@ -255,7 +312,7 @@ export default function ReportsPage() {
                       </p>
                       <AmountDisplay
                         value={summary.totalIncome}
-                        currency="EUR"
+                        currency={currency}
                         variant="income"
                         size="md"
                       />
@@ -276,7 +333,7 @@ export default function ReportsPage() {
                       </p>
                       <AmountDisplay
                         value={summary.totalExpenses}
-                        currency="EUR"
+                        currency={currency}
                         variant="expense"
                         size="md"
                       />
@@ -297,7 +354,7 @@ export default function ReportsPage() {
                       </p>
                       <AmountDisplay
                         value={summary.netSavings}
-                        currency="EUR"
+                        currency={currency}
                         variant={summary.netSavings >= 0 ? "income" : "expense"}
                         size="md"
                       />

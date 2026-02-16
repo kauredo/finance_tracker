@@ -35,17 +35,19 @@ export default function NavBar() {
 
   const navigation: { name: string; href: string; icon: IconName }[] = [
     { name: "Transactions", href: "/transactions", icon: "transactions" },
-    { name: "Categories", href: "/categories", icon: "tag" },
+    { name: "Accounts", href: "/accounts", icon: "wallet" },
     { name: "Budgets", href: "/budgets", icon: "chart" },
     { name: "Goals", href: "/goals", icon: "savings" },
-    { name: "Recurring", href: "/recurring", icon: "calendar" },
     { name: "Reports", href: "/reports", icon: "reports" },
   ];
 
-  const mobileNavigation = [
-    { name: "Dashboard", href: "/dashboard", icon: "dashboard" as IconName },
+  const mobileNavigation: { name: string; href: string; icon: IconName }[] = [
+    { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
     ...navigation,
-    { name: "Settings", href: "/settings", icon: "settings" as IconName },
+    { name: "Categories", href: "/categories", icon: "tag" },
+    { name: "Recurring", href: "/recurring", icon: "calendar" },
+    { name: "Export", href: "/export", icon: "download" },
+    { name: "Settings", href: "/settings", icon: "settings" },
   ];
 
   const handleSignOut = async () => {
@@ -62,7 +64,7 @@ export default function NavBar() {
   if (!user) return null;
 
   return (
-    <nav className="sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-border/50">
+    <nav className="sticky top-0 z-40 bg-surface border-b border-border/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -128,35 +130,8 @@ export default function NavBar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            {/* Global Search - Desktop only */}
-            <div className="hidden md:block">
-              <GlobalSearch />
-            </div>
-
-            {/* Theme Toggle - Desktop */}
-            <motion.button
-              onClick={toggleTheme}
-              className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-sand hover:bg-clay transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={theme}
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Icon
-                    name={theme === "light" ? "sun" : "moon"}
-                    size={20}
-                    className="text-foreground"
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
+            {/* Global Search */}
+            <GlobalSearch />
 
             {/* Desktop User Menu */}
             <div className="hidden md:block">

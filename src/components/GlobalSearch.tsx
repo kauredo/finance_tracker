@@ -8,6 +8,7 @@ import Icon from "@/components/icons/Icon";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface SearchResult {
   id: string;
@@ -24,6 +25,7 @@ export default function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { formatAmount } = useCurrency();
 
   // Only fetch data when search is open
   const transactionsData = useQuery(
@@ -156,7 +158,7 @@ export default function GlobalSearch() {
 
       {/* Search Modal */}
       <div className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl z-50 px-4">
-        <Card variant="glass" className="overflow-hidden">
+        <Card variant="default" className="overflow-hidden">
           {/* Search Input */}
           <div className="flex items-center gap-3 p-4 border-b border-border">
             <Icon name="search" size={20} className="text-muted" />
@@ -223,7 +225,8 @@ export default function GlobalSearch() {
                   <div
                     className={`font-semibold ${result.amount > 0 ? "text-success" : "text-foreground"}`}
                   >
-                    {result.amount > 0 ? "+" : ""}€{result.amount.toFixed(2)}
+                    {result.amount > 0 ? "+" : ""}
+                    {formatAmount(Math.abs(result.amount))}
                   </div>
                 )}
 

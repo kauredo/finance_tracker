@@ -9,6 +9,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/contexts/ToastContext";
+import { useCurrency } from "@/hooks/useCurrency";
 import { motion } from "motion/react";
 
 interface Category {
@@ -61,6 +62,7 @@ export default function BudgetCard({
   const [amount, setAmount] = useState(budget?.amount?.toString() || "");
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
+  const { symbol, formatAmount } = useCurrency();
 
   const percentage = budget ? Math.min((spent / budget.amount) * 100, 150) : 0;
   const clampedPercentage = Math.min(percentage, 100);
@@ -140,7 +142,7 @@ export default function BudgetCard({
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">
-                  €
+                  {symbol}
                 </span>
                 <Input
                   type="number"
@@ -271,10 +273,10 @@ export default function BudgetCard({
                 status === "wilting" ? "text-expense" : "text-foreground"
               }`}
             >
-              €{spent.toFixed(2)}
+              {formatAmount(spent)}
             </span>
             <span className="text-text-secondary text-sm">
-              / €{budget.amount.toFixed(2)}
+              / {formatAmount(budget.amount)}
             </span>
           </div>
         </div>
@@ -304,11 +306,11 @@ export default function BudgetCard({
           </span>
           {budget.amount - spent > 0 ? (
             <span className="text-foreground font-medium tabular-nums">
-              €{(budget.amount - spent).toFixed(2)} left
+              {formatAmount(budget.amount - spent)} left
             </span>
           ) : (
             <span className="text-expense font-medium tabular-nums">
-              €{Math.abs(budget.amount - spent).toFixed(2)} over
+              {formatAmount(Math.abs(budget.amount - spent))} over
             </span>
           )}
         </div>

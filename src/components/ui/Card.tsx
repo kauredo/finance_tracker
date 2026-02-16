@@ -16,9 +16,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
   ) => {
     const baseStyles = cn(
       "rounded-3xl p-6 transition-all duration-300",
-      variant !== "glass" &&
-        variant !== "growing" &&
-        "bg-surface border border-border shadow-sm",
+      variant !== "growing" && "bg-surface border border-border shadow-sm",
     );
 
     const variantStyles = {
@@ -31,10 +29,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
         "bg-gradient-to-br from-primary-pale via-surface to-growth-pale",
         "border-primary/20",
       ),
-      glass: cn(
-        "bg-surface/70 backdrop-blur-xl border border-border/40",
-        "shadow-lg",
-      ),
+      glass: "bg-cream border-border/60",
       growing: cn(
         "bg-surface border-2 border-transparent",
         "bg-clip-padding",
@@ -102,9 +97,7 @@ const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
   ) => {
     const baseStyles = cn(
       "rounded-3xl p-6",
-      variant !== "glass" &&
-        variant !== "growing" &&
-        "bg-surface border border-border shadow-sm",
+      variant !== "growing" && "bg-surface border border-border shadow-sm",
     );
 
     const variantStyles = {
@@ -114,10 +107,7 @@ const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
         "bg-gradient-to-br from-primary-pale via-surface to-growth-pale",
         "border-primary/20",
       ),
-      glass: cn(
-        "bg-surface/70 backdrop-blur-xl border border-border/40",
-        "shadow-lg",
-      ),
+      glass: "bg-cream border-border/60",
       growing: cn(
         "bg-surface border-2 border-transparent",
         "bg-clip-padding",
@@ -142,9 +132,7 @@ const MotionCard = forwardRef<HTMLDivElement, MotionCardProps>(
         className={cn(baseStyles, variantStyles[variant], className)}
         initial={initial ?? { opacity: 0, y: 20 }}
         animate={animate ?? { opacity: 1, y: 0 }}
-        transition={
-          transition ?? { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }
-        }
+        transition={transition ?? { duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         whileHover={whileHover ?? defaultHover}
         {...props}
       >

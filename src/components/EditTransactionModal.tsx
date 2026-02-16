@@ -16,6 +16,7 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 import Icon from "@/components/icons/Icon";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface EditTransactionModalProps {
   transactionId: Id<"transactions">;
@@ -29,6 +30,7 @@ export default function EditTransactionModal({
   onSuccess,
 }: EditTransactionModalProps) {
   const toast = useToast();
+  const { symbol } = useCurrency();
   const [loading, setLoading] = useState(false);
 
   // Fetch data using Convex
@@ -68,11 +70,18 @@ export default function EditTransactionModal({
     e.preventDefault();
     setLoading(true);
 
+    const parsedAmount = parseFloat(formData.amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.warning("Please enter a valid amount");
+      setLoading(false);
+      return;
+    }
+
     try {
       const finalAmount =
         formData.transactionType === "expense"
-          ? -Math.abs(parseFloat(formData.amount))
-          : Math.abs(parseFloat(formData.amount));
+          ? -Math.abs(parsedAmount)
+          : Math.abs(parsedAmount);
 
       await updateTransaction({
         id: transactionId,
@@ -228,7 +237,7 @@ export default function EditTransactionModal({
             {/* Amount */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Amount (€)
+                {`Amount (${symbol})`}
               </label>
               <Input
                 type="number"

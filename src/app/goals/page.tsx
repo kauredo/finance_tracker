@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/Badge";
 import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { motion } from "motion/react";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Goal {
   _id: Id<"goals">;
@@ -32,6 +33,7 @@ interface Goal {
 
 export default function GoalsPage() {
   const { loading: authLoading, isAuthenticated } = useAuth();
+  const { currency } = useCurrency();
   const { error: showError, success: showSuccess } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | undefined>(undefined);
@@ -144,7 +146,6 @@ export default function GoalsPage() {
             <MotionCard
               variant="glass"
               transition={{ delay: 0.1 }}
-              className="backdrop-blur-xl"
             >
               <div className="flex items-center gap-4 h-full min-h-[64px]">
                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-growth-pale rounded-2xl">
@@ -156,7 +157,7 @@ export default function GoalsPage() {
                   </p>
                   <AmountDisplay
                     value={totalSaved}
-                    currency="EUR"
+                    currency={currency}
                     variant="income"
                     size="md"
                   />
@@ -167,7 +168,6 @@ export default function GoalsPage() {
             <MotionCard
               variant="glass"
               transition={{ delay: 0.2 }}
-              className="backdrop-blur-xl"
             >
               <div className="flex items-center gap-4 h-full min-h-[64px]">
                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
@@ -177,7 +177,11 @@ export default function GoalsPage() {
                   <p className="text-sm text-text-secondary font-medium">
                     Total Target
                   </p>
-                  <AmountDisplay value={totalTarget} currency="EUR" size="md" />
+                  <AmountDisplay
+                    value={totalTarget}
+                    currency={currency}
+                    size="md"
+                  />
                 </div>
               </div>
             </MotionCard>
@@ -185,7 +189,6 @@ export default function GoalsPage() {
             <MotionCard
               variant="glass"
               transition={{ delay: 0.3 }}
-              className="backdrop-blur-xl"
             >
               <div className="flex items-center gap-6 h-full min-h-[64px]">
                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">

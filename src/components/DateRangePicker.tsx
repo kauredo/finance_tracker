@@ -28,7 +28,7 @@ export default function DateRangePicker({
   ];
 
   return (
-    <Card variant="glass" className="p-3 sm:p-4">
+    <Card variant="default" className="p-3 sm:p-4">
       <div className="space-y-3 sm:space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">

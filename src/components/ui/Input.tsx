@@ -394,7 +394,7 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
           <div
             className={cn(
               "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm",
-              "transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+              "transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
               "peer-checked:translate-x-5",
             )}
           />

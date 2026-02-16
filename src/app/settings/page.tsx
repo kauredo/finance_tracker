@@ -66,11 +66,6 @@ export default function SettingsPage() {
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const [formInitialized, setFormInitialized] = useState(false);
 
-  // Password states
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
-
   const loading = profile === undefined;
 
   // Initialize form when profile loads
@@ -107,37 +102,6 @@ export default function SettingsPage() {
       showError("Failed to update profile");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      showError("Passwords do not match");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      showError("Password must be at least 6 characters");
-      return;
-    }
-
-    setPasswordLoading(true);
-
-    try {
-      // Note: Password update with Convex Auth requires special handling
-      // For now, show a message that this feature needs to be implemented
-      showError(
-        "Password change is not yet available with the new auth system",
-      );
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error: any) {
-      console.error("Error updating password:", error);
-      showError(error.message);
-    } finally {
-      setPasswordLoading(false);
     }
   };
 
@@ -364,55 +328,23 @@ export default function SettingsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleUpdatePassword} className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        New Password
-                      </label>
-                      <Input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="••••••••"
-                        minLength={6}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Confirm New Password
-                      </label>
-                      <Input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
-                        minLength={6}
-                      />
-                    </div>
+                <div className="flex items-start gap-3 p-4 bg-sand/50 rounded-2xl">
+                  <Icon
+                    name="tip"
+                    size={20}
+                    className="text-text-secondary mt-0.5 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm text-foreground font-medium">
+                      Password management is handled by your authentication
+                      provider.
+                    </p>
+                    <p className="text-sm text-text-secondary mt-1">
+                      To reset your password, sign out and use the &quot;Forgot
+                      password&quot; link on the login page.
+                    </p>
                   </div>
-
-                  <div className="flex justify-end pt-4 border-t border-border">
-                    <Button
-                      type="submit"
-                      variant="secondary"
-                      disabled={passwordLoading || !newPassword}
-                    >
-                      {passwordLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <Icon name="lock" size={18} />
-                          Update Password
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
+                </div>
               </CardContent>
             </Card>
           </motion.div>

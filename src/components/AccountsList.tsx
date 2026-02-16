@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Icon from "@/components/icons/Icon";
+import { useCurrency } from "@/hooks/useCurrency";
 import { motion } from "motion/react";
 
 interface AccountsListProps {
@@ -13,6 +14,7 @@ interface AccountsListProps {
 }
 
 export default function AccountsList({ onAddClick }: AccountsListProps) {
+  const { formatAmount } = useCurrency();
   // Fetch accounts using Convex - automatically reactive
   const accounts = useQuery(api.accounts.list);
 
@@ -100,9 +102,7 @@ export default function AccountsList({ onAddClick }: AccountsListProps) {
                     }`}
                   >
                     {account.balance != null
-                      ? `€${account.balance.toLocaleString("de-DE", {
-                          minimumFractionDigits: 2,
-                        })}`
+                      ? formatAmount(account.balance)
                       : "—"}
                   </p>
                 </div>

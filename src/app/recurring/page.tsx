@@ -15,6 +15,7 @@ import RecurringTransactionModal from "@/components/RecurringTransactionModal";
 import Image from "next/image";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface RecurringTransaction {
   _id: Id<"recurringTransactions">;
@@ -42,6 +43,7 @@ const intervalLabels: Record<string, string> = {
 
 export default function RecurringPage() {
   const { user, loading: authLoading } = useAuth();
+  const { formatAmount } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<Id<"recurringTransactions"> | undefined>(
     undefined,
@@ -167,8 +169,8 @@ export default function RecurringPage() {
                       <p
                         className={`text-3xl font-bold tabular-nums ${monthlyTotal >= 0 ? "text-growth" : "text-foreground"}`}
                       >
-                        {monthlyTotal >= 0 ? "+" : ""}€
-                        {Math.abs(monthlyTotal).toFixed(2)}
+                        {monthlyTotal >= 0 ? "+" : ""}
+                        {formatAmount(Math.abs(monthlyTotal))}
                       </p>
                     </div>
                     <div className="text-right">
@@ -331,6 +333,7 @@ function RecurringCard({
   onDelete: (id: Id<"recurringTransactions">) => void;
   onToggle: (id: Id<"recurringTransactions">) => void;
 }) {
+  const { formatAmount } = useCurrency();
   const nextDate = new Date(item.nextRunDate);
   const isUpcoming = nextDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -374,7 +377,8 @@ function RecurringCard({
                       item.amount >= 0 ? "text-growth" : "text-foreground"
                     }`}
                   >
-                    {item.amount >= 0 ? "+" : ""}€{Math.abs(item.amount).toFixed(2)}
+                    {item.amount >= 0 ? "+" : ""}
+                    {formatAmount(Math.abs(item.amount))}
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm text-text-secondary mt-0.5">
@@ -384,7 +388,9 @@ function RecurringCard({
                   <span className="hidden sm:inline">•</span>
                   <span
                     className={
-                      isUpcoming && item.active ? "text-primary font-medium" : ""
+                      isUpcoming && item.active
+                        ? "text-primary font-medium"
+                        : ""
                     }
                   >
                     {isUpcoming && item.active ? "Soon: " : "Next: "}
@@ -403,7 +409,8 @@ function RecurringCard({
                   item.amount >= 0 ? "text-growth" : "text-foreground"
                 }`}
               >
-                {item.amount >= 0 ? "+" : ""}€{Math.abs(item.amount).toFixed(2)}
+                {item.amount >= 0 ? "+" : ""}
+                {formatAmount(Math.abs(item.amount))}
               </span>
             </div>
 

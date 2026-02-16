@@ -38,14 +38,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variantStyles = {
       primary: cn(
         "bg-primary text-white shadow-sm",
-        "hover:bg-primary-dark hover:shadow-md hover:-translate-y-0.5",
-        "active:translate-y-0 active:shadow-sm",
+        "hover:bg-primary-dark hover:shadow-md",
         "hover:shadow-[0_4px_14px_rgba(255,143,171,0.4)]",
       ),
       secondary: cn(
         "bg-surface border-2 border-border text-foreground shadow-sm",
-        "hover:border-primary/40 hover:bg-primary-pale hover:shadow-md hover:-translate-y-0.5",
-        "active:translate-y-0 active:shadow-sm",
+        "hover:border-primary/40 hover:bg-primary-pale hover:shadow-md",
       ),
       ghost: cn(
         "text-foreground",
@@ -54,20 +52,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ),
       danger: cn(
         "bg-danger text-white shadow-sm",
-        "hover:bg-danger/90 hover:shadow-md hover:-translate-y-0.5",
+        "hover:bg-danger/90 hover:shadow-md",
         "hover:shadow-[0_4px_14px_rgba(229,115,115,0.4)]",
-        "active:translate-y-0 active:shadow-sm",
       ),
       bloom: cn(
         "bg-growth text-white shadow-sm",
-        "hover:bg-growth-dark hover:shadow-md hover:-translate-y-0.5",
+        "hover:bg-growth-dark hover:shadow-md",
         "hover:shadow-[0_4px_14px_rgba(124,180,130,0.4)]",
-        "active:translate-y-0 active:shadow-sm",
       ),
       soft: cn(
-        "bg-surface/80 backdrop-blur-sm border border-border/50 text-foreground",
-        "hover:bg-surface hover:border-border hover:shadow-md hover:-translate-y-0.5",
-        "active:translate-y-0 active:shadow-sm",
+        "bg-surface border border-border/50 text-foreground",
+        "hover:bg-surface hover:border-border hover:shadow-md",
       ),
     };
 
@@ -156,7 +151,7 @@ const MotionButton = forwardRef<
       ghost: "text-foreground hover:bg-sand",
       danger: "bg-danger text-white shadow-sm",
       bloom: "bg-growth text-white shadow-sm",
-      soft: "bg-surface/80 backdrop-blur-sm border border-border/50 text-foreground",
+      soft: "bg-surface border border-border/50 text-foreground",
     };
 
     const sizeStyles = {
@@ -183,7 +178,6 @@ const MotionButton = forwardRef<
         disabled={disabled || isLoading}
         whileHover={{
           scale: 1.02,
-          y: -2,
           boxShadow:
             variant === "primary"
               ? "0 8px 20px rgba(255,143,171,0.35)"
@@ -191,7 +185,7 @@ const MotionButton = forwardRef<
                 ? "0 8px 20px rgba(124,180,130,0.35)"
                 : "0 8px 20px rgba(93,74,61,0.15)",
         }}
-        whileTap={{ scale: 0.98, y: 0 }}
+        whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
         {...props}
       >

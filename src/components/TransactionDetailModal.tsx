@@ -18,6 +18,7 @@ import {
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import EditTransactionModal from "@/components/EditTransactionModal";
 import Icon from "@/components/icons/Icon";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface TransactionDetailModalProps {
   transactionId: Id<"transactions">;
@@ -31,6 +32,7 @@ export default function TransactionDetailModal({
   onUpdate,
 }: TransactionDetailModalProps) {
   const toast = useToast();
+  const { formatAmount } = useCurrency();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -103,8 +105,8 @@ export default function TransactionDetailModal({
               <div
                 className={`text-3xl font-bold tabular-nums ${isExpense ? "text-expense" : "text-growth"}`}
               >
-                {isExpense ? "-" : "+"}€
-                {Math.abs(transaction.amount).toFixed(2)}
+                {isExpense ? "-" : "+"}
+                {formatAmount(Math.abs(transaction.amount))}
               </div>
             </div>
 

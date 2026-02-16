@@ -55,7 +55,7 @@ export default function WelcomeTour({ onClose }: WelcomeTourProps) {
       aria-labelledby="welcome-tour-title"
     >
       <Card
-        variant="glass"
+        variant="default"
         className="w-full max-w-md overflow-hidden relative"
       >
         <Button

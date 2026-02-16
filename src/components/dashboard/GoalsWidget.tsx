@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
+import { useCurrency } from "@/hooks/useCurrency";
 import { motion } from "motion/react";
 
 // Plant growth stages based on progress
@@ -25,6 +26,7 @@ export default function GoalsWidget() {
   const goals = useQuery(api.goals.list);
 
   const loading = goals === undefined;
+  const { formatAmount } = useCurrency();
 
   if (loading)
     return (
@@ -113,10 +115,10 @@ export default function GoalsWidget() {
                       </div>
                       <div className="flex items-baseline gap-1 text-sm">
                         <span className="font-bold text-foreground tabular-nums">
-                          €{goal.currentAmount.toLocaleString()}
+                          {formatAmount(goal.currentAmount, 0)}
                         </span>
                         <span className="text-muted">
-                          / €{goal.targetAmount.toLocaleString()}
+                          / {formatAmount(goal.targetAmount, 0)}
                         </span>
                       </div>
                     </div>
@@ -125,7 +127,7 @@ export default function GoalsWidget() {
                     <div className="text-right hidden sm:block">
                       <p className="text-xs text-text-secondary">Remaining</p>
                       <p className="text-sm font-medium text-foreground tabular-nums">
-                        €{remaining.toLocaleString()}
+                        {formatAmount(remaining, 0)}
                       </p>
                     </div>
                   </div>
