@@ -405,7 +405,8 @@ export default function UploadStatementModal({
                 />
                 <span>
                   AI extraction may contain errors. Click any value to edit it.
-                  Negative amounts are expenses, positive are income.
+                  Negative amounts are expenses, positive are income. Editing
+                  values won&apos;t re-check for duplicates.
                 </span>
               </div>
 

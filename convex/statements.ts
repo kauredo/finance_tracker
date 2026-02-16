@@ -123,38 +123,45 @@ export const parseStatement = action({
       wasTruncated = result.wasTruncated;
     } else if (["png", "jpg", "jpeg"].includes(fileExt)) {
       const arrayBuffer = await response.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
       const mimeType = fileExt === "png" ? "image/png" : "image/jpeg";
       transactions = await parseStatementWithVision(
         [{ base64, mimeType }],
         categoryNames,
       );
     } else if (fileExt === "pdf") {
-      const arrayBuffer = await response.arrayBuffer();
-      const pdfText = await extractTextFromPDF(arrayBuffer);
-      if (pdfText && pdfText.trim().length > 100) {
-        const result = await parseStatementWithAI(
-          pdfText,
-          "text",
-          categoryNames,
-        );
-        transactions = result.transactions;
-        wasTruncated = result.wasTruncated;
-      } else {
-        const base64 = Buffer.from(arrayBuffer).toString("base64");
-        transactions = await parseStatementWithVision(
-          [{ base64, mimeType: "application/pdf" }],
-          categoryNames,
+      const pdfText = await ctx.runAction(
+        internal.statementsNode.extractPdfText,
+        { storageId: args.storageId },
+      );
+      if (!pdfText || pdfText.trim().length < 50) {
+        throw new Error(
+          "Could not extract text from this PDF. It may be a scanned document. Please upload a CSV export or images of individual pages instead.",
         );
       }
+      const result = await parseStatementWithAI(
+        pdfText,
+        "text",
+        categoryNames,
+      );
+      transactions = result.transactions;
+      wasTruncated = result.wasTruncated;
     } else {
       throw new Error(`Unsupported file type: ${fileExt}`);
     }
 
     const validatedTransactions = validateTransactions(transactions);
     if (validatedTransactions.length === 0) {
+      const count = transactions.length;
       throw new Error(
-        "No valid transactions found in the statement. Please check the file format.",
+        count > 0
+          ? `Extracted ${count} transaction${count === 1 ? "" : "s"} but none passed validation. Common issues: dates not in a recognized format, zero amounts, or descriptions shorter than 2 characters.`
+          : "No transactions found in the statement. The file may not contain a recognizable transactions table.",
       );
     }
     const categoryMap = new Map<string, { id: Id<"categories">; name: string }>(
@@ -241,6 +248,13 @@ export const commitStatement = action({
 
     if (args.transactions.length === 0) {
       throw new Error("No transactions selected for import.");
+    }
+
+    const MAX_TRANSACTIONS = 500;
+    if (args.transactions.length > MAX_TRANSACTIONS) {
+      throw new Error(
+        `Too many transactions (${args.transactions.length}). Maximum is ${MAX_TRANSACTIONS} per upload.`,
+      );
     }
 
     // Validate each transaction before saving
@@ -370,50 +384,6 @@ function decodeTextWithFallback(arrayBuffer: ArrayBuffer): string {
       return decoder.decode(uint8Array);
     }
   }
-}
-
-/**
- * Extract text from PDF using basic text extraction
- */
-async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
-  const uint8Array = new Uint8Array(arrayBuffer);
-  let text = "";
-
-  const pdfString = new TextDecoder("latin1").decode(uint8Array);
-
-  // Look for stream content
-  const streamMatches = pdfString.match(
-    /stream[\r\n]+([\s\S]*?)[\r\n]+endstream/g,
-  );
-  if (streamMatches) {
-    for (const match of streamMatches) {
-      const textMatches = match.match(/\(([^)]+)\)/g);
-      if (textMatches) {
-        for (const textMatch of textMatches) {
-          const extracted = textMatch.slice(1, -1);
-          const cleanText = extracted.replace(/[^\x20-\x7E\xA0-\xFF]/g, " ");
-          if (cleanText.trim()) {
-            text += cleanText + " ";
-          }
-        }
-      }
-    }
-  }
-
-  // Also try to find plain text content
-  const plainTextMatches = pdfString.match(/\/T[cj]\s*\[([^\]]+)\]/g);
-  if (plainTextMatches) {
-    for (const match of plainTextMatches) {
-      const textParts = match.match(/\(([^)]+)\)/g);
-      if (textParts) {
-        for (const part of textParts) {
-          text += part.slice(1, -1) + " ";
-        }
-      }
-    }
-  }
-
-  return text.trim();
 }
 
 // ============================================

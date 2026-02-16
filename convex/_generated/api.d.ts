@@ -20,6 +20,7 @@ import type * as http from "../http.js";
 import type * as lib_access from "../lib/access.js";
 import type * as recurring from "../recurring.js";
 import type * as statements from "../statements.js";
+import type * as statementsNode from "../statementsNode.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   "lib/access": typeof lib_access;
   recurring: typeof recurring;
   statements: typeof statements;
+  statementsNode: typeof statementsNode;
   transactions: typeof transactions;
   users: typeof users;
 }>;

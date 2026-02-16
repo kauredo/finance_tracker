@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import Icon, { IconName } from "@/components/icons/Icon";
 import { Badge } from "@/components/ui/Badge";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { motion } from "motion/react";
@@ -61,6 +62,7 @@ export default function BudgetCard({
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState(budget?.amount?.toString() || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { success, error } = useToast();
   const { symbol, formatAmount } = useCurrency();
 
@@ -92,11 +94,10 @@ export default function BudgetCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to remove this budget?")) return;
-
     setIsLoading(true);
     try {
       await onDelete();
+      setShowDeleteModal(false);
       setAmount("");
       success("Budget removed from garden");
     } catch (_err) {
@@ -212,7 +213,8 @@ export default function BudgetCard({
             <Icon name="edit" size={16} />
           </Button>
           <Button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteModal(true)}
+            disabled={isLoading}
             variant="ghost"
             size="sm"
             className="p-2 h-auto text-text-secondary hover:text-expense hover:bg-expense/10"
@@ -315,6 +317,18 @@ export default function BudgetCard({
           )}
         </div>
       </Card>
+
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          title="Remove Budget"
+          message="Are you sure you want to remove this budget? The category and its transactions will not be affected."
+          itemName={category.name}
+          confirmText="Remove"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteModal(false)}
+          isLoading={isLoading}
+        />
+      )}
     </motion.div>
   );
 }

@@ -286,60 +286,91 @@ export const processAll = internalMutation({
 
     const toProcess = dueTransactions.filter((r) => r.nextRunDate <= today);
 
-    let createdCount = 0;
+    let successCount = 0;
+    let failedCount = 0;
+    let skippedCount = 0;
 
     for (const recurring of toProcess) {
-      if (!recurring.accountId) continue;
-
-      // Get household owner to attribute the transaction
-      const householdMembers = await ctx.db
-        .query("householdMembers")
-        .withIndex("by_household", (q) =>
-          q.eq("householdId", recurring.householdId),
-        )
-        .collect();
-
-      const owner = householdMembers.find((m) => m.role === "owner");
-      if (!owner) continue;
-
-      // Create the transaction
-      await ctx.db.insert("transactions", {
-        accountId: recurring.accountId,
-        categoryId: recurring.categoryId,
-        userId: owner.userId,
-        date: recurring.nextRunDate,
-        description: recurring.description,
-        amount: recurring.amount,
-        isRecurring: true,
-        createdAt: Date.now(),
-      });
-
-      // Update account balance
-      const account = await ctx.db.get(recurring.accountId);
-      if (account) {
-        await ctx.db.patch(recurring.accountId, {
-          balance: (account.balance ?? 0) + recurring.amount,
-          updatedAt: Date.now(),
-        });
+      if (!recurring.accountId) {
+        console.error(
+          `Skipping recurring ${recurring._id} ("${recurring.description}"): no accountId`,
+        );
+        skippedCount++;
+        continue;
       }
 
-      // Calculate and set next run date
-      const nextRunDate = calculateNextRunDate(
-        recurring.nextRunDate,
-        recurring.interval,
-        recurring.dayOfMonth ?? undefined,
-        recurring.dayOfWeek ?? undefined,
-      );
+      try {
+        // Get household owner to attribute the transaction
+        const householdMembers = await ctx.db
+          .query("householdMembers")
+          .withIndex("by_household", (q) =>
+            q.eq("householdId", recurring.householdId),
+          )
+          .collect();
 
-      await ctx.db.patch(recurring._id, {
-        lastRunDate: recurring.nextRunDate,
-        nextRunDate,
-        updatedAt: Date.now(),
-      });
+        const owner = householdMembers.find((m) => m.role === "owner");
+        if (!owner) {
+          console.error(
+            `Skipping recurring ${recurring._id} ("${recurring.description}"): no household owner`,
+          );
+          skippedCount++;
+          continue;
+        }
 
-      createdCount++;
+        // Create the transaction
+        await ctx.db.insert("transactions", {
+          accountId: recurring.accountId,
+          categoryId: recurring.categoryId,
+          userId: owner.userId,
+          date: recurring.nextRunDate,
+          description: recurring.description,
+          amount: recurring.amount,
+          isRecurring: true,
+          createdAt: Date.now(),
+        });
+
+        // Update account balance
+        const account = await ctx.db.get(recurring.accountId);
+        if (account) {
+          await ctx.db.patch(recurring.accountId, {
+            balance: (account.balance ?? 0) + recurring.amount,
+            updatedAt: Date.now(),
+          });
+        }
+
+        // Calculate and set next run date
+        const nextRunDate = calculateNextRunDate(
+          recurring.nextRunDate,
+          recurring.interval,
+          recurring.dayOfMonth ?? undefined,
+          recurring.dayOfWeek ?? undefined,
+        );
+
+        await ctx.db.patch(recurring._id, {
+          lastRunDate: recurring.nextRunDate,
+          nextRunDate,
+          updatedAt: Date.now(),
+        });
+
+        successCount++;
+      } catch (error) {
+        console.error(
+          `Failed to process recurring ${recurring._id} ("${recurring.description}"):`,
+          error,
+        );
+        failedCount++;
+      }
     }
 
-    return { processed: createdCount };
+    console.log(
+      `Recurring transactions: ${successCount} processed, ${failedCount} failed, ${skippedCount} skipped out of ${toProcess.length} due`,
+    );
+
+    return {
+      processed: successCount,
+      failed: failedCount,
+      skipped: skippedCount,
+      total: toProcess.length,
+    };
   },
 });

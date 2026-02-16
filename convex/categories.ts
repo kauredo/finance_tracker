@@ -180,9 +180,11 @@ export const remove = mutation({
       }
 
       // Reassign all transactions to the new category
-      for (const tx of transactionsWithCategory) {
-        await ctx.db.patch(tx._id, { categoryId: args.reassignTo });
-      }
+      await Promise.all(
+        transactionsWithCategory.map((tx) =>
+          ctx.db.patch(tx._id, { categoryId: args.reassignTo }),
+        ),
+      );
     }
 
     await ctx.db.delete(args.id);

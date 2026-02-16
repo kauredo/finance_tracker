@@ -12,10 +12,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
 import Icon, { IconName } from "@/components/icons/Icon";
 import RecurringTransactionModal from "@/components/RecurringTransactionModal";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import Image from "next/image";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "motion/react";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useToast } from "@/contexts/ToastContext";
 
 interface RecurringTransaction {
   _id: Id<"recurringTransactions">;
@@ -44,11 +46,18 @@ const intervalLabels: Record<string, string> = {
 export default function RecurringPage() {
   const { user, loading: authLoading } = useAuth();
   const { formatAmount } = useCurrency();
+  const { success, error: showError } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<Id<"recurringTransactions"> | undefined>(
     undefined,
   );
   const [suggestionData, setSuggestionData] = useState<any>(undefined);
+  const [deleteTarget, setDeleteTarget] =
+    useState<Id<"recurringTransactions"> | null>(null);
+  const [deletingId, setDeletingId] =
+    useState<Id<"recurringTransactions"> | null>(null);
+  const [togglingId, setTogglingId] =
+    useState<Id<"recurringTransactions"> | null>(null);
 
   // Fetch recurring transactions from Convex
   const recurringData = useQuery(api.recurring.list);
@@ -70,22 +79,30 @@ export default function RecurringPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: Id<"recurringTransactions">) => {
-    if (!confirm("Are you sure you want to delete this recurring transaction?"))
-      return;
-
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget);
     try {
-      await deleteRecurring({ id });
+      await deleteRecurring({ id: deleteTarget });
+      setDeleteTarget(null);
+      success("Recurring transaction deleted");
     } catch (error) {
       console.error("Error deleting:", error);
+      showError("Failed to delete recurring transaction");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleToggle = async (id: Id<"recurringTransactions">) => {
+    setTogglingId(id);
     try {
       await toggleRecurring({ id });
     } catch (error) {
       console.error("Error toggling:", error);
+      showError("Failed to update recurring transaction");
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -240,8 +257,10 @@ export default function RecurringPage() {
                           item={item}
                           index={index}
                           onEdit={handleEdit}
-                          onDelete={handleDelete}
+                          onDelete={(id) => setDeleteTarget(id)}
                           onToggle={handleToggle}
+                          isDeleting={deletingId === item._id}
+                          isToggling={togglingId === item._id}
                         />
                       ))}
                     </AnimatePresence>
@@ -275,8 +294,10 @@ export default function RecurringPage() {
                           item={item}
                           index={index}
                           onEdit={handleEdit}
-                          onDelete={handleDelete}
+                          onDelete={(id) => setDeleteTarget(id)}
                           onToggle={handleToggle}
+                          isDeleting={deletingId === item._id}
+                          isToggling={togglingId === item._id}
                         />
                       ))}
                     </AnimatePresence>
@@ -315,6 +336,17 @@ export default function RecurringPage() {
         editId={editId}
         initialData={suggestionData}
       />
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          title="Delete Recurring Transaction"
+          message="Are you sure you want to delete this recurring transaction? Future occurrences will no longer be created."
+          confirmText="Delete"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+          isLoading={deletingId !== null}
+        />
+      )}
     </>
   );
 }
@@ -326,12 +358,16 @@ function RecurringCard({
   onEdit,
   onDelete,
   onToggle,
+  isDeleting = false,
+  isToggling = false,
 }: {
   item: RecurringTransaction;
   index: number;
   onEdit: (id: Id<"recurringTransactions">) => void;
   onDelete: (id: Id<"recurringTransactions">) => void;
   onToggle: (id: Id<"recurringTransactions">) => void;
+  isDeleting?: boolean;
+  isToggling?: boolean;
 }) {
   const { formatAmount } = useCurrency();
   const nextDate = new Date(item.nextRunDate);
@@ -418,6 +454,7 @@ function RecurringCard({
             <div className="flex items-center gap-1 justify-end sm:justify-start md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               <Button
                 onClick={() => onToggle(item._id)}
+                disabled={isToggling}
                 variant="ghost"
                 size="sm"
                 className={`p-2 h-auto ${
@@ -427,7 +464,11 @@ function RecurringCard({
                 }`}
                 title={item.active ? "Pause" : "Resume"}
               >
-                <Icon name={item.active ? "check" : "close"} size={18} />
+                <Icon
+                  name={item.active ? "check" : "close"}
+                  size={18}
+                  className={isToggling ? "animate-pulse" : ""}
+                />
               </Button>
               <Button
                 onClick={() => onEdit(item._id)}
@@ -440,6 +481,7 @@ function RecurringCard({
               </Button>
               <Button
                 onClick={() => onDelete(item._id)}
+                disabled={isDeleting}
                 variant="ghost"
                 size="sm"
                 className="p-2 h-auto text-text-secondary hover:text-expense hover:bg-expense/10"
