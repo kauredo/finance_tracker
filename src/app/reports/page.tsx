@@ -81,6 +81,7 @@ export default function ReportsPage() {
     let totalExpenses = 0;
 
     transactionsData.transactions.forEach((tx) => {
+      if (tx.isTransfer) return; // Exclude transfers from cash flow stats
       const categoryName = tx.category?.name || "Other";
       const amount = tx.amount;
       const date = new Date(tx.date);

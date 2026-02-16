@@ -89,6 +89,7 @@ export const parseStatement = action({
       category: string;
       categoryId: Id<"categories"> | undefined;
       isDuplicate: boolean;
+      isTransfer: boolean;
     }>;
     availableCategories: Array<{ id: Id<"categories">; name: string }>;
     storageId: Id<"_storage">;
@@ -190,6 +191,7 @@ export const parseStatement = action({
       const key = `${t.date}|${t.amount}|${t.description.toLowerCase().slice(0, 30)}`;
       const isDuplicate = existingSet.has(key);
       const mapped = categoryMap.get(t.category.toLowerCase());
+      const isTransfer = t.category.toLowerCase() === "transfer";
       return {
         date: t.date,
         description: t.description,
@@ -197,6 +199,7 @@ export const parseStatement = action({
         category: mapped?.name || otherCategory?.name || "Other",
         categoryId: mapped?.id || otherCategory?.id || undefined,
         isDuplicate,
+        isTransfer,
       };
     });
 
@@ -232,6 +235,7 @@ export const commitStatement = action({
         description: v.string(),
         amount: v.number(),
         categoryId: v.optional(v.id("categories")),
+        isTransfer: v.optional(v.boolean()),
       }),
     ),
   },
@@ -293,9 +297,15 @@ export const commitStatement = action({
       },
     );
 
-    await ctx.runMutation(api.transactions.bulkCreate, {
+    const { ids } = await ctx.runMutation(api.transactions.bulkCreate, {
       accountId: args.accountId,
       transactions: transactionsWithNotes,
+    });
+
+    // Auto-detect transfers by matching against other accounts
+    await ctx.runMutation(internal.transactions.detectTransfers, {
+      accountId: args.accountId,
+      transactionIds: ids,
     });
 
     return {
@@ -609,7 +619,9 @@ RULES:
 
 4. CATEGORIES: Assign each transaction to the best match from this list: ${categoryNames.join(", ")}. If none fit, use "Other".
 
-5. IGNORE: Running balances, account numbers, headers, footers.`;
+5. IGNORE: Running balances, account numbers, headers, footers.
+
+6. TRANSFERS: If a transaction appears to be an internal transfer between accounts (e.g., contains "transfer", "TRF", "internal", "to savings", "from checking", or similar patterns), set category to "Transfer".`;
 
   const userPrompt = `Parse this ${fileLabel} and extract all transactions.
 
@@ -675,7 +687,9 @@ RULES:
 
 4. CATEGORIES: Assign each transaction to the best match from: ${categoryNames.join(", ")}. If none fit, use "Other".
 
-5. IGNORE: Balance columns, account numbers, headers.`;
+5. IGNORE: Balance columns, account numbers, headers.
+
+6. TRANSFERS: If a transaction appears to be an internal transfer between accounts (e.g., contains "transfer", "TRF", "internal", "to savings", "from checking"), set category to "Transfer".`;
 
   const userPrompt = `Extract ALL transactions from this bank statement. Debit amounts are NEGATIVE, credit amounts are POSITIVE. Extract EVERY visible transaction.`;
 

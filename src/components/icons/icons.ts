@@ -106,6 +106,7 @@ export const icons = {
   menu: "M4 6h16M4 12h16M4 18h16",
   arrow_left: "M10 19l-7-7m0 0l7-7m-7 7h18",
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  transfer: "M7 16l-4-4m0 0l4-4m-4 4h18M17 8l4 4m0 0l-4 4m4-4H3",
 };
 
 export type IconName =
@@ -169,7 +170,8 @@ export type IconName =
   | "shield"
   | "subscriptions"
   | "personal_care"
-  | "travel";
+  | "travel"
+  | "transfer";
 
 // Overwriting piggy_bank with a better "Savings" icon (Piggy bank style)
 // M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z is moon

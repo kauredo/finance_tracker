@@ -31,6 +31,7 @@ interface PreviewTransaction {
   category: string;
   categoryId?: Id<"categories">;
   isDuplicate: boolean;
+  isTransfer: boolean;
   selected: boolean;
 }
 
@@ -163,6 +164,7 @@ export default function UploadStatementModal({
             category: string;
             categoryId?: Id<"categories">;
             isDuplicate: boolean;
+            isTransfer: boolean;
           }) => ({
             ...t,
             selected: !t.isDuplicate,
@@ -220,6 +222,7 @@ export default function UploadStatementModal({
           description: t.description,
           amount: t.amount,
           categoryId: t.categoryId,
+          isTransfer: t.isTransfer || undefined,
         })),
       });
 
@@ -478,6 +481,24 @@ export default function UploadStatementModal({
                               }
                               className="text-sm w-full min-w-[120px] border border-transparent rounded-lg px-1.5 py-0.5 bg-transparent hover:border-border focus:border-primary focus:bg-surface focus:outline-none disabled:hover:border-transparent"
                             />
+                            {t.isTransfer && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPreviewTransactions((prev) =>
+                                    prev.map((pt, pi) =>
+                                      pi === i
+                                        ? { ...pt, isTransfer: !pt.isTransfer }
+                                        : pt,
+                                    ),
+                                  )
+                                }
+                                className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary whitespace-nowrap hover:bg-primary/20 transition-colors"
+                                title="Click to remove transfer flag"
+                              >
+                                transfer
+                              </button>
+                            )}
                             {t.isDuplicate && (
                               <span className="text-xs px-1.5 py-0.5 rounded bg-warning/10 text-warning whitespace-nowrap">
                                 duplicate

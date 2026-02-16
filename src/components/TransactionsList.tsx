@@ -19,6 +19,7 @@ interface Transaction {
   date: string;
   description: string;
   amount: number;
+  isTransfer?: boolean;
   category: {
     _id: Id<"categories">;
     name: string;
@@ -218,6 +219,15 @@ export default function TransactionsList({
                           <span className="text-xs text-text-secondary">
                             {t.account?.name || "Unknown"}
                           </span>
+                          {t.isTransfer && (
+                            <>
+                              <span className="text-text-secondary">•</span>
+                              <span className="inline-flex items-center gap-0.5 text-xs text-text-secondary">
+                                <Icon name="transfer" size={11} />
+                                Transfer
+                              </span>
+                            </>
+                          )}
                           {t.notes && (
                             <>
                               <span className="text-text-secondary">•</span>

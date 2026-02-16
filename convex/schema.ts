@@ -83,6 +83,7 @@ export default defineSchema({
     amount: v.number(), // negative for expenses, positive for income
     notes: v.optional(v.string()),
     isRecurring: v.optional(v.boolean()),
+    isTransfer: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index("by_account", ["accountId"])

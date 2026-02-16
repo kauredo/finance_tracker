@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import {
   requireUser,
@@ -139,6 +139,7 @@ export const create = mutation({
     amount: v.number(),
     notes: v.optional(v.string()),
     isRecurring: v.optional(v.boolean()),
+    isTransfer: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -153,6 +154,7 @@ export const create = mutation({
       amount: args.amount,
       notes: args.notes,
       isRecurring: args.isRecurring ?? false,
+      isTransfer: args.isTransfer ?? false,
       createdAt: Date.now(),
     });
 
@@ -304,6 +306,7 @@ export const bulkCreate = mutation({
         amount: v.number(),
         categoryId: v.optional(v.id("categories")),
         notes: v.optional(v.string()),
+        isTransfer: v.optional(v.boolean()),
       }),
     ),
   },
@@ -330,6 +333,7 @@ export const bulkCreate = mutation({
           amount: t.amount,
           notes: t.notes,
           isRecurring: false,
+          isTransfer: t.isTransfer ?? false,
           createdAt: now,
         });
       }),
@@ -385,6 +389,9 @@ export const getStats = query({
       transactions = transactions.filter((t) => t.date <= args.dateTo!);
     }
 
+    // Exclude transfers from income/expense stats
+    transactions = transactions.filter((t) => !t.isTransfer);
+
     // Calculate stats
     const income = transactions
       .filter((t) => t.amount > 0)
@@ -423,3 +430,87 @@ export const getStats = query({
     };
   },
 });
+
+/**
+ * Auto-detect transfers by matching newly imported transactions against
+ * existing transactions in other accounts.
+ * Matching: exact opposite amount, date within 2 days, unique match only.
+ */
+export const detectTransfers = internalMutation({
+  args: {
+    accountId: v.id("accounts"),
+    transactionIds: v.array(v.id("transactions")),
+  },
+  handler: async (ctx, args) => {
+    if (args.transactionIds.length === 0) return;
+
+    // Load the newly imported transactions
+    const newTxs = (
+      await Promise.all(args.transactionIds.map((id) => ctx.db.get(id)))
+    ).filter((t) => t !== null);
+
+    if (newTxs.length === 0) return;
+
+    // Find the date range of the batch (± 2 days buffer)
+    const dates = newTxs.map((t) => t.date).sort();
+    const minDate = shiftDate(dates[0], -2);
+    const maxDate = shiftDate(dates[dates.length - 1], 2);
+
+    // Get the importing user to find accessible accounts
+    const userId = newTxs[0].userId;
+    const accessibleAccountIds = await getAccessibleAccountIds(ctx, userId);
+
+    // Collect transactions from OTHER accessible accounts in the date window
+    const otherAccountTxs = await ctx.db
+      .query("transactions")
+      .withIndex("by_date")
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("date"), minDate),
+          q.lte(q.field("date"), maxDate),
+          q.neq(q.field("accountId"), args.accountId),
+        ),
+      )
+      .collect();
+
+    // Filter to only accessible accounts
+    const candidates = otherAccountTxs.filter(
+      (t) => accessibleAccountIds.has(t.accountId) && !t.isTransfer,
+    );
+
+    // For each new transaction, look for a unique match
+    for (const newTx of newTxs) {
+      if (newTx.isTransfer) continue; // Already marked
+
+      const matches = candidates.filter(
+        (c) =>
+          c.amount === -newTx.amount &&
+          Math.abs(daysBetween(c.date, newTx.date)) <= 2,
+      );
+
+      // Only mark if exactly one match (unambiguous)
+      if (matches.length === 1) {
+        await ctx.db.patch(newTx._id, { isTransfer: true });
+        await ctx.db.patch(matches[0]._id, { isTransfer: true });
+        // Remove matched candidate so it can't match again
+        const idx = candidates.indexOf(matches[0]);
+        if (idx !== -1) candidates.splice(idx, 1);
+      }
+    }
+  },
+});
+
+/** Shift an ISO date string by N days */
+function shiftDate(isoDate: string, days: number): string {
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+/** Number of days between two ISO date strings */
+function daysBetween(a: string, b: string): number {
+  const msPerDay = 86400000;
+  return Math.round(
+    (new Date(a).getTime() - new Date(b).getTime()) / msPerDay,
+  );
+}

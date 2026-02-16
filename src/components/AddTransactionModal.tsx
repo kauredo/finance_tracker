@@ -91,6 +91,7 @@ export default function AddTransactionModal({
           ? (formData.categoryId as Id<"categories">)
           : undefined,
         notes: formData.notes || undefined,
+        isTransfer: formData.transactionType === "transfer" || undefined,
       });
 
       toast.success("Transaction created successfully!");
@@ -269,6 +270,31 @@ export default function AddTransactionModal({
                 ))}
               </Select>
             </div>
+
+            {/* Transfer Toggle */}
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.transactionType === "transfer"}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    transactionType: e.target.checked
+                      ? "transfer"
+                      : "expense",
+                  }))
+                }
+                className="rounded border-border accent-primary w-4 h-4"
+              />
+              <div>
+                <span className="text-sm font-medium text-foreground">
+                  Transfer between my accounts
+                </span>
+                <p className="text-xs text-text-secondary">
+                  Excluded from income/expense stats
+                </p>
+              </div>
+            </label>
 
             {/* Notes */}
             <div>

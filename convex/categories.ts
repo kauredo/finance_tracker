@@ -215,6 +215,8 @@ export const seedDefaultCategories = internalMutation({
       { name: "Gifts", color: "#e11d48", icon: "gift" },
       // Income
       { name: "Income", color: "#22c55e", icon: "income" },
+      // Transfers
+      { name: "Transfer", color: "#94a3b8", icon: "transfer" },
       // Fallback
       { name: "Other", color: "#6b7280", icon: "other" },
     ];
