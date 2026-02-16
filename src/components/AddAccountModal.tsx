@@ -28,6 +28,10 @@ export default function AddAccountModal({
   const [accountType, setAccountType] = useState<"personal" | "joint">(
     "personal",
   );
+  const [startingBalance, setStartingBalance] = useState("");
+  const [startingBalanceDate, setStartingBalanceDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +46,12 @@ export default function AddAccountModal({
       await createAccount({
         name: accountName,
         type: accountType,
+        startingBalance: startingBalance
+          ? parseFloat(startingBalance)
+          : undefined,
+        startingBalanceDate: startingBalance
+          ? startingBalanceDate
+          : undefined,
       });
 
       onSuccess();
@@ -113,6 +123,39 @@ export default function AddAccountModal({
                 </p>
               )}
             </div>
+
+            <div>
+              <label className="block text-foreground text-sm font-medium mb-2">
+                Current Balance
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                value={startingBalance}
+                onChange={(e) => setStartingBalance(e.target.value)}
+                placeholder="0.00"
+              />
+              <p className="mt-1 text-xs text-text-secondary">
+                Optional — your account&apos;s current real-world balance
+              </p>
+            </div>
+
+            {startingBalance && parseFloat(startingBalance) !== 0 && (
+              <div>
+                <label className="block text-foreground text-sm font-medium mb-2">
+                  As of
+                </label>
+                <Input
+                  type="date"
+                  value={startingBalanceDate}
+                  onChange={(e) => setStartingBalanceDate(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-text-secondary">
+                  Only transactions from this date onward will affect the
+                  balance
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded-xl text-sm">

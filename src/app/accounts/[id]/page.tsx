@@ -157,6 +157,14 @@ export default function AccountDetailPage() {
               >
                 {formatAmount(account.balance ?? 0)}
               </div>
+              {account.startingBalance != null &&
+                account.startingBalance !== 0 && (
+                  <p className="text-xs text-muted mt-2">
+                    Starting balance: {formatAmount(account.startingBalance)}
+                    {account.startingBalanceDate &&
+                      ` as of ${new Date(account.startingBalanceDate + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`}
+                  </p>
+                )}
             </CardContent>
           </Card>
         </div>
@@ -177,6 +185,8 @@ export default function AccountDetailPage() {
             _id: account._id,
             name: account.name,
             type: account.type,
+            startingBalance: account.startingBalance,
+            startingBalanceDate: account.startingBalanceDate,
           }}
           onClose={() => setShowEditModal(false)}
           onSuccess={() => {

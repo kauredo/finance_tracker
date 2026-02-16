@@ -69,6 +69,9 @@ export default function DashboardPage() {
     dateTo: dateRange.to,
   });
 
+  // Fetch accounts for total balance
+  const accounts = useQuery(api.accounts.list);
+
   // Fetch budgets
   const budgets = useQuery(api.budgets.list);
 
@@ -78,15 +81,17 @@ export default function DashboardPage() {
   // Calculate derived stats
   const stats = useMemo(() => {
     const totalBudget = budgets?.reduce((sum, b) => sum + b.amount, 0) ?? 0;
+    const totalBalance =
+      accounts?.reduce((sum, a) => sum + (a.balance ?? 0), 0) ?? 0;
     return {
       totalExpenses: allTimeStats?.expenses ?? 0,
       monthlyExpenses: monthlyStats?.expenses ?? 0,
-      savings: allTimeStats?.net ?? 0,
+      savings: totalBalance,
       totalBudget,
       budgetSpent: monthlyStats?.expenses ?? 0,
       totalIncome: allTimeStats?.income ?? 0,
     };
-  }, [allTimeStats, monthlyStats, budgets]);
+  }, [allTimeStats, monthlyStats, budgets, accounts]);
 
   // Check welcome tour when user profile loads
   useEffect(() => {

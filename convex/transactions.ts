@@ -156,13 +156,16 @@ export const create = mutation({
       createdAt: Date.now(),
     });
 
-    // Update account balance
+    // Update account balance (only if transaction is at or after anchor date)
     const account = await ctx.db.get(args.accountId);
     if (account) {
-      await ctx.db.patch(args.accountId, {
-        balance: (account.balance ?? 0) + args.amount,
-        updatedAt: Date.now(),
-      });
+      const anchorDate = account.startingBalanceDate;
+      if (!anchorDate || args.date >= anchorDate) {
+        await ctx.db.patch(args.accountId, {
+          balance: (account.balance ?? 0) + args.amount,
+          updatedAt: Date.now(),
+        });
+      }
     }
 
     return transactionId;
@@ -213,24 +216,42 @@ export const update = mutation({
 
     await ctx.db.patch(args.id, updates);
 
-    // Update account balances if amount or account changed
-    if (args.amount !== undefined || args.accountId !== undefined) {
-      // Remove old amount from old account
+    // Update account balances if amount, date, or account changed
+    const oldDate = transaction.date;
+    const newDate = args.date ?? oldDate;
+
+    if (
+      args.amount !== undefined ||
+      args.accountId !== undefined ||
+      args.date !== undefined
+    ) {
+      // Remove old amount from old account (if it was counted)
       const oldAccount = await ctx.db.get(oldAccountId);
       if (oldAccount) {
-        await ctx.db.patch(oldAccountId, {
-          balance: (oldAccount.balance ?? 0) - oldAmount,
-          updatedAt: Date.now(),
-        });
+        const oldAnchor = oldAccount.startingBalanceDate;
+        const oldCounted = !oldAnchor || oldDate >= oldAnchor;
+        if (oldCounted) {
+          await ctx.db.patch(oldAccountId, {
+            balance: (oldAccount.balance ?? 0) - oldAmount,
+            updatedAt: Date.now(),
+          });
+        }
       }
 
-      // Add new amount to new account
-      const newAccount = await ctx.db.get(newAccountId);
+      // Add new amount to new account (if it should be counted)
+      const newAccount =
+        newAccountId === oldAccountId
+          ? await ctx.db.get(newAccountId) // re-read after patch
+          : await ctx.db.get(newAccountId);
       if (newAccount) {
-        await ctx.db.patch(newAccountId, {
-          balance: (newAccount.balance ?? 0) + newAmount,
-          updatedAt: Date.now(),
-        });
+        const newAnchor = newAccount.startingBalanceDate;
+        const newCounted = !newAnchor || newDate >= newAnchor;
+        if (newCounted) {
+          await ctx.db.patch(newAccountId, {
+            balance: (newAccount.balance ?? 0) + newAmount,
+            updatedAt: Date.now(),
+          });
+        }
       }
     }
 
@@ -253,13 +274,16 @@ export const remove = mutation({
 
     await requireAccountAccess(ctx, user._id, transaction.accountId);
 
-    // Update account balance
+    // Update account balance (only if transaction was counted)
     const account = await ctx.db.get(transaction.accountId);
     if (account) {
-      await ctx.db.patch(transaction.accountId, {
-        balance: (account.balance ?? 0) - transaction.amount,
-        updatedAt: Date.now(),
-      });
+      const anchorDate = account.startingBalanceDate;
+      if (!anchorDate || transaction.date >= anchorDate) {
+        await ctx.db.patch(transaction.accountId, {
+          balance: (account.balance ?? 0) - transaction.amount,
+          updatedAt: Date.now(),
+        });
+      }
     }
 
     await ctx.db.delete(args.id);
@@ -288,11 +312,15 @@ export const bulkCreate = mutation({
     await requireAccountAccess(ctx, user._id, args.accountId);
 
     const now = Date.now();
+    const account = await ctx.db.get(args.accountId);
+    const anchorDate = account?.startingBalanceDate;
     let totalAmount = 0;
 
     const ids = await Promise.all(
       args.transactions.map(async (t) => {
-        totalAmount += t.amount;
+        if (!anchorDate || t.date >= anchorDate) {
+          totalAmount += t.amount;
+        }
         return ctx.db.insert("transactions", {
           accountId: args.accountId,
           categoryId: t.categoryId,
@@ -307,11 +335,11 @@ export const bulkCreate = mutation({
       }),
     );
 
-    // Update account balance
-    const account = await ctx.db.get(args.accountId);
-    if (account) {
+    // Update account balance (re-read in case of concurrent changes)
+    const currentAccount = await ctx.db.get(args.accountId);
+    if (currentAccount && totalAmount !== 0) {
       await ctx.db.patch(args.accountId, {
-        balance: (account.balance ?? 0) + totalAmount,
+        balance: (currentAccount.balance ?? 0) + totalAmount,
         updatedAt: now,
       });
     }

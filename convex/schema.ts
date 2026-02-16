@@ -47,6 +47,8 @@ export default defineSchema({
       v.literal("joint"),
     ),
     balance: v.optional(v.number()), // calculated from transactions
+    startingBalance: v.optional(v.number()), // anchor balance at a point in time
+    startingBalanceDate: v.optional(v.string()), // ISO date "YYYY-MM-DD"
     color: v.optional(v.string()),
     icon: v.optional(v.string()),
     // Either owned by user OR household (for joint accounts)

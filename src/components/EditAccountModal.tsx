@@ -21,6 +21,8 @@ interface Account {
   _id: Id<"accounts">;
   name: string;
   type: AccountType;
+  startingBalance?: number;
+  startingBalanceDate?: string;
 }
 
 interface EditAccountModalProps {
@@ -36,6 +38,12 @@ export default function EditAccountModal({
 }: EditAccountModalProps) {
   const [name, setName] = useState(account.name);
   const [type, setType] = useState<AccountType>(account.type);
+  const [startingBalance, setStartingBalance] = useState(
+    account.startingBalance != null ? String(account.startingBalance) : "",
+  );
+  const [startingBalanceDate, setStartingBalanceDate] = useState(
+    account.startingBalanceDate ?? new Date().toISOString().split("T")[0],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +65,12 @@ export default function EditAccountModal({
         id: account._id,
         name: name.trim(),
         type,
+        startingBalance: startingBalance
+          ? parseFloat(startingBalance)
+          : 0,
+        startingBalanceDate: startingBalance
+          ? startingBalanceDate
+          : undefined,
       });
 
       onSuccess();
@@ -119,6 +133,43 @@ export default function EditAccountModal({
                 <option value="joint">Joint</option>
               </Select>
             </div>
+
+            <div>
+              <label
+                htmlFor="startingBalance"
+                className="block text-sm font-medium text-foreground mb-2"
+              >
+                Starting Balance
+              </label>
+              <Input
+                id="startingBalance"
+                type="number"
+                step="0.01"
+                value={startingBalance}
+                onChange={(e) => setStartingBalance(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+
+            {startingBalance && parseFloat(startingBalance) !== 0 && (
+              <div>
+                <label
+                  htmlFor="startingBalanceDate"
+                  className="block text-sm font-medium text-foreground mb-2"
+                >
+                  As of
+                </label>
+                <Input
+                  id="startingBalanceDate"
+                  type="date"
+                  value={startingBalanceDate}
+                  onChange={(e) => setStartingBalanceDate(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-text-secondary">
+                  Only transactions from this date onward affect the balance
+                </p>
+              </div>
+            )}
           </ModalBody>
 
           <ModalFooter>

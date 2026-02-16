@@ -77,6 +77,8 @@ export const create = mutation({
       v.literal("joint"),
     ),
     balance: v.optional(v.number()),
+    startingBalance: v.optional(v.number()),
+    startingBalanceDate: v.optional(v.string()),
     color: v.optional(v.string()),
     icon: v.optional(v.string()),
   },
@@ -103,7 +105,9 @@ export const create = mutation({
       return ctx.db.insert("accounts", {
         name: args.name,
         type: args.type,
-        balance: args.balance ?? 0,
+        balance: args.startingBalance ?? 0,
+        startingBalance: args.startingBalance,
+        startingBalanceDate: args.startingBalanceDate,
         color: args.color,
         icon: args.icon,
         householdId,
@@ -116,7 +120,9 @@ export const create = mutation({
     return ctx.db.insert("accounts", {
       name: args.name,
       type: args.type,
-      balance: args.balance ?? 0,
+      balance: args.startingBalance ?? 0,
+      startingBalance: args.startingBalance,
+      startingBalanceDate: args.startingBalanceDate,
       color: args.color,
       icon: args.icon,
       ownerId: user._id,
@@ -142,6 +148,8 @@ export const update = mutation({
         v.literal("joint"),
       ),
     ),
+    startingBalance: v.optional(v.number()),
+    startingBalanceDate: v.optional(v.string()),
     color: v.optional(v.string()),
     icon: v.optional(v.string()),
   },
@@ -156,6 +164,39 @@ export const update = mutation({
     if (updates.type !== undefined) patchData.type = updates.type;
     if (updates.color !== undefined) patchData.color = updates.color;
     if (updates.icon !== undefined) patchData.icon = updates.icon;
+
+    const anchorChanged =
+      updates.startingBalance !== undefined ||
+      updates.startingBalanceDate !== undefined;
+
+    if (anchorChanged) {
+      const account = await ctx.db.get(id);
+      if (!account) throw new Error("Account not found");
+
+      const newStarting =
+        updates.startingBalance !== undefined
+          ? updates.startingBalance
+          : account.startingBalance ?? 0;
+      const newDate =
+        updates.startingBalanceDate !== undefined
+          ? updates.startingBalanceDate
+          : account.startingBalanceDate;
+
+      patchData.startingBalance = newStarting;
+      patchData.startingBalanceDate = newDate;
+
+      // Recalculate balance from scratch
+      const transactions = await ctx.db
+        .query("transactions")
+        .withIndex("by_account", (q) => q.eq("accountId", id))
+        .collect();
+
+      const txSum = transactions
+        .filter((t) => !newDate || t.date >= newDate)
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      patchData.balance = (newStarting ?? 0) + txSum;
+    }
 
     await ctx.db.patch(id, patchData);
     return ctx.db.get(id);
@@ -195,12 +236,21 @@ export const recalculateBalance = mutation({
     const user = await requireUser(ctx);
     await requireAccountAccess(ctx, user._id, args.id);
 
+    const account = await ctx.db.get(args.id);
+    if (!account) throw new Error("Account not found");
+
+    const anchorDate = account.startingBalanceDate;
+
     const transactions = await ctx.db
       .query("transactions")
       .withIndex("by_account", (q) => q.eq("accountId", args.id))
       .collect();
 
-    const balance = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const txSum = transactions
+      .filter((t) => !anchorDate || t.date >= anchorDate)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const balance = (account.startingBalance ?? 0) + txSum;
 
     await ctx.db.patch(args.id, {
       balance,
