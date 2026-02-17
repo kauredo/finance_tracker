@@ -229,6 +229,63 @@ export const acceptInvite = mutation({
 });
 
 /**
+ * List pending (unused, unexpired) invites for the current household
+ */
+export const listPendingInvites = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireUser(ctx);
+    const householdId = await getUserHouseholdId(ctx, user._id);
+
+    if (!householdId) {
+      return [];
+    }
+
+    await requireHouseholdOwnership(ctx, user._id, householdId);
+
+    const invites = await ctx.db
+      .query("householdInvites")
+      .withIndex("by_household", (q) => q.eq("householdId", householdId))
+      .collect();
+
+    const now = Date.now();
+    const pending = invites.filter((i) => !i.usedAt && i.expiresAt > now);
+
+    // Enrich with inviter info
+    return Promise.all(
+      pending.map(async (invite) => {
+        const invitedBy = await ctx.db.get(invite.invitedByUserId);
+        return { ...invite, invitedBy };
+      }),
+    );
+  },
+});
+
+/**
+ * Revoke (delete) a pending invite
+ */
+export const revokeInvite = mutation({
+  args: { inviteId: v.id("householdInvites") },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const invite = await ctx.db.get(args.inviteId);
+
+    if (!invite) {
+      throw new Error("Invite not found");
+    }
+
+    await requireHouseholdOwnership(ctx, user._id, invite.householdId);
+
+    if (invite.usedAt) {
+      throw new Error("Cannot revoke an already-used invite");
+    }
+
+    await ctx.db.delete(args.inviteId);
+    return { success: true };
+  },
+});
+
+/**
  * Remove a member from a household (owner only)
  */
 export const removeMember = mutation({

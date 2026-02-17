@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useDateFormat } from "@/hooks/useDateFormat";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { Select } from "@/components/ui/Input";
 import Icon from "@/components/icons/Icon";
 import { Pagination } from "@/components/ui/Pagination";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { format, isToday, isYesterday, isThisWeek } from "date-fns";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface Transaction {
   _id: Id<"transactions">;
@@ -43,6 +47,7 @@ interface TransactionsListProps {
   maxAmount?: number;
   limit?: number;
   showPagination?: boolean;
+  onBatchModeChange?: (active: boolean) => void;
 }
 
 // Group transactions by date
@@ -84,14 +89,50 @@ export default function TransactionsList({
   minAmount,
   maxAmount,
   showPagination = true,
+  onBatchModeChange,
 }: TransactionsListProps = {}) {
   const { isAuthenticated } = useAuth();
+  const toast = useToast();
   const { formatAmount } = useCurrency();
   const { longFormat } = useDateFormat();
   const [selectedTransactionId, setSelectedTransactionId] =
     useState<Id<"transactions"> | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Batch mode state
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<Id<"transactions">>>(
+    new Set(),
+  );
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [batchLoading, setBatchLoading] = useState(false);
+
+  const bulkDelete = useMutation(api.transactions.bulkDelete);
+  const bulkUpdateCategory = useMutation(api.transactions.bulkUpdateCategory);
+  const categories = useQuery(api.categories.list);
+
+  const toggleSelect = useCallback((id: Id<"transactions">) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const enterBatchMode = useCallback(() => {
+    setBatchMode(true);
+    onBatchModeChange?.(true);
+  }, [onBatchModeChange]);
+
+  const exitBatchMode = useCallback(() => {
+    setBatchMode(false);
+    setSelectedIds(new Set());
+    setShowCategoryPicker(false);
+    onBatchModeChange?.(false);
+  }, [onBatchModeChange]);
 
   // Build query args
   const queryArgs = {
@@ -158,8 +199,85 @@ export default function TransactionsList({
 
   const groupedTransactions = groupTransactionsByDate(transactions, longFormat);
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBatchLoading(true);
+    try {
+      await bulkDelete({ ids: [...selectedIds] });
+      toast.success(`${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""} deleted`);
+      exitBatchMode();
+    } catch {
+      toast.error("Failed to delete transactions");
+    } finally {
+      setBatchLoading(false);
+      setShowBulkDeleteModal(false);
+    }
+  };
+
+  const handleBulkCategorize = async (categoryId: string) => {
+    if (selectedIds.size === 0 || !categoryId) return;
+    setBatchLoading(true);
+    try {
+      await bulkUpdateCategory({
+        ids: [...selectedIds],
+        categoryId: categoryId as Id<"categories">,
+      });
+      toast.success(`${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""} categorized`);
+      exitBatchMode();
+    } catch {
+      toast.error("Failed to categorize transactions");
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === transactions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(transactions.map((t) => t._id)));
+    }
+  };
+
   return (
     <div className="p-6">
+      {/* Batch Mode Toggle */}
+      {showPagination && transactions.length > 0 && (
+        <div className="flex items-center justify-end mb-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => (batchMode ? exitBatchMode() : enterBatchMode())}
+          >
+            <Icon name={batchMode ? "check" : "edit"} size={16} />
+            {batchMode ? "Done" : "Select"}
+          </Button>
+        </div>
+      )}
+
+      {/* Select All (in batch mode) */}
+      {batchMode && (
+        <div className="flex items-center gap-3 mb-4 px-1">
+          <button
+            onClick={toggleSelectAll}
+            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+              selectedIds.size === transactions.length
+                ? "bg-primary border-primary"
+                : "border-border hover:border-primary/50"
+            }`}
+          >
+            {selectedIds.size === transactions.length && (
+              <Icon name="check" size={12} className="text-white" />
+            )}
+          </button>
+          <span className="text-sm text-text-secondary">
+            {selectedIds.size > 0
+              ? `${selectedIds.size} of ${transactions.length} selected`
+              : "Select all"}
+          </span>
+        </div>
+      )}
+
       {/* Grouped Transactions */}
       <div className="space-y-6">
         {Object.entries(groupedTransactions).map(
@@ -183,93 +301,182 @@ export default function TransactionsList({
 
               {/* Transaction Cards */}
               <div className="space-y-2">
-                {txs.map((t, index) => (
-                  <motion.div
-                    key={t._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: (groupIndex * txs.length + index) * 0.02,
-                    }}
-                  >
-                    <div
-                      onClick={() => setSelectedTransactionId(t._id)}
-                      className="group flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-sand/50 border border-transparent hover:border-border transition-all cursor-pointer"
+                {txs.map((t, index) => {
+                  const isSelected = selectedIds.has(t._id);
+                  return (
+                    <motion.div
+                      key={t._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: (groupIndex * txs.length + index) * 0.02,
+                      }}
                     >
-                      {/* Category Icon */}
                       <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                        style={{
-                          backgroundColor: `${t.category?.color || "#888"}15`,
-                          color: t.category?.color || "#888",
-                        }}
+                        onClick={() =>
+                          batchMode
+                            ? toggleSelect(t._id)
+                            : setSelectedTransactionId(t._id)
+                        }
+                        className={`group flex items-center gap-4 p-4 rounded-2xl bg-surface hover:bg-sand/50 border transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-primary/40 bg-primary-pale/30"
+                            : "border-transparent hover:border-border"
+                        }`}
                       >
-                        <Icon
-                          name={(t.category?.icon as any) || "other"}
-                          size={20}
-                        />
-                      </div>
+                        {/* Checkbox (batch mode) */}
+                        {batchMode && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelect(t._id);
+                            }}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                              isSelected
+                                ? "bg-primary border-primary"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            {isSelected && (
+                              <Icon name="check" size={12} className="text-white" />
+                            )}
+                          </button>
+                        )}
 
-                      {/* Main Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-foreground truncate">
-                            {t.description}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-text-secondary">
-                            {t.category?.name || "Uncategorized"}
-                          </span>
-                          <span className="text-text-secondary">•</span>
-                          <span className="text-xs text-text-secondary">
-                            {t.account?.name || "Unknown"}
-                          </span>
-                          {t.isTransfer && (
-                            <>
-                              <span className="text-text-secondary">•</span>
-                              <span className="inline-flex items-center gap-0.5 text-xs text-text-secondary">
-                                <Icon name="transfer" size={11} />
-                                Transfer
-                              </span>
-                            </>
-                          )}
-                          {t.notes && (
-                            <>
-                              <span className="text-text-secondary">•</span>
-                              <Icon
-                                name="memo"
-                                size={12}
-                                className="text-text-secondary"
-                              />
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Amount */}
-                      <div className="text-right">
-                        <span
-                          className={`font-bold tabular-nums ${
-                            t.amount > 0 ? "text-growth" : "text-foreground"
-                          }`}
+                        {/* Category Icon */}
+                        <div
+                          className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 flex-shrink-0"
+                          style={{
+                            backgroundColor: `${t.category?.color || "#888"}15`,
+                            color: t.category?.color || "#888",
+                          }}
                         >
-                          {t.amount > 0 ? "+" : ""}
-                          {formatAmount(Math.abs(t.amount))}
-                        </span>
+                          <Icon
+                            name={(t.category?.icon as any) || "other"}
+                            size={20}
+                          />
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-foreground truncate">
+                              {t.description}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-text-secondary">
+                              {t.category?.name || "Uncategorized"}
+                            </span>
+                            <span className="text-text-secondary">•</span>
+                            <span className="text-xs text-text-secondary">
+                              {t.account?.name || "Unknown"}
+                            </span>
+                            {t.isTransfer && (
+                              <>
+                                <span className="text-text-secondary">•</span>
+                                <span className="inline-flex items-center gap-0.5 text-xs text-text-secondary">
+                                  <Icon name="transfer" size={11} />
+                                  Transfer
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          {/* Notes preview */}
+                          {t.notes && (
+                            <p className="text-xs text-text-secondary mt-1 truncate max-w-sm">
+                              {t.notes}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Amount */}
+                        <div className="text-right">
+                          <span
+                            className={`font-bold tabular-nums ${
+                              t.amount > 0 ? "text-growth" : "text-foreground"
+                            }`}
+                          >
+                            {t.amount > 0 ? "+" : ""}
+                            {formatAmount(Math.abs(t.amount))}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           ),
         )}
       </div>
 
+      {/* Batch Action Bar */}
+      <AnimatePresence>
+        {batchMode && selectedIds.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface border border-border shadow-lg rounded-2xl px-5 py-3 flex items-center gap-3"
+          >
+            <span className="text-sm font-medium text-foreground">
+              {selectedIds.size} selected
+            </span>
+            <div className="w-px h-6 bg-border" />
+            {showCategoryPicker ? (
+              <Select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) handleBulkCategorize(e.target.value);
+                }}
+                className="w-40 text-sm"
+              >
+                <option value="">Pick category...</option>
+                {categories?.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCategoryPicker(true)}
+                disabled={batchLoading}
+              >
+                <Icon name="tag" size={16} />
+                Categorize
+              </Button>
+            )}
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setShowBulkDeleteModal(true)}
+              disabled={batchLoading}
+            >
+              <Icon name="delete" size={16} />
+              Delete
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Delete Confirmation */}
+      {showBulkDeleteModal && (
+        <DeleteConfirmModal
+          title="Delete Transactions"
+          message={`Are you sure you want to delete ${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""}?`}
+          isLoading={batchLoading}
+          onConfirm={handleBulkDelete}
+          onCancel={() => setShowBulkDeleteModal(false)}
+        />
+      )}
+
       {/* Pagination */}
       {showPagination && (
-        <div className="mt-6 pt-6 border-t border-border">
+        <div className={`mt-6 pt-6 border-t border-border ${batchMode && selectedIds.size > 0 ? "pb-20" : ""}`}>
           <Pagination
             currentPage={currentPage}
             totalPages={Math.ceil(totalCount / itemsPerPage)}

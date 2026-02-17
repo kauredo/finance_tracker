@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/Modal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import EditTransactionModal from "@/components/EditTransactionModal";
+import RecurringTransactionModal from "@/components/RecurringTransactionModal";
 import Icon from "@/components/icons/Icon";
 import { useCurrency } from "@/hooks/useCurrency";
 
@@ -35,6 +36,7 @@ export default function TransactionDetailModal({
   const { formatAmount } = useCurrency();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   // Fetch transaction using Convex
@@ -185,6 +187,16 @@ export default function TransactionDetailModal({
                 </div>
               </div>
             )}
+
+            {/* Make Recurring */}
+            <button
+              onClick={() => setShowRecurringModal(true)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl text-sm text-text-secondary hover:bg-sand/50 hover:text-foreground transition-colors"
+            >
+              <Icon name="subscriptions" size={16} />
+              Make this recurring
+              <Icon name="chevron_down" size={14} className="ml-auto -rotate-90" />
+            </button>
           </ModalBody>
 
           <ModalFooter>
@@ -217,6 +229,25 @@ export default function TransactionDetailModal({
             setShowEditModal(false);
             // With Convex, data auto-refreshes!
             onUpdate();
+          }}
+        />
+      )}
+
+      {/* Recurring Modal */}
+      {showRecurringModal && transaction && (
+        <RecurringTransactionModal
+          isOpen={true}
+          onClose={() => setShowRecurringModal(false)}
+          onSuccess={() => {
+            setShowRecurringModal(false);
+            toast.success("Recurring transaction created!");
+          }}
+          initialData={{
+            description: transaction.description,
+            amount: transaction.amount,
+            interval: "monthly",
+            accountId: transaction.accountId,
+            categoryId: transaction.categoryId ?? undefined,
           }}
         />
       )}

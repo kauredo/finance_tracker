@@ -27,6 +27,8 @@ interface RecurringTransactionModalProps {
     description: string;
     amount: number;
     interval: string;
+    accountId?: string;
+    categoryId?: string;
   };
 }
 
@@ -81,13 +83,15 @@ export default function RecurringTransactionModal({
       setInterval(existingRecurring.interval);
       setNextRunDate(existingRecurring.nextRunDate);
     } else if (isOpen && initialData && !editId) {
-      // Pre-fill from suggestion
+      // Pre-fill from suggestion or "Convert to Recurring"
       setDescription(initialData.description);
       setAmount(Math.abs(initialData.amount).toString());
       setType(initialData.amount >= 0 ? "income" : "expense");
       setInterval(
         initialData.interval as "daily" | "weekly" | "monthly" | "yearly",
       );
+      if (initialData.accountId) setAccountId(initialData.accountId);
+      if (initialData.categoryId) setCategoryId(initialData.categoryId);
       setNextRunDate(new Date().toISOString().split("T")[0]);
     } else if (!isOpen) {
       resetForm();

@@ -1,14 +1,19 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/contexts/ToastContext";
 import Link from "next/link";
 import { useCurrency } from "@/hooks/useCurrency";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { Input } from "@/components/ui/Input";
 
 // Plant growth stages based on progress
 function getGrowthStage(progress: number): { emoji: string; label: string } {
@@ -21,12 +26,29 @@ function getGrowthStage(progress: number): { emoji: string; label: string } {
 
 export default function GoalsWidget() {
   const router = useRouter();
+  const toast = useToast();
+  const addFunds = useMutation(api.goals.addFunds);
+  const [addingTo, setAddingTo] = useState<Id<"goals"> | null>(null);
+  const [wateringGoal, setWateringGoal] = useState<Id<"goals"> | null>(null);
+  const [waterAmount, setWaterAmount] = useState("");
 
   // Fetch goals using Convex - automatically reactive
   const goals = useQuery(api.goals.list);
 
   const loading = goals === undefined;
   const { formatAmount } = useCurrency();
+
+  const handleQuickAdd = async (goalId: Id<"goals">, amount: number) => {
+    setAddingTo(goalId);
+    try {
+      await addFunds({ id: goalId, amount });
+      toast.success(`Added ${formatAmount(amount)}!`);
+    } catch {
+      toast.error("Failed to add funds");
+    } finally {
+      setAddingTo(null);
+    }
+  };
 
   if (loading)
     return (
@@ -123,12 +145,74 @@ export default function GoalsWidget() {
                       </div>
                     </div>
 
-                    {/* Remaining */}
-                    <div className="text-right hidden sm:block">
-                      <p className="text-xs text-text-secondary">Remaining</p>
-                      <p className="text-sm font-medium text-foreground tabular-nums">
-                        {formatAmount(remaining, 0)}
-                      </p>
+                    {/* Water this goal */}
+                    <div className="flex flex-col items-end gap-1">
+                      <AnimatePresence mode="wait">
+                        {wateringGoal === goal._id ? (
+                          <motion.form
+                            key="input"
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: "auto" }}
+                            exit={{ opacity: 0, width: 0 }}
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              const amt = parseFloat(waterAmount);
+                              if (amt > 0) {
+                                handleQuickAdd(goal._id, amt);
+                                setWateringGoal(null);
+                                setWaterAmount("");
+                              }
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <Input
+                              type="number"
+                              value={waterAmount}
+                              onChange={(e) => setWaterAmount(e.target.value)}
+                              placeholder="0"
+                              min="1"
+                              step="any"
+                              autoFocus
+                              className="w-20 text-sm h-9 text-right"
+                              onBlur={() => {
+                                if (!waterAmount) {
+                                  setWateringGoal(null);
+                                }
+                              }}
+                            />
+                            <Button
+                              type="submit"
+                              variant="bloom"
+                              size="sm"
+                              disabled={!waterAmount || parseFloat(waterAmount) <= 0 || addingTo === goal._id}
+                              isLoading={addingTo === goal._id}
+                              className="h-9 px-3"
+                            >
+                              💧
+                            </Button>
+                          </motion.form>
+                        ) : (
+                          <motion.div key="button" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            <p className="text-xs text-text-secondary text-right mb-1 hidden sm:block">
+                              {formatAmount(remaining, 0)} left
+                            </p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setWateringGoal(goal._id);
+                                setWaterAmount("");
+                              }}
+                              disabled={addingTo === goal._id}
+                              isLoading={addingTo === goal._id}
+                              className="text-xs h-9 px-3"
+                            >
+                              💧 Water
+                            </Button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                 </motion.div>

@@ -512,6 +512,97 @@ export const detectTransfers = internalMutation({
   },
 });
 
+/**
+ * Bulk delete transactions
+ */
+export const bulkDelete = mutation({
+  args: {
+    ids: v.array(v.id("transactions")),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const accessibleAccountIds = await getAccessibleAccountIds(ctx, user._id);
+
+    // Load all transactions and verify access
+    const transactions = (
+      await Promise.all(args.ids.map((id) => ctx.db.get(id)))
+    ).filter((t) => t !== null);
+
+    for (const t of transactions) {
+      if (!accessibleAccountIds.has(t.accountId)) {
+        throw new Error("Access denied to one or more transactions");
+      }
+    }
+
+    // Group balance adjustments by account
+    const balanceDeltas = new Map<typeof transactions[0]["accountId"], number>();
+    for (const t of transactions) {
+      const account = await ctx.db.get(t.accountId);
+      const anchorDate = account?.startingBalanceDate;
+      if (!anchorDate || t.date >= anchorDate) {
+        balanceDeltas.set(
+          t.accountId,
+          (balanceDeltas.get(t.accountId) ?? 0) - t.amount,
+        );
+      }
+    }
+
+    // Delete all transactions
+    await Promise.all(args.ids.map((id) => ctx.db.delete(id)));
+
+    // Apply balance adjustments
+    for (const [accountId, delta] of balanceDeltas) {
+      const account = await ctx.db.get(accountId);
+      if (account) {
+        await ctx.db.patch(accountId, {
+          balance: (account.balance ?? 0) + delta,
+          updatedAt: Date.now(),
+        });
+      }
+    }
+
+    return { deleted: args.ids.length };
+  },
+});
+
+/**
+ * Bulk update category for transactions
+ */
+export const bulkUpdateCategory = mutation({
+  args: {
+    ids: v.array(v.id("transactions")),
+    categoryId: v.id("categories"),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const accessibleAccountIds = await getAccessibleAccountIds(ctx, user._id);
+
+    // Verify category exists
+    const category = await ctx.db.get(args.categoryId);
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    // Load and verify access
+    const transactions = (
+      await Promise.all(args.ids.map((id) => ctx.db.get(id)))
+    ).filter((t) => t !== null);
+
+    for (const t of transactions) {
+      if (!accessibleAccountIds.has(t.accountId)) {
+        throw new Error("Access denied to one or more transactions");
+      }
+    }
+
+    // Update all
+    await Promise.all(
+      args.ids.map((id) => ctx.db.patch(id, { categoryId: args.categoryId })),
+    );
+
+    return { updated: args.ids.length };
+  },
+});
+
 /** Shift an ISO date string by N days */
 function shiftDate(isoDate: string, days: number): string {
   const d = new Date(isoDate);

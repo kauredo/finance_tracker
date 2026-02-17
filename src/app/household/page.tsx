@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
@@ -32,6 +32,8 @@ export default function HouseholdPage() {
   const householdData = useQuery(api.households.getCurrentHousehold);
   const removeMemberMutation = useMutation(api.households.removeMember);
   const createInvite = useMutation(api.households.createInvite);
+  const pendingInvites = useQuery(api.households.listPendingInvites);
+  const revokeInvite = useMutation(api.households.revokeInvite);
 
   const loading = householdData === undefined;
   const household = householdData;
@@ -47,6 +49,31 @@ export default function HouseholdPage() {
       router.push("/auth");
     }
   }, [authLoading, isAuthenticated, router]);
+
+  const [creatingInvite, setCreatingInvite] = useState(false);
+
+  const handleCreateInvite = async () => {
+    setCreatingInvite(true);
+    try {
+      await createInvite({});
+      showSuccess("Invite code created!");
+    } catch (error) {
+      console.error("Error creating invite:", error);
+      showError("Failed to create invite");
+    } finally {
+      setCreatingInvite(false);
+    }
+  };
+
+  const handleRevokeInvite = async (inviteId: Id<"householdInvites">) => {
+    try {
+      await revokeInvite({ inviteId });
+      showSuccess("Invite revoked");
+    } catch (error) {
+      console.error("Error revoking invite:", error);
+      showError("Failed to revoke invite");
+    }
+  };
 
   const handleRemoveMember = async (userId: Id<"users">) => {
     if (!household || currentUserRole !== "owner") return;
@@ -278,6 +305,91 @@ export default function HouseholdPage() {
               </div>
             </CardContent>
           </MotionCard>
+
+          {/* Pending Invites (Owner Only) */}
+          {isOwner && (
+            <MotionCard transition={{ delay: 0.25 }}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary-pale rounded-xl">
+                    <Icon name="user_plus" size={20} className="text-primary" />
+                  </div>
+                  <CardTitle>Pending Invites</CardTitle>
+                  {pendingInvites && pendingInvites.length > 0 && (
+                    <Badge variant="default" pill className="ml-auto">
+                      {pendingInvites.length}
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {pendingInvites && pendingInvites.length > 0 ? (
+                  <div className="space-y-3">
+                    {pendingInvites.map((invite) => {
+                      const daysLeft = Math.max(
+                        0,
+                        Math.ceil(
+                          (invite.expiresAt - Date.now()) / (1000 * 60 * 60 * 24),
+                        ),
+                      );
+                      return (
+                        <div
+                          key={invite._id}
+                          className="flex items-center justify-between p-4 bg-sand/30 rounded-2xl"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <code className="text-sm font-mono font-bold text-foreground">
+                                {invite.inviteCode}
+                              </code>
+                              <Badge
+                                variant={daysLeft <= 1 ? "danger" : "default"}
+                                size="sm"
+                                pill
+                              >
+                                {daysLeft}d left
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-text-secondary mt-1">
+                              Created{" "}
+                              {format(new Date(invite.createdAt), "MMM d, yyyy")}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleRevokeInvite(
+                                invite._id as Id<"householdInvites">,
+                              )
+                            }
+                            className="text-expense hover:bg-expense/10"
+                          >
+                            Revoke
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-text-secondary mb-3">
+                      No pending invites
+                    </p>
+                    <Button
+                      variant="secondary"
+                      onClick={handleCreateInvite}
+                      isLoading={creatingInvite}
+                      disabled={creatingInvite}
+                    >
+                      <Icon name="user_plus" size={16} />
+                      Generate Invite Code
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </MotionCard>
+          )}
 
           {/* Info Card */}
           {!isOwner && (

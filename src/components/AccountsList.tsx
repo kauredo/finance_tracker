@@ -47,6 +47,15 @@ export default function AccountsList({ onAddClick }: AccountsListProps) {
         illustration="wallet"
         title="No pots yet"
         description="Add your first account to start tracking your finances."
+        action={
+          onAddClick
+            ? {
+                label: "Add Your First Account",
+                onClick: onAddClick,
+                variant: "bloom",
+              }
+            : undefined
+        }
       />
     );
   }

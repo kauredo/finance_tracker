@@ -31,6 +31,7 @@ export default function TransactionsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isBatchMode, setIsBatchMode] = useState(false);
   const { dateRange, setDateRange, setPreset } = useDateRange("month");
 
   // Fetch accounts and categories using Convex
@@ -276,25 +277,28 @@ export default function TransactionsPage() {
             endDate={dateRange.endDate}
             minAmount={minAmount ? parseFloat(minAmount) : undefined}
             maxAmount={maxAmount ? parseFloat(maxAmount) : undefined}
+            onBatchModeChange={setIsBatchMode}
           />
         </MotionCard>
 
-        {/* Floating Add Button (Mobile) */}
-        <motion.div
-          className="fixed bottom-6 right-6 md:hidden"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5, type: "spring" }}
-        >
-          <Button
-            onClick={() => setShowAddModal(true)}
-            variant="bloom"
-            size="lg"
-            className="w-14 h-14 rounded-full shadow-lg p-0"
+        {/* Floating Add Button (Mobile) — hidden during batch mode */}
+        {!isBatchMode && (
+          <motion.div
+            className="fixed bottom-6 right-6 md:hidden"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
           >
-            <Icon name="plus" size={24} />
-          </Button>
-        </motion.div>
+            <Button
+              onClick={() => setShowAddModal(true)}
+              variant="bloom"
+              size="lg"
+              className="w-14 h-14 rounded-full shadow-lg p-0"
+            >
+              <Icon name="plus" size={24} />
+            </Button>
+          </motion.div>
+        )}
       </main>
 
       {/* Add Transaction Modal */}
