@@ -329,7 +329,8 @@ export default function HouseholdPage() {
                       const daysLeft = Math.max(
                         0,
                         Math.ceil(
-                          (invite.expiresAt - Date.now()) / (1000 * 60 * 60 * 24),
+                          (invite.expiresAt - Date.now()) /
+                            (1000 * 60 * 60 * 24),
                         ),
                       );
                       return (
@@ -352,7 +353,10 @@ export default function HouseholdPage() {
                             </div>
                             <p className="text-xs text-text-secondary mt-1">
                               Created{" "}
-                              {format(new Date(invite.createdAt), "MMM d, yyyy")}
+                              {format(
+                                new Date(invite.createdAt),
+                                "MMM d, yyyy",
+                              )}
                             </p>
                           </div>
                           <Button

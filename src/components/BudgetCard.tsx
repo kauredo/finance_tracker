@@ -245,7 +245,9 @@ export default function BudgetCard({
               <h3 className="font-display font-bold text-foreground truncate">
                 {category.name}
               </h3>
-              <span className="text-lg" aria-hidden="true">{emoji}</span>
+              <span className="text-lg" aria-hidden="true">
+                {emoji}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Badge

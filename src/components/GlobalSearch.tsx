@@ -161,7 +161,11 @@ export default function GlobalSearch() {
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, -1));
-      } else if (e.key === "Enter" && selectedIndex >= 0 && results[selectedIndex]) {
+      } else if (
+        e.key === "Enter" &&
+        selectedIndex >= 0 &&
+        results[selectedIndex]
+      ) {
         e.preventDefault();
         handleResultClick(results[selectedIndex]);
       }

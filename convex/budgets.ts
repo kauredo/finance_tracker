@@ -24,18 +24,15 @@ export const list = query({
       .withIndex("by_household", (q) => q.eq("householdId", householdId))
       .collect();
 
-    // Enrich with category data
-    const enriched = await Promise.all(
-      budgets.map(async (budget) => {
-        const category = await ctx.db.get(budget.categoryId);
-        return {
-          ...budget,
-          category,
-        };
-      }),
-    );
+    // Batch-fetch category data
+    const uniqueCatIds = [...new Set(budgets.map((b) => b.categoryId))];
+    const catDocs = await Promise.all(uniqueCatIds.map((id) => ctx.db.get(id)));
+    const catMap = new Map(catDocs.filter(Boolean).map((c) => [c!._id, c]));
 
-    return enriched;
+    return budgets.map((budget) => ({
+      ...budget,
+      category: catMap.get(budget.categoryId) ?? null,
+    }));
   },
 });
 
@@ -210,25 +207,23 @@ export const getProgress = query({
       }
     }
 
-    // Combine budgets with spent amounts
-    const progress = await Promise.all(
-      budgets.map(async (budget) => {
-        const category = await ctx.db.get(budget.categoryId);
-        const spent = spentByCategory[budget.categoryId] ?? 0;
-        const percentage =
-          budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+    // Batch-fetch category data
+    const uniqueCatIds = [...new Set(budgets.map((b) => b.categoryId))];
+    const catDocs = await Promise.all(uniqueCatIds.map((id) => ctx.db.get(id)));
+    const catMap = new Map(catDocs.filter(Boolean).map((c) => [c!._id, c]));
 
-        return {
-          ...budget,
-          category,
-          spent,
-          remaining: Math.max(0, budget.amount - spent),
-          percentage: Math.min(100, percentage),
-          isOverBudget: spent > budget.amount,
-        };
-      }),
-    );
+    return budgets.map((budget) => {
+      const spent = spentByCategory[budget.categoryId] ?? 0;
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
 
-    return progress;
+      return {
+        ...budget,
+        category: catMap.get(budget.categoryId) ?? null,
+        spent,
+        remaining: Math.max(0, budget.amount - spent),
+        percentage: Math.min(100, percentage),
+        isOverBudget: spent > budget.amount,
+      };
+    });
   },
 });

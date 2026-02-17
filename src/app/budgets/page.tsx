@@ -190,10 +190,7 @@ export default function BudgetsPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 -mt-16">
             {/* Total Spent */}
-            <MotionCard
-              variant="glass"
-              transition={{ delay: 0.1 }}
-            >
+            <MotionCard variant="glass" transition={{ delay: 0.1 }}>
               <div className="flex items-center gap-6 h-full min-h-[72px]">
                 <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                   <ProgressRing
@@ -217,10 +214,7 @@ export default function BudgetsPage() {
             </MotionCard>
 
             {/* Total Budget */}
-            <MotionCard
-              variant="glass"
-              transition={{ delay: 0.2 }}
-            >
+            <MotionCard variant="glass" transition={{ delay: 0.2 }}>
               <div className="flex items-center gap-4 h-full min-h-[72px]">
                 <div className="w-14 h-14 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                   <Icon name="flag" size={24} className="text-primary" />
@@ -239,10 +233,7 @@ export default function BudgetsPage() {
             </MotionCard>
 
             {/* Health Status */}
-            <MotionCard
-              variant="glass"
-              transition={{ delay: 0.3 }}
-            >
+            <MotionCard variant="glass" transition={{ delay: 0.3 }}>
               <div className="flex items-center gap-4 h-full min-h-[72px]">
                 <div className="w-14 h-14 flex items-center justify-center flex-shrink-0 text-4xl">
                   {health.emoji}
@@ -301,7 +292,9 @@ export default function BudgetsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl" aria-hidden="true">🌱</span>
+                    <span className="text-2xl" aria-hidden="true">
+                      🌱
+                    </span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Active Budgets
                     </h2>
@@ -344,7 +337,9 @@ export default function BudgetsPage() {
                     transition={{ delay: 0.2 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl" aria-hidden="true">🌰</span>
+                    <span className="text-2xl" aria-hidden="true">
+                      🌰
+                    </span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Ready to Plant
                     </h2>

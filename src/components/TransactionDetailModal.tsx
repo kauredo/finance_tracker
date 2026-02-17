@@ -195,7 +195,11 @@ export default function TransactionDetailModal({
             >
               <Icon name="subscriptions" size={16} />
               Make this recurring
-              <Icon name="chevron_down" size={14} className="ml-auto -rotate-90" />
+              <Icon
+                name="chevron_down"
+                size={14}
+                className="ml-auto -rotate-90"
+              />
             </button>
           </ModalBody>
 

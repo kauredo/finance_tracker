@@ -32,103 +32,101 @@ export default async function OGImage() {
   const logoSrc = `data:image/png;base64,${readFileSync(logoPath).toString("base64")}`;
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background:
+          "linear-gradient(135deg, #fefcf9 0%, #fff5f7 50%, #f5f0e8 100%)",
+        fontFamily: '"Plus Jakarta Sans"',
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
       <div
         style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background:
-            "linear-gradient(135deg, #fefcf9 0%, #fff5f7 50%, #f5f0e8 100%)",
-          fontFamily: '"Plus Jakarta Sans"',
-          position: "relative",
-          overflow: "hidden",
+          position: "absolute",
+          top: -60,
+          right: -60,
+          width: 220,
+          height: 220,
+          borderRadius: "50%",
+          background: "rgba(255, 143, 171, 0.12)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: -50,
+          left: -50,
+          width: 180,
+          height: 180,
+          borderRadius: "50%",
+          background: "rgba(124, 180, 130, 0.12)",
+        }}
+      />
+
+      <img
+        src={logoSrc}
+        width={140}
+        height={140}
+        style={{ marginBottom: 24 }}
+      />
+
+      <div
+        style={{
+          fontFamily: '"Fraunces"',
+          fontSize: 64,
+          fontWeight: 700,
+          color: "#3d3530",
+          lineHeight: 1.1,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: -60,
-            right: -60,
-            width: 220,
-            height: 220,
-            borderRadius: "50%",
-            background: "rgba(255, 143, 171, 0.12)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -50,
-            left: -50,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "rgba(124, 180, 130, 0.12)",
-          }}
-        />
-
-        <img
-          src={logoSrc}
-          width={140}
-          height={140}
-          style={{ marginBottom: 24 }}
-        />
-
-        <div
-          style={{
-            fontFamily: '"Fraunces"',
-            fontSize: 64,
-            fontWeight: 700,
-            color: "#3d3530",
-            lineHeight: 1.1,
-          }}
-        >
-          Wallet Joy
-        </div>
-
-        <div
-          style={{
-            fontSize: 28,
-            color: "#8b7355",
-            fontWeight: 500,
-            marginTop: 12,
-          }}
-        >
-          Manage Your Finances Together
-        </div>
-
-        <div style={{ display: "flex", gap: 8, marginTop: 40 }}>
-          <div
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              background: "#ff8fab",
-            }}
-          />
-          <div
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              background: "#7cb482",
-            }}
-          />
-          <div
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              background: "#ff8fab",
-            }}
-          />
-        </div>
+        Wallet Joy
       </div>
-    ),
+
+      <div
+        style={{
+          fontSize: 28,
+          color: "#8b7355",
+          fontWeight: 500,
+          marginTop: 12,
+        }}
+      >
+        Manage Your Finances Together
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginTop: 40 }}>
+        <div
+          style={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            background: "#ff8fab",
+          }}
+        />
+        <div
+          style={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            background: "#7cb482",
+          }}
+        />
+        <div
+          style={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            background: "#ff8fab",
+          }}
+        />
+      </div>
+    </div>,
     {
       ...size,
       fonts: [

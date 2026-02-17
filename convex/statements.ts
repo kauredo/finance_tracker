@@ -145,11 +145,7 @@ export const parseStatement = action({
           "Could not extract text from this PDF. It may be a scanned document. Please upload a CSV export or images of individual pages instead.",
         );
       }
-      const result = await parseStatementWithAI(
-        pdfText,
-        "text",
-        categoryNames,
-      );
+      const result = await parseStatementWithAI(pdfText, "text", categoryNames);
       transactions = result.transactions;
       wasTruncated = result.wasTruncated;
     } else {

@@ -22,17 +22,17 @@ export const list = query({
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
       .collect();
 
-    // Get household accounts
+    // Get household accounts (parallel)
     const householdIds = await getUserHouseholdIds(ctx, user._id);
-    const householdAccounts: typeof personalAccounts = [];
-
-    for (const householdId of householdIds) {
-      const accounts = await ctx.db
-        .query("accounts")
-        .withIndex("by_household", (q) => q.eq("householdId", householdId))
-        .collect();
-      householdAccounts.push(...accounts);
-    }
+    const householdAccountArrays = await Promise.all(
+      householdIds.map((householdId) =>
+        ctx.db
+          .query("accounts")
+          .withIndex("by_household", (q) => q.eq("householdId", householdId))
+          .collect(),
+      ),
+    );
+    const householdAccounts = householdAccountArrays.flat();
 
     // Combine and sort by name
     return [...personalAccounts, ...householdAccounts].sort((a, b) =>
@@ -176,7 +176,7 @@ export const update = mutation({
       const newStarting =
         updates.startingBalance !== undefined
           ? updates.startingBalance
-          : account.startingBalance ?? 0;
+          : (account.startingBalance ?? 0);
       const newDate =
         updates.startingBalanceDate !== undefined
           ? updates.startingBalanceDate

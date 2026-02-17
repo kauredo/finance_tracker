@@ -49,9 +49,7 @@ export default function AddAccountModal({
         startingBalance: startingBalance
           ? parseFloat(startingBalance)
           : undefined,
-        startingBalanceDate: startingBalance
-          ? startingBalanceDate
-          : undefined,
+        startingBalanceDate: startingBalance ? startingBalanceDate : undefined,
       });
 
       onSuccess();

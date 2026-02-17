@@ -63,7 +63,7 @@ export default function SpendingHeatmap({
     }[][] = [];
 
     let current = new Date(startDay);
-    let currentWeek: typeof weeks[0] = [];
+    let currentWeek: (typeof weeks)[0] = [];
 
     while (current <= endDay) {
       const dateStr = current.toISOString().split("T")[0];
@@ -117,8 +117,7 @@ export default function SpendingHeatmap({
   const cellGap = 3;
   const labelWidth = 24;
   const headerHeight = 18;
-  const totalWidth =
-    labelWidth + grid.length * (cellSize + cellGap);
+  const totalWidth = labelWidth + grid.length * (cellSize + cellGap);
   const totalHeight = headerHeight + 7 * (cellSize + cellGap);
 
   return (
@@ -165,11 +164,9 @@ export default function SpendingHeatmap({
           {/* Cells */}
           {grid.map((week, wi) =>
             week.map((day) => {
-              const intensity =
-                maxSpend > 0 ? day.amount / maxSpend : 0;
+              const intensity = maxSpend > 0 ? day.amount / maxSpend : 0;
               const x = labelWidth + wi * (cellSize + cellGap);
-              const y =
-                headerHeight + day.dayOfWeek * (cellSize + cellGap);
+              const y = headerHeight + day.dayOfWeek * (cellSize + cellGap);
 
               return (
                 <rect
@@ -191,9 +188,9 @@ export default function SpendingHeatmap({
                     const rect = (
                       e.target as SVGRectElement
                     ).getBoundingClientRect();
-                    const parent = (
-                      e.target as SVGRectElement
-                    ).closest(".relative")!.getBoundingClientRect();
+                    const parent = (e.target as SVGRectElement)
+                      .closest(".relative")!
+                      .getBoundingClientRect();
                     setTooltip({
                       x: rect.left - parent.left + cellSize / 2,
                       y: rect.top - parent.top - 4,
@@ -234,19 +231,14 @@ export default function SpendingHeatmap({
           }}
         >
           <p className="font-medium text-[var(--foreground)]">
-            {new Date(tooltip.date + "T12:00:00").toLocaleDateString(
-              "en-US",
-              {
-                month: "short",
-                day: "numeric",
-                weekday: "short",
-              },
-            )}
+            {new Date(tooltip.date + "T12:00:00").toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              weekday: "short",
+            })}
           </p>
           <p className="text-[var(--text-secondary)]">
-            {tooltip.amount > 0
-              ? formatAmount(tooltip.amount)
-              : "No spending"}
+            {tooltip.amount > 0 ? formatAmount(tooltip.amount) : "No spending"}
           </p>
         </div>
       )}

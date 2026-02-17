@@ -135,11 +135,7 @@ export default function DashboardPage() {
     }
 
     // Month-over-month spending change
-    if (
-      monthlyStats &&
-      prevMonthStats &&
-      prevMonthStats.expenses > 0
-    ) {
+    if (monthlyStats && prevMonthStats && prevMonthStats.expenses > 0) {
       const change =
         ((monthlyStats.expenses - prevMonthStats.expenses) /
           prevMonthStats.expenses) *
@@ -186,8 +182,7 @@ export default function DashboardPage() {
     // Savings rate
     if (monthlyStats && monthlyStats.income > 0) {
       const rate =
-        ((monthlyStats.income - monthlyStats.expenses) /
-          monthlyStats.income) *
+        ((monthlyStats.income - monthlyStats.expenses) / monthlyStats.income) *
         100;
       if (rate >= 30) {
         items.push({

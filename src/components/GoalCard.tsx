@@ -119,7 +119,9 @@ export default function GoalCard({
                   </h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg" aria-hidden="true">{emoji}</span>
+                  <span className="text-lg" aria-hidden="true">
+                    {emoji}
+                  </span>
                   <Badge variant="default" size="sm" pill>
                     {label}
                   </Badge>
@@ -237,9 +239,13 @@ export default function GoalCard({
           ) : (
             <div className="text-center py-3 bg-growth-pale rounded-2xl">
               <p className="text-growth font-medium flex items-center justify-center gap-2">
-                <span className="text-xl" aria-hidden="true">🎉</span>
+                <span className="text-xl" aria-hidden="true">
+                  🎉
+                </span>
                 {description}
-                <span className="text-xl" aria-hidden="true">🎉</span>
+                <span className="text-xl" aria-hidden="true">
+                  🎉
+                </span>
               </p>
             </div>
           )}

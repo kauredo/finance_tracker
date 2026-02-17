@@ -193,13 +193,13 @@ export default function ReportsPage() {
       const pctChange = (curr: number, prev: number) =>
         prev > 0 ? ((curr - prev) / prev) * 100 : null;
 
-      const latestLabel = new Date(
-        latest[0] + "-01",
-      ).toLocaleDateString("en-US", { month: "short" });
-      const prevLabel = new Date(prev[0] + "-01").toLocaleDateString(
+      const latestLabel = new Date(latest[0] + "-01").toLocaleDateString(
         "en-US",
         { month: "short" },
       );
+      const prevLabel = new Date(prev[0] + "-01").toLocaleDateString("en-US", {
+        month: "short",
+      });
 
       comparison = {
         incomeChange: pctChange(latestIncome, prevIncome),
@@ -439,15 +439,16 @@ export default function ReportsPage() {
                         variant={summary.netSavings >= 0 ? "income" : "expense"}
                         size="md"
                       />
-                      {comparison?.netChange !== null && comparison?.netChange !== undefined && (
-                        <p
-                          className={`text-xs mt-1 ${comparison.netChange >= 0 ? "text-growth" : "text-expense"}`}
-                        >
-                          {comparison.netChange >= 0 ? "↑" : "↓"}{" "}
-                          {formatAmount(Math.abs(comparison.netChange))}{" "}
-                          {comparison.label}
-                        </p>
-                      )}
+                      {comparison?.netChange !== null &&
+                        comparison?.netChange !== undefined && (
+                          <p
+                            className={`text-xs mt-1 ${comparison.netChange >= 0 ? "text-growth" : "text-expense"}`}
+                          >
+                            {comparison.netChange >= 0 ? "↑" : "↓"}{" "}
+                            {formatAmount(Math.abs(comparison.netChange))}{" "}
+                            {comparison.label}
+                          </p>
+                        )}
                     </div>
                   </div>
                 </CardContent>
@@ -487,15 +488,16 @@ export default function ReportsPage() {
                       >
                         {summary.savingsRate.toFixed(1)}%
                       </p>
-                      {comparison?.savingsRateChange !== null && comparison?.savingsRateChange !== undefined && (
-                        <p
-                          className={`text-xs mt-1 ${comparison.savingsRateChange >= 0 ? "text-growth" : "text-expense"}`}
-                        >
-                          {comparison.savingsRateChange >= 0 ? "↑" : "↓"}{" "}
-                          {Math.abs(comparison.savingsRateChange).toFixed(1)}pp{" "}
-                          {comparison.label}
-                        </p>
-                      )}
+                      {comparison?.savingsRateChange !== null &&
+                        comparison?.savingsRateChange !== undefined && (
+                          <p
+                            className={`text-xs mt-1 ${comparison.savingsRateChange >= 0 ? "text-growth" : "text-expense"}`}
+                          >
+                            {comparison.savingsRateChange >= 0 ? "↑" : "↓"}{" "}
+                            {Math.abs(comparison.savingsRateChange).toFixed(1)}
+                            pp {comparison.label}
+                          </p>
+                        )}
                     </div>
                   </div>
                 </CardContent>
@@ -512,10 +514,12 @@ export default function ReportsPage() {
                 <ReportsCharts
                   categoryData={categoryData}
                   monthlyData={monthlyData}
-                  rawTransactions={transactionsData?.transactions?.map((tx) => ({
-                    date: tx.date,
-                    amount: tx.amount,
-                  }))}
+                  rawTransactions={transactionsData?.transactions?.map(
+                    (tx) => ({
+                      date: tx.date,
+                      amount: tx.amount,
+                    }),
+                  )}
                 />
               </motion.div>
             ) : (

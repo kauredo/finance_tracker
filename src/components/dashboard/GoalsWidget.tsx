@@ -76,7 +76,9 @@ export default function GoalsWidget() {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl" aria-hidden="true">🌱</span>
+            <span className="text-2xl" aria-hidden="true">
+              🌱
+            </span>
             Dream Garden
           </CardTitle>
           <Link href="/goals" className="text-sm text-primary hover:underline">
@@ -127,7 +129,9 @@ export default function GoalsWidget() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg" aria-hidden="true">{emoji}</span>
+                        <span className="text-lg" aria-hidden="true">
+                          {emoji}
+                        </span>
                         <span className="font-medium text-foreground truncate">
                           {goal.name}
                         </span>
@@ -184,7 +188,11 @@ export default function GoalsWidget() {
                               type="submit"
                               variant="bloom"
                               size="sm"
-                              disabled={!waterAmount || parseFloat(waterAmount) <= 0 || addingTo === goal._id}
+                              disabled={
+                                !waterAmount ||
+                                parseFloat(waterAmount) <= 0 ||
+                                addingTo === goal._id
+                              }
                               isLoading={addingTo === goal._id}
                               className="h-9 px-3"
                             >
@@ -192,7 +200,11 @@ export default function GoalsWidget() {
                             </Button>
                           </motion.form>
                         ) : (
-                          <motion.div key="button" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                          <motion.div
+                            key="button"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                          >
                             <p className="text-xs text-text-secondary text-right mb-1 hidden sm:block">
                               {formatAmount(remaining, 0)} left
                             </p>

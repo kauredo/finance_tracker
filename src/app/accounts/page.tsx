@@ -67,7 +67,9 @@ export default function AccountsPage() {
           >
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-3xl" aria-hidden="true">🏦</span>
+                <span className="text-3xl" aria-hidden="true">
+                  🏦
+                </span>
                 <h1 className="text-3xl font-display font-bold text-foreground">
                   Money Pots
                 </h1>
@@ -87,10 +89,7 @@ export default function AccountsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 -mt-16">
-          <MotionCard
-            variant="glass"
-            transition={{ delay: 0.1 }}
-          >
+          <MotionCard variant="glass" transition={{ delay: 0.1 }}>
             <div className="flex items-center gap-4 h-full min-h-[64px]">
               <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-growth-pale rounded-2xl">
                 <Icon name="wallet" size={24} className="text-growth" />
@@ -115,10 +114,7 @@ export default function AccountsPage() {
             </div>
           </MotionCard>
 
-          <MotionCard
-            variant="glass"
-            transition={{ delay: 0.2 }}
-          >
+          <MotionCard variant="glass" transition={{ delay: 0.2 }}>
             <div className="flex items-center gap-4 h-full min-h-[64px]">
               <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                 <Icon name="accounts" size={24} className="text-primary" />

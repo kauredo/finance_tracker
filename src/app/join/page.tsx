@@ -167,7 +167,9 @@ function JoinContent() {
                 className="text-center"
               >
                 <div className="w-20 h-20 bg-expense/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-4xl" aria-hidden="true">🥀</span>
+                  <span className="text-4xl" aria-hidden="true">
+                    🥀
+                  </span>
                 </div>
                 <h2 className="text-2xl font-display font-bold text-foreground mb-2">
                   Oops!

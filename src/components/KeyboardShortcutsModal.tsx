@@ -102,7 +102,11 @@ export default function KeyboardShortcutsModal() {
               </div>
 
               <p className="text-xs text-muted mt-5 pt-4 border-t border-border">
-                Press <kbd className="px-1.5 py-0.5 bg-sand border border-border rounded text-[10px] font-medium">?</kbd> to toggle this panel
+                Press{" "}
+                <kbd className="px-1.5 py-0.5 bg-sand border border-border rounded text-[10px] font-medium">
+                  ?
+                </kbd>{" "}
+                to toggle this panel
               </p>
             </CardContent>
           </Card>

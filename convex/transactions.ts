@@ -1,5 +1,6 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 import {
   requireUser,
   canAccessAccount,
@@ -86,18 +87,23 @@ export const list = query({
     const limit = args.limit ?? 50;
     transactions = transactions.slice(offset, offset + limit);
 
-    // Enrich with category and account data
-    const enriched = await Promise.all(
-      transactions.map(async (t) => {
-        const category = t.categoryId ? await ctx.db.get(t.categoryId) : null;
-        const account = await ctx.db.get(t.accountId);
-        return {
-          ...t,
-          category,
-          account,
-        };
-      }),
-    );
+    // Batch-fetch categories and accounts to avoid N+1
+    const uniqueCatIds = [
+      ...new Set(transactions.map((t) => t.categoryId).filter(Boolean)),
+    ] as Id<"categories">[];
+    const uniqueAccIds = [...new Set(transactions.map((t) => t.accountId))];
+    const [cats, accs] = await Promise.all([
+      Promise.all(uniqueCatIds.map((id) => ctx.db.get(id))),
+      Promise.all(uniqueAccIds.map((id) => ctx.db.get(id))),
+    ]);
+    const catMap = new Map(cats.filter(Boolean).map((c) => [c!._id, c]));
+    const accMap = new Map(accs.filter(Boolean).map((a) => [a!._id, a]));
+
+    const enriched = transactions.map((t) => ({
+      ...t,
+      category: t.categoryId ? (catMap.get(t.categoryId) ?? null) : null,
+      account: accMap.get(t.accountId) ?? null,
+    }));
 
     return { transactions: enriched, total, limit, offset };
   },
@@ -422,14 +428,16 @@ export const getStats = query({
       }
     }
 
-    // Enrich category data
-    const categoryStats = await Promise.all(
-      Object.entries(byCategory).map(async ([categoryId, amount]) => {
-        const category = await ctx.db.get(categoryId as any);
-        return {
-          category,
-          amount,
-        };
+    // Batch-fetch category data
+    const catIds = Object.keys(byCategory) as Id<"categories">[];
+    const catDocs = await Promise.all(catIds.map((id) => ctx.db.get(id)));
+    const catLookup = new Map(
+      catDocs.filter(Boolean).map((c) => [c!._id as string, c]),
+    );
+    const categoryStats = Object.entries(byCategory).map(
+      ([categoryId, amount]) => ({
+        category: catLookup.get(categoryId) ?? null,
+        amount,
       }),
     );
 
@@ -534,10 +542,21 @@ export const bulkDelete = mutation({
       }
     }
 
-    // Group balance adjustments by account
-    const balanceDeltas = new Map<typeof transactions[0]["accountId"], number>();
+    // Batch-fetch accounts for balance adjustments
+    const uniqueAccountIds = [...new Set(transactions.map((t) => t.accountId))];
+    const accountDocs = await Promise.all(
+      uniqueAccountIds.map((id) => ctx.db.get(id)),
+    );
+    const accountMap = new Map(
+      accountDocs.filter(Boolean).map((a) => [a!._id, a]),
+    );
+
+    const balanceDeltas = new Map<
+      (typeof transactions)[0]["accountId"],
+      number
+    >();
     for (const t of transactions) {
-      const account = await ctx.db.get(t.accountId);
+      const account = accountMap.get(t.accountId);
       const anchorDate = account?.startingBalanceDate;
       if (!anchorDate || t.date >= anchorDate) {
         balanceDeltas.set(
@@ -613,7 +632,5 @@ function shiftDate(isoDate: string, days: number): string {
 /** Number of days between two ISO date strings */
 function daysBetween(a: string, b: string): number {
   const msPerDay = 86400000;
-  return Math.round(
-    (new Date(a).getTime() - new Date(b).getTime()) / msPerDay,
-  );
+  return Math.round((new Date(a).getTime() - new Date(b).getTime()) / msPerDay);
 }

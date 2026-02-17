@@ -148,17 +148,17 @@ export async function getAccessibleAccountIds(
     .withIndex("by_owner", (q) => q.eq("ownerId", userId))
     .collect();
 
-  // Get household accounts
+  // Get household accounts (parallel)
   const householdIds = await getUserHouseholdIds(ctx, userId);
-  const householdAccounts: typeof personalAccounts = [];
-
-  for (const householdId of householdIds) {
-    const accounts = await ctx.db
-      .query("accounts")
-      .withIndex("by_household", (q) => q.eq("householdId", householdId))
-      .collect();
-    householdAccounts.push(...accounts);
-  }
+  const householdAccountArrays = await Promise.all(
+    householdIds.map((householdId) =>
+      ctx.db
+        .query("accounts")
+        .withIndex("by_household", (q) => q.eq("householdId", householdId))
+        .collect(),
+    ),
+  );
+  const householdAccounts = householdAccountArrays.flat();
 
   return new Set([
     ...personalAccounts.map((a) => a._id),

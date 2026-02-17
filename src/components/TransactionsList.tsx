@@ -204,7 +204,9 @@ export default function TransactionsList({
     setBatchLoading(true);
     try {
       await bulkDelete({ ids: [...selectedIds] });
-      toast.success(`${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""} deleted`);
+      toast.success(
+        `${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""} deleted`,
+      );
       exitBatchMode();
     } catch {
       toast.error("Failed to delete transactions");
@@ -222,7 +224,9 @@ export default function TransactionsList({
         ids: [...selectedIds],
         categoryId: categoryId as Id<"categories">,
       });
-      toast.success(`${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""} categorized`);
+      toast.success(
+        `${selectedIds.size} transaction${selectedIds.size > 1 ? "s" : ""} categorized`,
+      );
       exitBatchMode();
     } catch {
       toast.error("Failed to categorize transactions");
@@ -344,7 +348,11 @@ export default function TransactionsList({
                             }`}
                           >
                             {isSelected && (
-                              <Icon name="check" size={12} className="text-white" />
+                              <Icon
+                                name="check"
+                                size={12}
+                                className="text-white"
+                              />
                             )}
                           </button>
                         )}
@@ -482,7 +490,9 @@ export default function TransactionsList({
 
       {/* Pagination */}
       {showPagination && (
-        <div className={`mt-6 pt-6 border-t border-border ${batchMode && selectedIds.size > 0 ? "pb-20" : ""}`}>
+        <div
+          className={`mt-6 pt-6 border-t border-border ${batchMode && selectedIds.size > 0 ? "pb-20" : ""}`}
+        >
           <Pagination
             currentPage={currentPage}
             totalPages={Math.ceil(totalCount / itemsPerPage)}

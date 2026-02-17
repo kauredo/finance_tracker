@@ -143,10 +143,7 @@ export default function GoalsPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           {/* Summary Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 -mt-16">
-            <MotionCard
-              variant="glass"
-              transition={{ delay: 0.1 }}
-            >
+            <MotionCard variant="glass" transition={{ delay: 0.1 }}>
               <div className="flex items-center gap-4 h-full min-h-[64px]">
                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-growth-pale rounded-2xl">
                   <Icon name="trending_up" size={24} className="text-growth" />
@@ -165,10 +162,7 @@ export default function GoalsPage() {
               </div>
             </MotionCard>
 
-            <MotionCard
-              variant="glass"
-              transition={{ delay: 0.2 }}
-            >
+            <MotionCard variant="glass" transition={{ delay: 0.2 }}>
               <div className="flex items-center gap-4 h-full min-h-[64px]">
                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-primary-pale rounded-2xl">
                   <Icon name="flag" size={24} className="text-primary" />
@@ -186,10 +180,7 @@ export default function GoalsPage() {
               </div>
             </MotionCard>
 
-            <MotionCard
-              variant="glass"
-              transition={{ delay: 0.3 }}
-            >
+            <MotionCard variant="glass" transition={{ delay: 0.3 }}>
               <div className="flex items-center gap-6 h-full min-h-[64px]">
                 <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
                   <ProgressRing
@@ -247,7 +238,9 @@ export default function GoalsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl" aria-hidden="true">🌿</span>
+                    <span className="text-2xl" aria-hidden="true">
+                      🌿
+                    </span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Growing
                     </h2>
@@ -281,7 +274,9 @@ export default function GoalsPage() {
                     transition={{ delay: 0.2 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl" aria-hidden="true">🌸</span>
+                    <span className="text-2xl" aria-hidden="true">
+                      🌸
+                    </span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Bloomed
                     </h2>

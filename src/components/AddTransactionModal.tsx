@@ -134,7 +134,11 @@ export default function AddTransactionModal({
               <label className="block text-sm font-medium text-foreground mb-2">
                 Transaction Type
               </label>
-              <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Transaction type">
+              <div
+                className="grid grid-cols-2 gap-3"
+                role="radiogroup"
+                aria-label="Transaction type"
+              >
                 <button
                   type="button"
                   role="radio"
@@ -283,9 +287,7 @@ export default function AddTransactionModal({
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    transactionType: e.target.checked
-                      ? "transfer"
-                      : "expense",
+                    transactionType: e.target.checked ? "transfer" : "expense",
                   }))
                 }
                 className="rounded border-border accent-primary w-4 h-4"

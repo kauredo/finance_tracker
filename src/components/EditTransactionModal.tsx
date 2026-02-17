@@ -139,7 +139,11 @@ export default function EditTransactionModal({
               <label className="block text-sm font-medium text-foreground mb-2">
                 Transaction Type
               </label>
-              <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Transaction type">
+              <div
+                className="grid grid-cols-2 gap-3"
+                role="radiogroup"
+                aria-label="Transaction type"
+              >
                 <button
                   type="button"
                   role="radio"

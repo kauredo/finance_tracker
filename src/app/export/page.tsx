@@ -181,10 +181,7 @@ export default function DataExportPage() {
     y += 16;
 
     // --- Category Breakdown ---
-    const categoryMap = new Map<
-      string,
-      { amount: number; count: number }
-    >();
+    const categoryMap = new Map<string, { amount: number; count: number }>();
     transactions
       .filter((tx) => tx.amount < 0)
       .forEach((tx) => {
@@ -236,7 +233,9 @@ export default function DataExportPage() {
           3: { halign: "right" },
         },
       });
-      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+      y =
+        (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable
+          .finalY + 12;
     }
 
     // --- Transactions Table ---
@@ -294,12 +293,9 @@ export default function DataExportPage() {
       const pageHeight = doc.internal.pageSize.getHeight();
       doc.setFontSize(7);
       doc.setTextColor(...textMuted);
-      doc.text(
-        `Page ${i} of ${pageCount}`,
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: "center" },
-      );
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, {
+        align: "center",
+      });
     }
 
     doc.save(`wallet-joy-report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
@@ -391,7 +387,9 @@ export default function DataExportPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 + index * 0.05 }}
-                      onClick={() => setExportFormat(format.id as "csv" | "pdf")}
+                      onClick={() =>
+                        setExportFormat(format.id as "csv" | "pdf")
+                      }
                       className={`p-5 rounded-2xl border-2 transition-all text-left ${
                         exportFormat === format.id
                           ? "border-primary bg-primary-pale shadow-md"

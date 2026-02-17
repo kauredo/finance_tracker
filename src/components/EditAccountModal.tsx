@@ -65,12 +65,8 @@ export default function EditAccountModal({
         id: account._id,
         name: name.trim(),
         type,
-        startingBalance: startingBalance
-          ? parseFloat(startingBalance)
-          : 0,
-        startingBalanceDate: startingBalance
-          ? startingBalanceDate
-          : undefined,
+        startingBalance: startingBalance ? parseFloat(startingBalance) : 0,
+        startingBalanceDate: startingBalance ? startingBalanceDate : undefined,
       });
 
       onSuccess();

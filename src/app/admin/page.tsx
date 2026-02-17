@@ -169,7 +169,9 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-xl" aria-hidden="true">⚙️</span>
+                <span className="text-xl" aria-hidden="true">
+                  ⚙️
+                </span>
                 System Setup
               </CardTitle>
             </CardHeader>
@@ -201,7 +203,9 @@ export default function AdminPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-warning">
-                  <span className="text-xl" aria-hidden="true">⏳</span>
+                  <span className="text-xl" aria-hidden="true">
+                    ⏳
+                  </span>
                   Pending Confirmation ({pendingUsers.length})
                 </CardTitle>
               </CardHeader>
@@ -266,7 +270,9 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-xl" aria-hidden="true">✅</span>
+                <span className="text-xl" aria-hidden="true">
+                  ✅
+                </span>
                 Confirmed Users ({confirmedUsers.length})
               </CardTitle>
             </CardHeader>

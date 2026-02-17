@@ -152,7 +152,9 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl" aria-hidden="true">🥧</span>
+                  <span className="text-xl" aria-hidden="true">
+                    🥧
+                  </span>
                   Expense Distribution
                 </h3>
                 {categoryData.length > 0 ? (
@@ -194,59 +196,64 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl" aria-hidden="true">🏆</span>
+                  <span className="text-xl" aria-hidden="true">
+                    🏆
+                  </span>
                   Top Categories
                 </h3>
-                {categoryData.length > 0 ? (() => {
-                  const total = categoryData.reduce(
-                    (sum, c) => sum + c.value,
-                    0,
-                  );
-                  return (
-                  <div className="space-y-3">
-                    {categoryData.slice(0, 6).map((category, index) => {
-                      const percentage = total > 0 ? (category.value / total) * 100 : 0;
+                {categoryData.length > 0 ? (
+                  (() => {
+                    const total = categoryData.reduce(
+                      (sum, c) => sum + c.value,
+                      0,
+                    );
+                    return (
+                      <div className="space-y-3">
+                        {categoryData.slice(0, 6).map((category, index) => {
+                          const percentage =
+                            total > 0 ? (category.value / total) * 100 : 0;
 
-                      return (
-                        <motion.div
-                          key={category.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="flex items-center gap-3"
-                        >
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-sm font-medium text-foreground truncate">
-                                {category.name}
-                              </span>
-                              <span className="text-sm text-foreground tabular-nums">
-                                {formatAmount(category.value)}
-                              </span>
-                            </div>
-                            <div className="h-2 bg-sand rounded-full overflow-hidden">
-                              <motion.div
-                                className="h-full rounded-full"
+                          return (
+                            <motion.div
+                              key={category.name}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="flex items-center gap-3"
+                            >
+                              <div
+                                className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: category.color }}
-                                initial={{ width: 0 }}
-                                animate={{ width: `${percentage}%` }}
-                                transition={{
-                                  duration: 0.5,
-                                  delay: index * 0.05,
-                                }}
                               />
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                  );
-                })() : (
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-sm font-medium text-foreground truncate">
+                                    {category.name}
+                                  </span>
+                                  <span className="text-sm text-foreground tabular-nums">
+                                    {formatAmount(category.value)}
+                                  </span>
+                                </div>
+                                <div className="h-2 bg-sand rounded-full overflow-hidden">
+                                  <motion.div
+                                    className="h-full rounded-full"
+                                    style={{ backgroundColor: category.color }}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${percentage}%` }}
+                                    transition={{
+                                      duration: 0.5,
+                                      delay: index * 0.05,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()
+                ) : (
                   <div className="h-[300px] flex items-center justify-center text-text-secondary">
                     No expense data available
                   </div>
@@ -268,7 +275,9 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl" aria-hidden="true">📈</span>
+                  <span className="text-xl" aria-hidden="true">
+                    📈
+                  </span>
                   Income vs Expenses (Last 6 Months)
                 </h3>
                 {monthlyData.length > 0 ? (
@@ -382,8 +391,7 @@ export default function ReportsCharts({
                         const prevNet = prevMonth
                           ? prevMonth.income - prevMonth.expenses
                           : null;
-                        const change =
-                          prevNet !== null ? net - prevNet : null;
+                        const change = prevNet !== null ? net - prevNet : null;
 
                         return (
                           <motion.div
@@ -432,7 +440,9 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl" aria-hidden="true">🗓️</span>
+                  <span className="text-xl" aria-hidden="true">
+                    🗓️
+                  </span>
                   Daily Spending (Last 3 Months)
                 </h3>
                 <SpendingHeatmap transactions={rawTransactions} />
