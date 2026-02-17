@@ -122,7 +122,7 @@ export default function CategoriesPage() {
             >
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-3xl">🏷️</span>
+                  <span className="text-3xl" aria-hidden="true">🏷️</span>
                   <h1 className="text-3xl font-display font-bold text-foreground">
                     Categories
                   </h1>
@@ -161,7 +161,7 @@ export default function CategoriesPage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl">✨</span>
+                    <span className="text-2xl" aria-hidden="true">✨</span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       My Categories
                     </h2>
@@ -180,7 +180,7 @@ export default function CategoriesPage() {
                       >
                         <Card className="group hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer relative overflow-hidden">
                           {/* Edit/Delete buttons on hover */}
-                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <div className="absolute top-2 right-2 flex gap-1">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -278,7 +278,7 @@ export default function CategoriesPage() {
                   transition={{ delay: 0.2 }}
                   className="flex items-center gap-2 mb-6"
                 >
-                  <span className="text-2xl">📦</span>
+                  <span className="text-2xl" aria-hidden="true">📦</span>
                   <h2 className="text-2xl font-display font-bold text-foreground">
                     Default Categories
                   </h2>

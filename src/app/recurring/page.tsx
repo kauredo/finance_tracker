@@ -240,7 +240,7 @@ export default function RecurringPage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 mb-4"
                   >
-                    <span className="text-xl">🌿</span>
+                    <span className="text-xl" aria-hidden="true">🌿</span>
                     <h2 className="text-lg font-display font-bold text-foreground">
                       Active
                     </h2>

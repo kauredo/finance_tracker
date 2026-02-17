@@ -211,7 +211,7 @@ export default function OnboardingWizard() {
                 className="space-y-6"
               >
                 <div className="text-center mb-8">
-                  <span className="text-4xl mb-4 block">💰</span>
+                  <span className="text-4xl mb-4 block" aria-hidden="true">💰</span>
                   <h2 className="text-2xl font-display font-bold text-foreground mb-2">
                     Choose your soil
                   </h2>
@@ -271,7 +271,7 @@ export default function OnboardingWizard() {
                 className="space-y-6"
               >
                 <div className="text-center mb-8">
-                  <span className="text-4xl mb-4 block">🏦</span>
+                  <span className="text-4xl mb-4 block" aria-hidden="true">🏦</span>
                   <h2 className="text-2xl font-display font-bold text-foreground mb-2">
                     Plant your first pot
                   </h2>

@@ -76,7 +76,7 @@ export default function GoalsWidget() {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">🌱</span>
+            <span className="text-2xl" aria-hidden="true">🌱</span>
             Dream Garden
           </CardTitle>
           <Link href="/goals" className="text-sm text-primary hover:underline">
@@ -127,7 +127,7 @@ export default function GoalsWidget() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">{emoji}</span>
+                        <span className="text-lg" aria-hidden="true">{emoji}</span>
                         <span className="font-medium text-foreground truncate">
                           {goal.name}
                         </span>
@@ -229,7 +229,7 @@ export default function GoalsWidget() {
               >
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-text-secondary flex items-center gap-2">
-                    <span>🌸</span>
+                    <span aria-hidden="true">🌸</span>
                     {completedGoals.length} goal
                     {completedGoals.length > 1 ? "s" : ""} bloomed!
                   </span>

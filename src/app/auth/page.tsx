@@ -241,7 +241,7 @@ export default function AuthPage() {
                       }}
                       className="w-20 h-20 mx-auto bg-growth-pale rounded-full flex items-center justify-center mb-4"
                     >
-                      <span className="text-4xl">🌱</span>
+                      <span className="text-4xl" aria-hidden="true">🌱</span>
                     </motion.div>
                     <h3 className="text-xl font-display font-bold text-foreground">
                       Seed planted!

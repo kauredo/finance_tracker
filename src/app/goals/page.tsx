@@ -247,7 +247,7 @@ export default function GoalsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl">🌿</span>
+                    <span className="text-2xl" aria-hidden="true">🌿</span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Growing
                     </h2>
@@ -281,7 +281,7 @@ export default function GoalsPage() {
                     transition={{ delay: 0.2 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl">🌸</span>
+                    <span className="text-2xl" aria-hidden="true">🌸</span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Bloomed
                     </h2>

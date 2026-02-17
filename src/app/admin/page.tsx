@@ -11,6 +11,7 @@ import Icon from "@/components/icons/Icon";
 import { useToast } from "@/contexts/ToastContext";
 import { motion } from "motion/react";
 import NavBar from "@/components/NavBar";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -73,23 +74,27 @@ export default function AdminPage() {
     }
   };
 
-  const handleDelete = async (userId: Id<"users">) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this user? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
+  const [pendingDeleteUserId, setPendingDeleteUserId] =
+    useState<Id<"users"> | null>(null);
 
-    setDeletingUserId(userId);
+  const handleDeleteClick = (userId: Id<"users">) => {
+    setPendingDeleteUserId(userId);
+    setShowDeleteUserModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!pendingDeleteUserId) return;
+    setDeletingUserId(pendingDeleteUserId);
     try {
-      await deleteUser({ userId });
+      await deleteUser({ userId: pendingDeleteUserId });
       toast.success("User deleted");
     } catch (err: any) {
       toast.error(err.message || "Failed to delete user");
     } finally {
       setDeletingUserId(null);
+      setShowDeleteUserModal(false);
+      setPendingDeleteUserId(null);
     }
   };
 
@@ -164,7 +169,7 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-xl">⚙️</span>
+                <span className="text-xl" aria-hidden="true">⚙️</span>
                 System Setup
               </CardTitle>
             </CardHeader>
@@ -196,7 +201,7 @@ export default function AdminPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-warning">
-                  <span className="text-xl">⏳</span>
+                  <span className="text-xl" aria-hidden="true">⏳</span>
                   Pending Confirmation ({pendingUsers.length})
                 </CardTitle>
               </CardHeader>
@@ -243,7 +248,7 @@ export default function AdminPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(user._id)}
+                          onClick={() => handleDeleteClick(user._id)}
                           disabled={deletingUserId === user._id}
                           className="text-danger hover:bg-danger/10"
                         >
@@ -261,7 +266,7 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-xl">✅</span>
+                <span className="text-xl" aria-hidden="true">✅</span>
                 Confirmed Users ({confirmedUsers.length})
               </CardTitle>
             </CardHeader>
@@ -351,7 +356,7 @@ export default function AdminPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(user._id)}
+                            onClick={() => handleDeleteClick(user._id)}
                             disabled={
                               deletingUserId === user._id || user.isAdmin
                             }
@@ -373,6 +378,20 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </main>
+
+        {showDeleteUserModal && (
+          <DeleteConfirmModal
+            title="Delete User"
+            message="Are you sure you want to delete this user? This cannot be undone."
+            confirmText="Delete"
+            onConfirm={handleDeleteConfirm}
+            onCancel={() => {
+              setShowDeleteUserModal(false);
+              setPendingDeleteUserId(null);
+            }}
+            isLoading={deletingUserId !== null}
+          />
+        )}
       </div>
     </>
   );

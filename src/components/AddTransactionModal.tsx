@@ -134,9 +134,11 @@ export default function AddTransactionModal({
               <label className="block text-sm font-medium text-foreground mb-2">
                 Transaction Type
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Transaction type">
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={formData.transactionType === "expense"}
                   onClick={() =>
                     setFormData((prev) => ({
                       ...prev,
@@ -154,6 +156,8 @@ export default function AddTransactionModal({
                 </button>
                 <button
                   type="button"
+                  role="radio"
+                  aria-checked={formData.transactionType === "income"}
                   onClick={() =>
                     setFormData((prev) => ({
                       ...prev,

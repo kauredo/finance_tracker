@@ -186,9 +186,11 @@ export default function RecurringTransactionModal({
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Transaction Type
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Transaction type">
                   <button
                     type="button"
+                    role="radio"
+                    aria-checked={type === "expense"}
                     onClick={() => setType("expense")}
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
                       type === "expense"
@@ -201,6 +203,8 @@ export default function RecurringTransactionModal({
                   </button>
                   <button
                     type="button"
+                    role="radio"
+                    aria-checked={type === "income"}
                     onClick={() => setType("income")}
                     className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
                       type === "income"

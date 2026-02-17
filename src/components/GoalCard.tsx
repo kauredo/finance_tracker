@@ -119,7 +119,7 @@ export default function GoalCard({
                   </h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{emoji}</span>
+                  <span className="text-lg" aria-hidden="true">{emoji}</span>
                   <Badge variant="default" size="sm" pill>
                     {label}
                   </Badge>
@@ -136,7 +136,7 @@ export default function GoalCard({
               >
                 <Icon name="other" size={20} />
               </Button>
-              <div className="absolute right-0 mt-1 w-36 bg-surface border border-border rounded-2xl shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10 overflow-hidden">
+              <div className="absolute right-0 mt-1 w-36 bg-surface border border-border rounded-2xl shadow-xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible group-focus-within/menu:opacity-100 group-focus-within/menu:visible transition-all z-10 overflow-hidden">
                 <button
                   onClick={() => onEdit(goal)}
                   className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-sand transition-colors flex items-center gap-2"
@@ -237,9 +237,9 @@ export default function GoalCard({
           ) : (
             <div className="text-center py-3 bg-growth-pale rounded-2xl">
               <p className="text-growth font-medium flex items-center justify-center gap-2">
-                <span className="text-xl">🎉</span>
+                <span className="text-xl" aria-hidden="true">🎉</span>
                 {description}
-                <span className="text-xl">🎉</span>
+                <span className="text-xl" aria-hidden="true">🎉</span>
               </p>
             </div>
           )}

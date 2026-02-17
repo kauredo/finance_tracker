@@ -259,6 +259,9 @@ export default function TransactionsList({
       {batchMode && (
         <div className="flex items-center gap-3 mb-4 px-1">
           <button
+            role="checkbox"
+            aria-checked={selectedIds.size === transactions.length}
+            aria-label="Select all transactions"
             onClick={toggleSelectAll}
             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
               selectedIds.size === transactions.length
@@ -327,6 +330,9 @@ export default function TransactionsList({
                         {/* Checkbox (batch mode) */}
                         {batchMode && (
                           <button
+                            role="checkbox"
+                            aria-checked={isSelected}
+                            aria-label={`Select ${t.description}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleSelect(t._id);

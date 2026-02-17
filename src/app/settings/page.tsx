@@ -141,7 +141,7 @@ export default function SettingsPage() {
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
               >
-                <span className="text-4xl">⚙️</span>
+                <span className="text-4xl" aria-hidden="true">⚙️</span>
               </motion.div>
             </div>
             <div>

@@ -301,7 +301,7 @@ export default function BudgetsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl">🌱</span>
+                    <span className="text-2xl" aria-hidden="true">🌱</span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Active Budgets
                     </h2>
@@ -344,7 +344,7 @@ export default function BudgetsPage() {
                     transition={{ delay: 0.2 }}
                     className="flex items-center gap-2 mb-6"
                   >
-                    <span className="text-2xl">🌰</span>
+                    <span className="text-2xl" aria-hidden="true">🌰</span>
                     <h2 className="text-2xl font-display font-bold text-foreground">
                       Ready to Plant
                     </h2>

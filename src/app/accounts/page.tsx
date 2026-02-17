@@ -67,7 +67,7 @@ export default function AccountsPage() {
           >
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-3xl">🏦</span>
+                <span className="text-3xl" aria-hidden="true">🏦</span>
                 <h1 className="text-3xl font-display font-bold text-foreground">
                   Money Pots
                 </h1>

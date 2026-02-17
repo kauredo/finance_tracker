@@ -83,7 +83,7 @@ export default function PendingPage() {
               transition={{ duration: 3, repeat: Infinity }}
               className="w-24 h-24 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-6"
             >
-              <span className="text-5xl">⏳</span>
+              <span className="text-5xl" aria-hidden="true">⏳</span>
             </motion.div>
 
             <h2 className="text-2xl font-display font-bold text-foreground mb-3">

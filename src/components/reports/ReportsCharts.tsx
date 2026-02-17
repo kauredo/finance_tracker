@@ -152,7 +152,7 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl">🥧</span>
+                  <span className="text-xl" aria-hidden="true">🥧</span>
                   Expense Distribution
                 </h3>
                 {categoryData.length > 0 ? (
@@ -194,17 +194,18 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl">🏆</span>
+                  <span className="text-xl" aria-hidden="true">🏆</span>
                   Top Categories
                 </h3>
-                {categoryData.length > 0 ? (
+                {categoryData.length > 0 ? (() => {
+                  const total = categoryData.reduce(
+                    (sum, c) => sum + c.value,
+                    0,
+                  );
+                  return (
                   <div className="space-y-3">
                     {categoryData.slice(0, 6).map((category, index) => {
-                      const total = categoryData.reduce(
-                        (sum, c) => sum + c.value,
-                        0,
-                      );
-                      const percentage = (category.value / total) * 100;
+                      const percentage = total > 0 ? (category.value / total) * 100 : 0;
 
                       return (
                         <motion.div
@@ -244,7 +245,8 @@ export default function ReportsCharts({
                       );
                     })}
                   </div>
-                ) : (
+                  );
+                })() : (
                   <div className="h-[300px] flex items-center justify-center text-text-secondary">
                     No expense data available
                   </div>
@@ -266,7 +268,7 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl">📈</span>
+                  <span className="text-xl" aria-hidden="true">📈</span>
                   Income vs Expenses (Last 6 Months)
                 </h3>
                 {monthlyData.length > 0 ? (
@@ -430,7 +432,7 @@ export default function ReportsCharts({
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
-                  <span className="text-xl">🗓️</span>
+                  <span className="text-xl" aria-hidden="true">🗓️</span>
                   Daily Spending (Last 3 Months)
                 </h3>
                 <SpendingHeatmap transactions={rawTransactions} />
