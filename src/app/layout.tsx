@@ -26,11 +26,23 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:3000",
+  ),
   title: "Wallet Joy - Manage Your Finances Together",
   description:
     "Track expenses, upload bank statements, and visualize your finances",
   icons: {
     icon: "/favicon.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Wallet Joy",
+  },
+  twitter: {
+    card: "summary_large_image",
   },
 };
 

@@ -10,6 +10,7 @@ import { useToast } from "@/contexts/ToastContext";
 import NavBar from "@/components/NavBar";
 import TransactionsList from "@/components/TransactionsList";
 import EditAccountModal from "@/components/EditAccountModal";
+import InvitePartnerModal from "@/components/InvitePartnerModal";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
@@ -24,6 +25,7 @@ export default function AccountDetailPage() {
   const params = useParams();
   const toast = useToast();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -129,6 +131,16 @@ export default function AccountDetailPage() {
             </div>
           </div>
           <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+            {account.type === "joint" && (
+              <Button
+                variant="secondary"
+                onClick={() => setShowInviteModal(true)}
+                className="flex-1 sm:flex-none"
+              >
+                <span className="hidden sm:inline">Invite Partner</span>
+                <span className="sm:hidden">Invite</span>
+              </Button>
+            )}
             <Button
               variant="secondary"
               onClick={() => setShowEditModal(true)}
@@ -195,6 +207,10 @@ export default function AccountDetailPage() {
             // Convex auto-refreshes data
           }}
         />
+      )}
+
+      {showInviteModal && (
+        <InvitePartnerModal onClose={() => setShowInviteModal(false)} />
       )}
 
       {showDeleteModal && (
