@@ -333,12 +333,16 @@ export default function HouseholdPage() {
                             (1000 * 60 * 60 * 24),
                         ),
                       );
+                      const inviteLink =
+                        typeof window !== "undefined"
+                          ? `${window.location.origin}/join?code=${invite.inviteCode}`
+                          : `/join?code=${invite.inviteCode}`;
                       return (
                         <div
                           key={invite._id}
-                          className="flex items-center justify-between p-4 bg-sand/30 rounded-2xl"
+                          className="p-4 bg-sand/30 rounded-2xl space-y-3"
                         >
-                          <div>
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <code className="text-sm font-mono font-bold text-foreground">
                                 {invite.inviteCode}
@@ -351,46 +355,63 @@ export default function HouseholdPage() {
                                 {daysLeft}d left
                               </Badge>
                             </div>
-                            <p className="text-xs text-text-secondary mt-1">
-                              Created{" "}
-                              {format(
-                                new Date(invite.createdAt),
-                                "MMM d, yyyy",
-                              )}
-                            </p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleRevokeInvite(
+                                  invite._id as Id<"householdInvites">,
+                                )
+                              }
+                              className="text-expense hover:bg-expense/10"
+                            >
+                              Revoke
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleRevokeInvite(
-                                invite._id as Id<"householdInvites">,
-                              )
-                            }
-                            className="text-expense hover:bg-expense/10"
-                          >
-                            Revoke
-                          </Button>
+                          <div className="flex gap-2">
+                            <code className="w-0 flex-1 px-3 py-1.5 bg-surface rounded-lg text-xs font-mono text-text-secondary truncate">
+                              {inviteLink}
+                            </code>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(inviteLink);
+                                showSuccess("Invite link copied!");
+                              }}
+                            >
+                              <Icon name="edit" size={14} />
+                              Copy
+                            </Button>
+                          </div>
+                          <p className="text-xs text-text-secondary">
+                            Created{" "}
+                            {format(
+                              new Date(invite.createdAt),
+                              "MMM d, yyyy",
+                            )}
+                          </p>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-text-secondary mb-3">
-                      No pending invites
-                    </p>
-                    <Button
-                      variant="secondary"
-                      onClick={handleCreateInvite}
-                      isLoading={creatingInvite}
-                      disabled={creatingInvite}
-                    >
-                      <Icon name="user_plus" size={16} />
-                      Generate Invite Code
-                    </Button>
-                  </div>
+                  <p className="text-sm text-text-secondary text-center py-2">
+                    No pending invites
+                  </p>
                 )}
+                <div className="pt-3 border-t border-border/50">
+                  <Button
+                    variant="secondary"
+                    onClick={handleCreateInvite}
+                    isLoading={creatingInvite}
+                    disabled={creatingInvite}
+                    className="w-full"
+                  >
+                    <Icon name="user_plus" size={16} />
+                    Generate Invite Code
+                  </Button>
+                </div>
               </CardContent>
             </MotionCard>
           )}
@@ -422,52 +443,6 @@ export default function HouseholdPage() {
             </motion.div>
           )}
 
-          {/* Invite Link (Owner Only) */}
-          {isOwner && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="bg-primary-pale/50 border-primary/20">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-primary/10 rounded-2xl">
-                      <Icon name="joint" size={24} className="text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-display font-bold text-foreground mb-2">
-                        Invite a Partner
-                      </h3>
-                      <p className="text-sm text-text-secondary mb-4">
-                        Share this link with someone to invite them to your
-                        household garden.
-                      </p>
-                      <div className="flex gap-2">
-                        <code className="w-0 flex-1 px-4 py-2 bg-surface rounded-xl text-sm font-mono text-foreground truncate">
-                          {typeof window !== "undefined"
-                            ? `${window.location.origin}/join?household=${household._id}`
-                            : `/join?household=${household._id}`}
-                        </code>
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            navigator.clipboard.writeText(
-                              `${window.location.origin}/join?household=${household._id}`,
-                            );
-                            showSuccess("Link copied!");
-                          }}
-                        >
-                          <Icon name="edit" size={16} />
-                          Copy
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
         </div>
       </main>
     </div>
