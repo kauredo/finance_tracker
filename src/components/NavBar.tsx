@@ -182,13 +182,13 @@ export default function NavBar() {
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden bg-surface"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden bg-surface border-t border-border/50 overflow-y-auto max-h-[calc(100dvh-4rem)] overscroll-contain"
             >
-              <div className="py-4 space-y-1 border-t border-border/50 overflow-y-auto max-h-[calc(100vh-5rem)] px-2 overscroll-contain">
+              <div className="py-4 space-y-1 px-2">
                 {mobileNavigation.map((item, index) => {
                   const isActive =
                     pathname === item.href ||

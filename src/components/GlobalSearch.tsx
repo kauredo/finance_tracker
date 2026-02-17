@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
@@ -23,7 +23,9 @@ interface SearchResult {
 export default function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { formatAmount } = useCurrency();
 
@@ -98,10 +100,29 @@ export default function GlobalSearch() {
     return allResults;
   }, [query, transactionsData, accounts, categories]);
 
+  // Reset selection when results change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [results]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (selectedIndex >= 0 && resultsRef.current) {
+      const item = resultsRef.current.children[selectedIndex] as HTMLElement;
+      item?.scrollIntoView({ block: "nearest" });
+    }
+  }, [selectedIndex]);
+
   useEffect(() => {
     // Keyboard shortcut: / to focus search
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "/" && !isOpen) {
+      const target = e.target as HTMLElement;
+      if (
+        e.key === "/" &&
+        !isOpen &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) &&
+        !target.isContentEditable
+      ) {
         e.preventDefault();
         setIsOpen(true);
         setTimeout(() => inputRef.current?.focus(), 100);
@@ -116,18 +137,37 @@ export default function GlobalSearch() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
-  const handleResultClick = (result: SearchResult) => {
-    setIsOpen(false);
-    setQuery("");
+  const handleResultClick = useCallback(
+    (result: SearchResult) => {
+      setIsOpen(false);
+      setQuery("");
 
-    if (result.type === "transaction") {
-      router.push("/transactions");
-    } else if (result.type === "account") {
-      router.push(`/accounts/${result.id}`);
-    } else if (result.type === "category") {
-      router.push("/categories");
-    }
-  };
+      if (result.type === "transaction") {
+        router.push("/transactions");
+      } else if (result.type === "account") {
+        router.push(`/accounts/${result.id}`);
+      } else if (result.type === "category") {
+        router.push("/categories");
+      }
+    },
+    [router],
+  );
+
+  const handleInputKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) => Math.max(prev - 1, -1));
+      } else if (e.key === "Enter" && selectedIndex >= 0 && results[selectedIndex]) {
+        e.preventDefault();
+        handleResultClick(results[selectedIndex]);
+      }
+    },
+    [results, selectedIndex, handleResultClick],
+  );
 
   if (!isOpen) {
     return (
@@ -167,6 +207,7 @@ export default function GlobalSearch() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleInputKeyDown}
               placeholder="Search transactions, accounts, categories..."
               className="flex-1 bg-transparent border-none outline-none text-foreground placeholder-muted focus:ring-0"
               autoFocus
@@ -177,7 +218,7 @@ export default function GlobalSearch() {
           </div>
 
           {/* Results */}
-          <div className="max-h-96 overflow-y-auto">
+          <div ref={resultsRef} className="max-h-96 overflow-y-auto">
             {results.length === 0 && query.trim().length >= 2 && !loading && (
               <div className="p-8 text-center text-muted">
                 <Icon
@@ -195,12 +236,12 @@ export default function GlobalSearch() {
               </div>
             )}
 
-            {results.map((result) => (
+            {results.map((result, index) => (
               <Button
                 key={`${result.type}-${result.id}`}
                 onClick={() => handleResultClick(result)}
                 variant="ghost"
-                className="w-full flex items-center gap-4 p-4 hover:bg-surface-alt text-left border-b border-border last:border-0 h-auto rounded-none"
+                className={`w-full flex items-center gap-4 p-4 hover:bg-surface-alt text-left border-b border-border last:border-0 h-auto rounded-none ${index === selectedIndex ? "bg-surface-alt" : ""}`}
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
