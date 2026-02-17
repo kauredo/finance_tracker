@@ -34,7 +34,7 @@ function JoinContent() {
   useEffect(() => {
     if (!authLoading && !user && inviteCode) {
       // Redirect to auth with return URL
-      router.push(`/auth?redirect=/join?code=${inviteCode}`);
+      router.push(`/auth?redirect=${encodeURIComponent(`/join?code=${inviteCode}`)}`);
     }
   }, [user, authLoading, inviteCode, router]);
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,25 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function AuthPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <Image src="/logo.png" alt="Loading" width={48} height={48} />
+          </motion.div>
+        </div>
+      }
+    >
+      <AuthContent />
+    </Suspense>
+  );
+}
+
+function AuthContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,6 +46,8 @@ export default function AuthPage() {
   const { signIn, signUp, user, loading: authLoading } = useAuth();
   const { signIn: convexSignIn } = useAuthActions();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams?.get("redirect") || "/dashboard";
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +65,9 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/dashboard");
+      router.push(redirectTo);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +78,7 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         await signIn(email, password);
-        router.push("/dashboard");
+        router.push(redirectTo);
       } else {
         await signUp(email, password, fullName);
         setSignupSuccess(true);
