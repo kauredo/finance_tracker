@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import Icon from "@/components/icons/Icon";
 import { motion, AnimatePresence } from "motion/react";
 import { useCurrency } from "@/hooks/useCurrency";
+import SpendingHeatmap from "./SpendingHeatmap";
 
 interface CategoryData {
   name: string;
@@ -36,6 +37,7 @@ interface MonthlyData {
 interface ReportsChartsProps {
   categoryData: CategoryData[];
   monthlyData: MonthlyData[];
+  rawTransactions?: { date: string; amount: number }[];
 }
 
 // Custom tooltip styles matching our theme
@@ -81,9 +83,12 @@ const PieTooltip = ({ active, payload }: any) => {
 export default function ReportsCharts({
   categoryData,
   monthlyData,
+  rawTransactions,
 }: ReportsChartsProps) {
   const { formatAmount } = useCurrency();
-  const [view, setView] = useState<"category" | "monthly">("category");
+  const [view, setView] = useState<"category" | "monthly" | "heatmap">(
+    "category",
+  );
 
   return (
     <div className="space-y-6">
@@ -115,6 +120,21 @@ export default function ReportsCharts({
           <Icon name="trending_up" size={16} />
           Monthly Trends
         </Button>
+        {rawTransactions && rawTransactions.length > 0 && (
+          <Button
+            onClick={() => setView("heatmap")}
+            variant={view === "heatmap" ? "primary" : "ghost"}
+            size="sm"
+            className={`rounded-xl transition-all ${
+              view === "heatmap"
+                ? ""
+                : "text-text-secondary hover:text-foreground"
+            }`}
+          >
+            <Icon name="calendar" size={16} />
+            Daily Activity
+          </Button>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -348,8 +368,21 @@ export default function ReportsCharts({
                 {monthlyData.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-border">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {monthlyData.slice(-4).map((month, index) => {
+                      {monthlyData.slice(-4).map((month, index, arr) => {
                         const net = month.income - month.expenses;
+                        // Get the previous month for comparison
+                        const allMonths = monthlyData;
+                        const currentIdx = allMonths.indexOf(
+                          allMonths.slice(-4)[index],
+                        );
+                        const prevMonth =
+                          currentIdx > 0 ? allMonths[currentIdx - 1] : null;
+                        const prevNet = prevMonth
+                          ? prevMonth.income - prevMonth.expenses
+                          : null;
+                        const change =
+                          prevNet !== null ? net - prevNet : null;
+
                         return (
                           <motion.div
                             key={month.month}
@@ -367,12 +400,40 @@ export default function ReportsCharts({
                               {net >= 0 ? "+" : ""}
                               {formatAmount(Math.abs(net))}
                             </p>
+                            {change !== null && (
+                              <p
+                                className={`text-[10px] mt-0.5 ${change >= 0 ? "text-growth" : "text-expense"}`}
+                              >
+                                {change >= 0 ? "↑" : "↓"}{" "}
+                                {formatAmount(Math.abs(change))}
+                              </p>
+                            )}
                           </motion.div>
                         );
                       })}
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+        {/* Spending Heatmap */}
+        {view === "heatmap" && rawTransactions && (
+          <motion.div
+            key="heatmap"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-display font-bold text-foreground mb-4 flex items-center gap-2">
+                  <span className="text-xl">🗓️</span>
+                  Daily Spending (Last 3 Months)
+                </h3>
+                <SpendingHeatmap transactions={rawTransactions} />
               </CardContent>
             </Card>
           </motion.div>

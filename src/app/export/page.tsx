@@ -14,6 +14,7 @@ import Icon from "@/components/icons/Icon";
 import Image from "next/image";
 import { format } from "date-fns";
 import { motion } from "motion/react";
+import { useCurrency } from "@/hooks/useCurrency";
 
 const exportFormats = [
   {
@@ -22,6 +23,13 @@ const exportFormats = [
     emoji: "📄",
     description: "Spreadsheet compatible",
     subtitle: "Works in Excel, Google Sheets, etc.",
+  },
+  {
+    id: "pdf",
+    name: "PDF",
+    emoji: "📋",
+    description: "Professional report",
+    subtitle: "Summary stats & formatted tables",
   },
 ];
 
@@ -36,7 +44,8 @@ export default function DataExportPage() {
   const [endDate, setEndDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd"),
   );
-  const [exportFormat, setExportFormat] = useState<"csv">("csv");
+  const [exportFormat, setExportFormat] = useState<"csv" | "pdf">("csv");
+  const { formatAmount } = useCurrency();
 
   // Fetch accounts from Convex
   const accounts = useQuery(api.accounts.list);
@@ -53,6 +62,249 @@ export default function DataExportPage() {
     limit: 10000, // Get all transactions for export
   });
 
+  const downloadFile = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportCSV = () => {
+    const transactions = transactionsData!.transactions;
+    const headers = [
+      "Date",
+      "Description",
+      "Amount",
+      "Category",
+      "Account",
+      "Type",
+    ];
+    const rows = transactions.map((tx) => [
+      tx.date,
+      `"${tx.description.replace(/"/g, '""')}"`,
+      tx.amount.toFixed(2),
+      tx.category?.name || "Uncategorized",
+      tx.account?.name || "Unknown",
+      tx.amount >= 0 ? "Income" : "Expense",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    downloadFile(blob, `transactions_${format(new Date(), "yyyy-MM-dd")}.csv`);
+  };
+
+  const exportPDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
+
+    const transactions = transactionsData!.transactions;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Colors (warm palette matching the app)
+    const primary: [number, number, number] = [255, 143, 171]; // #ff8fab pink
+    const textDark: [number, number, number] = [45, 40, 35];
+    const textMuted: [number, number, number] = [120, 110, 100];
+    const bgWarm: [number, number, number] = [252, 248, 243];
+
+    // --- Header ---
+    doc.setFillColor(...bgWarm);
+    doc.rect(0, 0, pageWidth, 40, "F");
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...textDark);
+    doc.text("Wallet Joy", 20, 18);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...textMuted);
+    const dateRange = [
+      startDate ? format(new Date(startDate), "MMM d, yyyy") : "All time",
+      endDate ? format(new Date(endDate), "MMM d, yyyy") : "Present",
+    ].join(" — ");
+    const accountLabel =
+      selectedAccount === "all"
+        ? "All Accounts"
+        : (accounts?.find((a) => a._id === selectedAccount)?.name ?? "");
+    doc.text(`${dateRange}  •  ${accountLabel}`, 20, 26);
+    doc.text(
+      `Exported ${format(new Date(), "MMM d, yyyy 'at' h:mm a")}`,
+      20,
+      32,
+    );
+
+    // --- Summary Stats ---
+    const totalIncome = transactions
+      .filter((tx) => tx.amount > 0)
+      .reduce((sum, tx) => sum + tx.amount, 0);
+    const totalExpenses = transactions
+      .filter((tx) => tx.amount < 0)
+      .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    const netAmount = totalIncome - totalExpenses;
+
+    let y = 50;
+    doc.setFillColor(...primary);
+    doc.rect(20, y, pageWidth - 40, 0.5, "F");
+    y += 8;
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...textDark);
+    doc.text("Summary", 20, y);
+    y += 8;
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    const summaryItems = [
+      ["Transactions", `${transactions.length}`],
+      ["Total Income", formatAmount(totalIncome)],
+      ["Total Expenses", formatAmount(totalExpenses)],
+      ["Net", formatAmount(netAmount)],
+    ];
+    const colWidth = (pageWidth - 40) / summaryItems.length;
+    summaryItems.forEach(([label, value], i) => {
+      const x = 20 + i * colWidth;
+      doc.setTextColor(...textMuted);
+      doc.text(label, x, y);
+      doc.setTextColor(...textDark);
+      doc.setFont("helvetica", "bold");
+      doc.text(value, x, y + 5);
+      doc.setFont("helvetica", "normal");
+    });
+    y += 16;
+
+    // --- Category Breakdown ---
+    const categoryMap = new Map<
+      string,
+      { amount: number; count: number }
+    >();
+    transactions
+      .filter((tx) => tx.amount < 0)
+      .forEach((tx) => {
+        const cat = tx.category?.name || "Uncategorized";
+        const prev = categoryMap.get(cat) || { amount: 0, count: 0 };
+        categoryMap.set(cat, {
+          amount: prev.amount + Math.abs(tx.amount),
+          count: prev.count + 1,
+        });
+      });
+
+    if (categoryMap.size > 0) {
+      const categoryRows = [...categoryMap.entries()]
+        .sort((a, b) => b[1].amount - a[1].amount)
+        .map(([name, { amount, count }]) => [
+          name,
+          `${count}`,
+          formatAmount(amount),
+          `${((amount / totalExpenses) * 100).toFixed(1)}%`,
+        ]);
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...textDark);
+      doc.text("Spending by Category", 20, y);
+      y += 2;
+
+      autoTable(doc, {
+        startY: y,
+        head: [["Category", "Count", "Amount", "% of Total"]],
+        body: categoryRows,
+        margin: { left: 20, right: 20 },
+        theme: "plain",
+        headStyles: {
+          fillColor: bgWarm,
+          textColor: textMuted,
+          fontSize: 8,
+          fontStyle: "bold",
+          cellPadding: 3,
+        },
+        bodyStyles: {
+          textColor: textDark,
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        alternateRowStyles: { fillColor: [250, 247, 242] },
+        columnStyles: {
+          2: { halign: "right" },
+          3: { halign: "right" },
+        },
+      });
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    }
+
+    // --- Transactions Table ---
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...textDark);
+    doc.text("Transactions", 20, y);
+    y += 2;
+
+    const txRows = transactions.map((tx) => [
+      tx.date,
+      tx.description,
+      tx.category?.name || "—",
+      tx.account?.name || "—",
+      `${tx.amount >= 0 ? "+" : ""}${formatAmount(Math.abs(tx.amount))}`,
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Date", "Description", "Category", "Account", "Amount"]],
+      body: txRows,
+      margin: { left: 20, right: 20 },
+      theme: "plain",
+      headStyles: {
+        fillColor: bgWarm,
+        textColor: textMuted,
+        fontSize: 8,
+        fontStyle: "bold",
+        cellPadding: 3,
+      },
+      bodyStyles: {
+        textColor: textDark,
+        fontSize: 7.5,
+        cellPadding: 2.5,
+      },
+      alternateRowStyles: { fillColor: [250, 247, 242] },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        4: { halign: "right" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 4) {
+          const raw = transactions[data.row.index];
+          if (raw && raw.amount >= 0) {
+            data.cell.styles.textColor = [56, 120, 72];
+          }
+        }
+      },
+    });
+
+    // --- Footer on every page ---
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setFontSize(7);
+      doc.setTextColor(...textMuted);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" },
+      );
+    }
+
+    doc.save(`wallet-joy-report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
+
   const handleExport = async () => {
     if (!transactionsData?.transactions) {
       showError("No data to export");
@@ -61,40 +313,11 @@ export default function DataExportPage() {
 
     setExporting(true);
     try {
-      // Generate CSV content
-      const headers = [
-        "Date",
-        "Description",
-        "Amount",
-        "Category",
-        "Account",
-        "Type",
-      ];
-      const rows = transactionsData.transactions.map((tx) => [
-        tx.date,
-        `"${tx.description.replace(/"/g, '""')}"`,
-        tx.amount.toFixed(2),
-        tx.category?.name || "Uncategorized",
-        tx.account?.name || "Unknown",
-        tx.amount >= 0 ? "Income" : "Expense",
-      ]);
-
-      const csvContent = [
-        headers.join(","),
-        ...rows.map((row) => row.join(",")),
-      ].join("\n");
-
-      // Create and download file
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `transactions_${format(new Date(), "yyyy-MM-dd")}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
+      if (exportFormat === "pdf") {
+        await exportPDF();
+      } else {
+        exportCSV();
+      }
       showSuccess("Your data has been harvested! 🌾");
     } catch (error) {
       console.error("Error exporting data:", error);
@@ -168,7 +391,7 @@ export default function DataExportPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 + index * 0.05 }}
-                      onClick={() => setExportFormat(format.id as "csv")}
+                      onClick={() => setExportFormat(format.id as "csv" | "pdf")}
                       className={`p-5 rounded-2xl border-2 transition-all text-left ${
                         exportFormat === format.id
                           ? "border-primary bg-primary-pale shadow-md"

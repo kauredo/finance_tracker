@@ -26,6 +26,8 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAccount, setSelectedAccount] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [minAmount, setMinAmount] = useState<string>("");
+  const [maxAmount, setMaxAmount] = useState<string>("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -58,6 +60,8 @@ export default function TransactionsPage() {
     searchQuery ||
     selectedAccount !== "all" ||
     selectedCategory !== "all" ||
+    minAmount ||
+    maxAmount ||
     dateRange.startDate ||
     dateRange.endDate;
 
@@ -65,6 +69,8 @@ export default function TransactionsPage() {
     setSearchQuery("");
     setSelectedAccount("all");
     setSelectedCategory("all");
+    setMinAmount("");
+    setMaxAmount("");
     setPreset("all");
   };
 
@@ -204,6 +210,34 @@ export default function TransactionsPage() {
                         {dateRange.startDate ? "Custom Range" : "All Time"}
                       </Button>
                     </div>
+
+                    {/* Amount Range */}
+                    <div className="sm:col-span-2 lg:col-span-4">
+                      <p className="text-xs text-text-secondary mb-2">
+                        Amount range (absolute value)
+                      </p>
+                      <div className="flex gap-2 max-w-sm">
+                        <Input
+                          type="number"
+                          placeholder="Min"
+                          value={minAmount}
+                          onChange={(e) => setMinAmount(e.target.value)}
+                          step="0.01"
+                          min="0"
+                        />
+                        <span className="flex items-center text-muted text-sm">
+                          –
+                        </span>
+                        <Input
+                          type="number"
+                          placeholder="Max"
+                          value={maxAmount}
+                          onChange={(e) => setMaxAmount(e.target.value)}
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Date Range Picker */}
@@ -240,6 +274,8 @@ export default function TransactionsPage() {
             categoryFilter={selectedCategory}
             startDate={dateRange.startDate}
             endDate={dateRange.endDate}
+            minAmount={minAmount ? parseFloat(minAmount) : undefined}
+            maxAmount={maxAmount ? parseFloat(maxAmount) : undefined}
           />
         </MotionCard>
 

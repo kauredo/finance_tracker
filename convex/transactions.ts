@@ -17,6 +17,8 @@ export const list = query({
     dateFrom: v.optional(v.string()),
     dateTo: v.optional(v.string()),
     search: v.optional(v.string()),
+    minAmount: v.optional(v.number()),
+    maxAmount: v.optional(v.number()),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
   },
@@ -64,6 +66,16 @@ export const list = query({
       const searchLower = args.search.toLowerCase();
       transactions = transactions.filter((t) =>
         t.description.toLowerCase().includes(searchLower),
+      );
+    }
+    if (args.minAmount !== undefined) {
+      transactions = transactions.filter(
+        (t) => Math.abs(t.amount) >= args.minAmount!,
+      );
+    }
+    if (args.maxAmount !== undefined) {
+      transactions = transactions.filter(
+        (t) => Math.abs(t.amount) <= args.maxAmount!,
       );
     }
 

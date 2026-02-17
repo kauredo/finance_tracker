@@ -19,6 +19,27 @@ import { motion, AnimatePresence } from "motion/react";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useDateRange } from "@/hooks/useDateRange";
 
+function ChangeIndicator({
+  value,
+  label,
+  invert = false,
+}: {
+  value: number | null;
+  label: string;
+  invert?: boolean;
+}) {
+  if (value === null) return null;
+  const isPositive = invert ? value < 0 : value > 0;
+  const absVal = Math.abs(value);
+  return (
+    <p
+      className={`text-xs mt-1 ${isPositive ? "text-growth" : "text-expense"}`}
+    >
+      {isPositive ? "↑" : "↓"} {absVal.toFixed(1)}% {label}
+    </p>
+  );
+}
+
 interface CategoryData {
   name: string;
   value: number;
@@ -45,7 +66,7 @@ const COLORS = [
 
 export default function ReportsPage() {
   const { user, loading: authLoading } = useAuth();
-  const { currency } = useCurrency();
+  const { currency, formatAmount } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
   const { dateRange, setDateRange, setPreset } = useDateRange("all");
@@ -60,7 +81,7 @@ export default function ReportsPage() {
   const loading = transactionsData === undefined;
 
   // Process data for charts and summary
-  const { categoryData, monthlyData, summary } = useMemo(() => {
+  const { categoryData, monthlyData, summary, comparison } = useMemo(() => {
     if (!transactionsData?.transactions) {
       return {
         categoryData: [],
@@ -144,9 +165,55 @@ export default function ReportsPage() {
     const netSavings = totalIncome - totalExpenses;
     const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
+    // Month-over-month comparison (last two months with data)
+    const sortedMonths = Array.from(monthMap.entries()).sort(([a], [b]) =>
+      a.localeCompare(b),
+    );
+    let comparison: {
+      incomeChange: number | null;
+      expenseChange: number | null;
+      netChange: number | null;
+      savingsRateChange: number | null;
+      label: string;
+    } | null = null;
+
+    if (sortedMonths.length >= 2) {
+      const latest = sortedMonths[sortedMonths.length - 1];
+      const prev = sortedMonths[sortedMonths.length - 2];
+      const latestIncome = latest[1].income;
+      const latestExpenses = latest[1].expenses;
+      const prevIncome = prev[1].income;
+      const prevExpenses = prev[1].expenses;
+      const latestNet = latestIncome - latestExpenses;
+      const prevNet = prevIncome - prevExpenses;
+      const latestRate =
+        latestIncome > 0 ? (latestNet / latestIncome) * 100 : 0;
+      const prevRate = prevIncome > 0 ? (prevNet / prevIncome) * 100 : 0;
+
+      const pctChange = (curr: number, prev: number) =>
+        prev > 0 ? ((curr - prev) / prev) * 100 : null;
+
+      const latestLabel = new Date(
+        latest[0] + "-01",
+      ).toLocaleDateString("en-US", { month: "short" });
+      const prevLabel = new Date(prev[0] + "-01").toLocaleDateString(
+        "en-US",
+        { month: "short" },
+      );
+
+      comparison = {
+        incomeChange: pctChange(latestIncome, prevIncome),
+        expenseChange: pctChange(latestExpenses, prevExpenses),
+        netChange: prevNet !== 0 ? latestNet - prevNet : null,
+        savingsRateChange: prevRate !== 0 ? latestRate - prevRate : null,
+        label: `${latestLabel} vs ${prevLabel}`,
+      };
+    }
+
     return {
       categoryData: catData,
       monthlyData: monthData,
+      comparison,
       summary: {
         totalIncome,
         totalExpenses,
@@ -317,6 +384,12 @@ export default function ReportsPage() {
                         variant="income"
                         size="md"
                       />
+                      {comparison && (
+                        <ChangeIndicator
+                          value={comparison.incomeChange}
+                          label={comparison.label}
+                        />
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -338,6 +411,13 @@ export default function ReportsPage() {
                         variant="expense"
                         size="md"
                       />
+                      {comparison && (
+                        <ChangeIndicator
+                          value={comparison.expenseChange}
+                          label={comparison.label}
+                          invert
+                        />
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -359,6 +439,15 @@ export default function ReportsPage() {
                         variant={summary.netSavings >= 0 ? "income" : "expense"}
                         size="md"
                       />
+                      {comparison?.netChange !== null && comparison?.netChange !== undefined && (
+                        <p
+                          className={`text-xs mt-1 ${comparison.netChange >= 0 ? "text-growth" : "text-expense"}`}
+                        >
+                          {comparison.netChange >= 0 ? "↑" : "↓"}{" "}
+                          {formatAmount(Math.abs(comparison.netChange))}{" "}
+                          {comparison.label}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -398,6 +487,15 @@ export default function ReportsPage() {
                       >
                         {summary.savingsRate.toFixed(1)}%
                       </p>
+                      {comparison?.savingsRateChange !== null && comparison?.savingsRateChange !== undefined && (
+                        <p
+                          className={`text-xs mt-1 ${comparison.savingsRateChange >= 0 ? "text-growth" : "text-expense"}`}
+                        >
+                          {comparison.savingsRateChange >= 0 ? "↑" : "↓"}{" "}
+                          {Math.abs(comparison.savingsRateChange).toFixed(1)}pp{" "}
+                          {comparison.label}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -414,6 +512,10 @@ export default function ReportsPage() {
                 <ReportsCharts
                   categoryData={categoryData}
                   monthlyData={monthlyData}
+                  rawTransactions={transactionsData?.transactions?.map((tx) => ({
+                    date: tx.date,
+                    amount: tx.amount,
+                  }))}
                 />
               </motion.div>
             ) : (

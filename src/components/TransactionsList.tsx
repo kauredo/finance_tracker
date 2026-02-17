@@ -39,6 +39,8 @@ interface TransactionsListProps {
   categoryFilter?: string;
   startDate?: string;
   endDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
   limit?: number;
   showPagination?: boolean;
 }
@@ -79,6 +81,8 @@ export default function TransactionsList({
   categoryFilter = "all",
   startDate,
   endDate,
+  minAmount,
+  maxAmount,
   showPagination = true,
 }: TransactionsListProps = {}) {
   const { isAuthenticated } = useAuth();
@@ -102,6 +106,8 @@ export default function TransactionsList({
     dateFrom: startDate || undefined,
     dateTo: endDate || undefined,
     search: searchQuery || undefined,
+    minAmount: minAmount ?? undefined,
+    maxAmount: maxAmount ?? undefined,
     limit: itemsPerPage,
     offset: (currentPage - 1) * itemsPerPage,
   };

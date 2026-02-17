@@ -47,15 +47,25 @@ export default function DashboardPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
 
-  // Get current month date range for monthly stats
-  const dateRange = useMemo(() => {
+  // Get current and previous month date ranges
+  const { dateRange, prevDateRange } = useMemo(() => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevFirstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevLastDay = new Date(now.getFullYear(), now.getMonth(), 0);
     return {
-      from: firstDay.toISOString().split("T")[0],
-      to: now.toISOString().split("T")[0],
+      dateRange: {
+        from: firstDay.toISOString().split("T")[0],
+        to: now.toISOString().split("T")[0],
+      },
+      prevDateRange: {
+        from: prevFirstDay.toISOString().split("T")[0],
+        to: prevLastDay.toISOString().split("T")[0],
+      },
     };
   }, []);
+
+  const { currency, formatAmount } = useCurrency();
 
   // Fetch user profile using Convex
   const userProfile = useQuery(api.users.getCurrentUserProfile);
@@ -63,10 +73,14 @@ export default function DashboardPage() {
   // Fetch all-time stats
   const allTimeStats = useQuery(api.transactions.getStats, {});
 
-  // Fetch monthly stats
+  // Fetch monthly stats (current + previous)
   const monthlyStats = useQuery(api.transactions.getStats, {
     dateFrom: dateRange.from,
     dateTo: dateRange.to,
+  });
+  const prevMonthStats = useQuery(api.transactions.getStats, {
+    dateFrom: prevDateRange.from,
+    dateTo: prevDateRange.to,
   });
 
   // Fetch accounts for total balance
@@ -93,6 +107,102 @@ export default function DashboardPage() {
     };
   }, [allTimeStats, monthlyStats, budgets, accounts]);
 
+  // Compute dashboard insights
+  const insights = useMemo(() => {
+    const items: {
+      key: string;
+      icon: string;
+      text: string;
+      color: string;
+      href?: string;
+    }[] = [];
+
+    // Top spending category this month
+    if (monthlyStats?.categoryStats) {
+      const topExpense = monthlyStats.categoryStats
+        .filter((c) => c.amount < 0)
+        .sort((a, b) => a.amount - b.amount)[0];
+      const catName = (topExpense?.category as any)?.name;
+      if (topExpense && catName) {
+        items.push({
+          key: "top-category",
+          icon: "📊",
+          text: `Top spend this month: ${catName} (${formatAmount(Math.abs(topExpense.amount))})`,
+          color: "primary",
+          href: "/reports",
+        });
+      }
+    }
+
+    // Month-over-month spending change
+    if (
+      monthlyStats &&
+      prevMonthStats &&
+      prevMonthStats.expenses > 0
+    ) {
+      const change =
+        ((monthlyStats.expenses - prevMonthStats.expenses) /
+          prevMonthStats.expenses) *
+        100;
+      if (Math.abs(change) >= 5) {
+        items.push({
+          key: "spending-change",
+          icon: change > 0 ? "📈" : "📉",
+          text:
+            change > 0
+              ? `Spending is up ${change.toFixed(0)}% vs last month`
+              : `Spending is down ${Math.abs(change).toFixed(0)}% vs last month`,
+          color: change > 0 ? "expense" : "growth",
+          href: "/reports",
+        });
+      }
+    }
+
+    // No budgets set up
+    if (budgets && budgets.length === 0) {
+      items.push({
+        key: "no-budgets",
+        icon: "🎯",
+        text: "Set up monthly budgets to track your spending limits",
+        color: "primary",
+        href: "/budgets",
+      });
+    }
+
+    // Budget warning
+    if (stats.totalBudget > 0) {
+      const pct = (stats.budgetSpent / stats.totalBudget) * 100;
+      if (pct >= 90) {
+        items.push({
+          key: "budget-warning",
+          icon: "⚠️",
+          text: `You've used ${pct.toFixed(0)}% of your monthly budget`,
+          color: "expense",
+          href: "/budgets",
+        });
+      }
+    }
+
+    // Savings rate
+    if (monthlyStats && monthlyStats.income > 0) {
+      const rate =
+        ((monthlyStats.income - monthlyStats.expenses) /
+          monthlyStats.income) *
+        100;
+      if (rate >= 30) {
+        items.push({
+          key: "savings-rate",
+          icon: "🌸",
+          text: `${rate.toFixed(0)}% savings rate this month — excellent!`,
+          color: "growth",
+          href: "/reports",
+        });
+      }
+    }
+
+    return items.slice(0, 3); // Show max 3 insights
+  }, [monthlyStats, prevMonthStats, budgets, stats, formatAmount]);
+
   // Check welcome tour when user profile loads
   useEffect(() => {
     if (userProfile && !userProfile.hasSeenWelcomeTour) {
@@ -111,8 +221,6 @@ export default function DashboardPage() {
       router.push("/pending");
     }
   }, [loading, isAuthenticated, user, router]);
-
-  const { currency, formatAmount } = useCurrency();
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -267,6 +375,43 @@ export default function DashboardPage() {
             </div>
           </Card>
         </motion.div>
+
+        {/* Insight Cards */}
+        {insights.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="flex flex-wrap gap-2 mb-6"
+          >
+            {insights.map((insight) => {
+              const colorClass =
+                insight.color === "expense"
+                  ? "bg-expense/5 border-expense/15 text-expense hover:bg-expense/10"
+                  : insight.color === "growth"
+                    ? "bg-growth-pale border-growth/15 text-growth hover:bg-growth/10"
+                    : "bg-primary-pale border-primary/15 text-primary hover:bg-primary/10";
+              return insight.href ? (
+                <Link
+                  key={insight.key}
+                  href={insight.href}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border transition-colors ${colorClass}`}
+                >
+                  <span>{insight.icon}</span>
+                  <span className="font-medium">{insight.text}</span>
+                </Link>
+              ) : (
+                <div
+                  key={insight.key}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm border ${colorClass}`}
+                >
+                  <span>{insight.icon}</span>
+                  <span className="font-medium">{insight.text}</span>
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

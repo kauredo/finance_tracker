@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import ToastContainer from "@/components/ui/Toast";
+import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -68,6 +69,7 @@ export default function RootLayout({
                 </a>
                 <div id="main-content">{children}</div>
                 <ToastContainer />
+                <KeyboardShortcutsModal />
               </ToastProvider>
             </AuthProvider>
           </ThemeProvider>
