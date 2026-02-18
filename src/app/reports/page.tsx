@@ -101,12 +101,30 @@ export default function ReportsPage() {
     let totalIncome = 0;
     let totalExpenses = 0;
 
-    transactionsData.transactions.forEach((tx) => {
+    // Build reimbursement totals map for split-aware calculation
+    const reimbursementTotals = new Map<string, number>();
+    const txList = transactionsData.transactions;
+    for (const tx of txList) {
+      if (tx.splitParentId) {
+        const key = tx.splitParentId as string;
+        reimbursementTotals.set(key, (reimbursementTotals.get(key) ?? 0) + tx.amount);
+      }
+    }
+
+    txList.forEach((tx) => {
       if (tx.isTransfer) return; // Exclude transfers from cash flow stats
+      if (tx.splitParentId) return; // Skip reimbursement children
+
       const categoryName = tx.category?.name || "Other";
-      const amount = tx.amount;
       const date = new Date(tx.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+      // For split parents, use net amount
+      let amount = tx.amount;
+      if (tx.isSplit) {
+        const reimbursed = reimbursementTotals.get(tx._id as string) ?? 0;
+        amount = tx.amount + reimbursed; // e.g. -120 + 100 = -20
+      }
 
       // Category breakdown (only expenses)
       if (amount < 0) {

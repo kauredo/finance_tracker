@@ -21,11 +21,21 @@ import { useCurrency } from "@/hooks/useCurrency";
 interface AddTransactionModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  splitParentId?: Id<"transactions">;
+  splitParentData?: {
+    description: string;
+    amount: number;
+    splitParticipants: number;
+    accountId: Id<"accounts">;
+    categoryId?: Id<"categories">;
+  };
 }
 
 export default function AddTransactionModal({
   onClose,
   onSuccess,
+  splitParentId,
+  splitParentData,
 }: AddTransactionModalProps) {
   const toast = useToast();
   const { symbol } = useCurrency();
@@ -38,14 +48,23 @@ export default function AddTransactionModal({
   // Mutation to create transaction
   const createTransaction = useMutation(api.transactions.create);
 
+  const isReimbursementMode = !!splitParentId;
+  const suggestedShare = splitParentData
+    ? Math.abs(splitParentData.amount) / splitParentData.splitParticipants
+    : 0;
+
   const [formData, setFormData] = useState({
-    accountId: "" as string,
+    accountId: (splitParentData?.accountId ?? "") as string,
     date: new Date().toISOString().split("T")[0],
-    description: "",
-    amount: "",
-    categoryId: "" as string,
+    description: isReimbursementMode
+      ? `Reimbursement for ${splitParentData?.description ?? ""}`
+      : "",
+    amount: isReimbursementMode ? suggestedShare.toFixed(2) : "",
+    categoryId: (splitParentData?.categoryId ?? "") as string,
     notes: "",
-    transactionType: "expense", // expense or income
+    transactionType: isReimbursementMode ? "income" : "expense",
+    isSplit: false,
+    splitParticipants: "2",
   });
 
   // Auto-select first account when accounts load
@@ -92,6 +111,11 @@ export default function AddTransactionModal({
           : undefined,
         notes: formData.notes || undefined,
         isTransfer: formData.transactionType === "transfer" || undefined,
+        isSplit: formData.isSplit || undefined,
+        splitParticipants: formData.isSplit
+          ? parseInt(formData.splitParticipants)
+          : undefined,
+        splitParentId: splitParentId || undefined,
       });
 
       toast.success("Transaction created successfully!");
@@ -124,61 +148,67 @@ export default function AddTransactionModal({
     <Modal open={true} onOpenChange={(open) => !open && onClose()}>
       <ModalContent size="md">
         <ModalHeader>
-          <ModalTitle>Add Transaction</ModalTitle>
+          <ModalTitle>
+            {isReimbursementMode ? "Add Reimbursement" : "Add Transaction"}
+          </ModalTitle>
         </ModalHeader>
 
         <form onSubmit={handleSubmit}>
           <ModalBody className="space-y-4 max-h-[60vh] overflow-y-auto">
             {/* Transaction Type Toggle */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Transaction Type
-              </label>
-              <div
-                className="grid grid-cols-2 gap-3"
-                role="radiogroup"
-                aria-label="Transaction type"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={formData.transactionType === "expense"}
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      transactionType: "expense",
-                    }))
-                  }
-                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                    formData.transactionType === "expense"
-                      ? "border-expense bg-expense text-white"
-                      : "border-border bg-surface text-foreground hover:border-expense/50"
-                  }`}
+            {!isReimbursementMode && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Transaction Type
+                </label>
+                <div
+                  className="grid grid-cols-2 gap-3"
+                  role="radiogroup"
+                  aria-label="Transaction type"
                 >
-                  <Icon name="expense" size={16} />
-                  Expense
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={formData.transactionType === "income"}
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      transactionType: "income",
-                    }))
-                  }
-                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
-                    formData.transactionType === "income"
-                      ? "border-growth bg-growth text-white"
-                      : "border-border bg-surface text-foreground hover:border-growth/50"
-                  }`}
-                >
-                  <Icon name="income" size={16} />
-                  Income
-                </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={formData.transactionType === "expense"}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        transactionType: "expense",
+                        isSplit: false,
+                      }))
+                    }
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 ${
+                      formData.transactionType === "expense"
+                        ? "border-expense bg-expense text-white"
+                        : "border-border bg-surface text-foreground hover:border-expense/50"
+                    }`}
+                  >
+                    <Icon name="expense" size={16} />
+                    Expense
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={formData.transactionType === "income"}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        transactionType: "income",
+                        isSplit: false,
+                      }))
+                    }
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 ${
+                      formData.transactionType === "income"
+                        ? "border-growth bg-growth text-white"
+                        : "border-border bg-surface text-foreground hover:border-growth/50"
+                    }`}
+                  >
+                    <Icon name="income" size={16} />
+                    Income
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Account */}
             <div>
@@ -280,27 +310,99 @@ export default function AddTransactionModal({
             </div>
 
             {/* Transfer Toggle */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.transactionType === "transfer"}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    transactionType: e.target.checked ? "transfer" : "expense",
-                  }))
-                }
-                className="rounded border-border accent-primary w-4 h-4"
-              />
-              <div>
-                <span className="text-sm font-medium text-foreground">
-                  Transfer between my accounts
-                </span>
-                <p className="text-xs text-text-secondary">
-                  Excluded from income/expense stats
-                </p>
-              </div>
-            </label>
+            {!isReimbursementMode && (
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.transactionType === "transfer"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      transactionType: e.target.checked ? "transfer" : "expense",
+                      isSplit: false,
+                    }))
+                  }
+                  className="rounded border-border accent-primary w-4 h-4"
+                />
+                <div>
+                  <span className="text-sm font-medium text-foreground">
+                    Transfer between my accounts
+                  </span>
+                  <p className="text-xs text-text-secondary">
+                    Excluded from income/expense stats
+                  </p>
+                </div>
+              </label>
+            )}
+
+            {/* Split Toggle (expense only, not transfer, not reimbursement) */}
+            {!isReimbursementMode &&
+              formData.transactionType === "expense" && (
+                <>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isSplit}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isSplit: e.target.checked,
+                        }))
+                      }
+                      className="rounded border-border accent-primary w-4 h-4"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-foreground">
+                        Split with others
+                      </span>
+                      <p className="text-xs text-text-secondary">
+                        Track reimbursements and show your real share
+                      </p>
+                    </div>
+                  </label>
+
+                  {formData.isSplit && (
+                    <div className="ml-7 space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Total people (including you)
+                        </label>
+                        <Input
+                          type="number"
+                          min="2"
+                          step="1"
+                          value={formData.splitParticipants}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              splitParticipants: e.target.value,
+                            }))
+                          }
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (isNaN(val) || val < 2) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                splitParticipants: "2",
+                              }));
+                            }
+                          }}
+                          required
+                        />
+                      </div>
+                      {formData.amount && parseInt(formData.splitParticipants) >= 2 && (
+                        <p className="text-sm text-primary font-medium">
+                          Your share: {symbol}
+                          {(
+                            parseFloat(formData.amount) /
+                            parseInt(formData.splitParticipants)
+                          ).toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
 
             {/* Notes */}
             <div>
@@ -328,7 +430,7 @@ export default function AddTransactionModal({
               isLoading={loading}
               variant="bloom"
             >
-              Create Transaction
+              {isReimbursementMode ? "Add Reimbursement" : "Create Transaction"}
             </Button>
           </ModalFooter>
         </form>

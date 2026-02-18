@@ -24,6 +24,9 @@ interface Transaction {
   description: string;
   amount: number;
   isTransfer?: boolean;
+  isSplit?: boolean;
+  splitParticipants?: number;
+  splitParentId?: Id<"transactions">;
   category: {
     _id: Id<"categories">;
     name: string;
@@ -395,6 +398,24 @@ export default function TransactionsList({
                                 </span>
                               </>
                             )}
+                            {t.isSplit && t.splitParticipants && (
+                              <>
+                                <span className="text-text-secondary">•</span>
+                                <span className="inline-flex items-center gap-0.5 text-xs text-primary">
+                                  <Icon name="joint" size={11} />
+                                  Split {t.splitParticipants} ways
+                                </span>
+                              </>
+                            )}
+                            {t.splitParentId && (
+                              <>
+                                <span className="text-text-secondary">•</span>
+                                <span className="inline-flex items-center gap-0.5 text-xs text-growth">
+                                  <Icon name="income" size={11} />
+                                  Reimbursement
+                                </span>
+                              </>
+                            )}
                           </div>
                           {/* Notes preview */}
                           {t.notes && (
@@ -414,6 +435,11 @@ export default function TransactionsList({
                             {t.amount > 0 ? "+" : ""}
                             {formatAmount(Math.abs(t.amount))}
                           </span>
+                          {t.isSplit && t.splitParticipants && (
+                            <div className="text-xs text-primary mt-0.5">
+                              Your share: {formatAmount(Math.abs(t.amount) / t.splitParticipants)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -514,8 +540,8 @@ export default function TransactionsList({
           onClose={() => setSelectedTransactionId(null)}
           onUpdate={() => {
             setSelectedTransactionId(null);
-            // With Convex, data refetches automatically!
           }}
+          onNavigateToTransaction={(id) => setSelectedTransactionId(id)}
         />
       )}
     </div>

@@ -49,6 +49,8 @@ export default function EditTransactionModal({
     categoryId: "",
     notes: "",
     transactionType: "expense",
+    isSplit: false,
+    splitParticipants: "2",
   });
 
   // Initialize form when transaction loads
@@ -62,6 +64,8 @@ export default function EditTransactionModal({
         categoryId: transaction.categoryId || "",
         notes: transaction.notes || "",
         transactionType: transaction.amount < 0 ? "expense" : "income",
+        isSplit: transaction.isSplit ?? false,
+        splitParticipants: (transaction.splitParticipants ?? 2).toString(),
       });
     }
   }, [transaction]);
@@ -93,6 +97,10 @@ export default function EditTransactionModal({
           ? (formData.categoryId as Id<"categories">)
           : undefined,
         notes: formData.notes || undefined,
+        isSplit: formData.isSplit || undefined,
+        splitParticipants: formData.isSplit
+          ? parseInt(formData.splitParticipants)
+          : undefined,
       });
 
       toast.success("Transaction updated successfully!");
@@ -154,11 +162,12 @@ export default function EditTransactionModal({
                       transactionType: "expense",
                     }))
                   }
-                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                  disabled={!!transaction?.splitParentId}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 ${
                     formData.transactionType === "expense"
                       ? "border-expense bg-expense text-white"
                       : "border-border bg-surface text-foreground hover:border-expense/50"
-                  }`}
+                  } ${transaction?.splitParentId ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <Icon name="expense" size={16} />
                   Expense
@@ -171,13 +180,15 @@ export default function EditTransactionModal({
                     setFormData((prev) => ({
                       ...prev,
                       transactionType: "income",
+                      isSplit: false,
                     }))
                   }
-                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all ${
+                  disabled={!!transaction?.splitParentId}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 font-medium transition-all duration-200 ${
                     formData.transactionType === "income"
                       ? "border-growth bg-growth text-white"
                       : "border-border bg-surface text-foreground hover:border-growth/50"
-                  }`}
+                  } ${transaction?.splitParentId ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <Icon name="income" size={16} />
                   Income
@@ -281,6 +292,76 @@ export default function EditTransactionModal({
                 ))}
               </Select>
             </div>
+
+            {/* Split Toggle (expense only, not a reimbursement child) */}
+            {formData.transactionType === "expense" &&
+              !transaction?.splitParentId && (
+                <>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isSplit}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isSplit: e.target.checked,
+                        }))
+                      }
+                      className="rounded border-border accent-primary w-4 h-4"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-foreground">
+                        Split with others
+                      </span>
+                      <p className="text-xs text-text-secondary">
+                        Track reimbursements and show your real share
+                      </p>
+                    </div>
+                  </label>
+
+                  {formData.isSplit && (
+                    <div className="ml-7 space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Total people (including you)
+                        </label>
+                        <Input
+                          type="number"
+                          min="2"
+                          step="1"
+                          value={formData.splitParticipants}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              splitParticipants: e.target.value,
+                            }))
+                          }
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (isNaN(val) || val < 2) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                splitParticipants: "2",
+                              }));
+                            }
+                          }}
+                          required
+                        />
+                      </div>
+                      {formData.amount &&
+                        parseInt(formData.splitParticipants) >= 2 && (
+                          <p className="text-sm text-primary font-medium">
+                            Your share: {symbol}
+                            {(
+                              parseFloat(formData.amount) /
+                              parseInt(formData.splitParticipants)
+                            ).toFixed(2)}
+                          </p>
+                        )}
+                    </div>
+                  )}
+                </>
+              )}
 
             {/* Notes */}
             <div>

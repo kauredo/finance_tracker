@@ -146,6 +146,41 @@ export const getById = query({
 });
 
 /**
+ * Get reimbursements linked to a split parent transaction
+ */
+export const getReimbursements = query({
+  args: { parentId: v.id("transactions") },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const parent = await ctx.db.get(args.parentId);
+
+    if (!parent) {
+      throw new Error("Transaction not found");
+    }
+
+    const hasAccess = await canAccessAccount(ctx, user._id, parent.accountId);
+    if (!hasAccess) {
+      throw new Error("Access denied");
+    }
+
+    const reimbursements = await ctx.db
+      .query("transactions")
+      .withIndex("by_split_parent", (q) => q.eq("splitParentId", args.parentId))
+      .collect();
+
+    // Enrich with account data
+    const uniqueAccIds = [...new Set(reimbursements.map((r) => r.accountId))];
+    const accDocs = await Promise.all(uniqueAccIds.map((id) => ctx.db.get(id)));
+    const accMap = new Map(accDocs.filter(Boolean).map((a) => [a!._id, a]));
+
+    return reimbursements.map((r) => ({
+      ...r,
+      account: accMap.get(r.accountId) ?? null,
+    }));
+  },
+});
+
+/**
  * Create a new transaction
  */
 export const create = mutation({
@@ -158,10 +193,35 @@ export const create = mutation({
     notes: v.optional(v.string()),
     isRecurring: v.optional(v.boolean()),
     isTransfer: v.optional(v.boolean()),
+    isSplit: v.optional(v.boolean()),
+    splitParticipants: v.optional(v.number()),
+    splitParentId: v.optional(v.id("transactions")),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     await requireAccountAccess(ctx, user._id, args.accountId);
+
+    // Validate split fields
+    if (args.isSplit) {
+      if (args.isTransfer) {
+        throw new Error("A transaction cannot be both a split and a transfer");
+      }
+      if (args.amount >= 0) {
+        throw new Error("Split expenses must be negative amounts");
+      }
+      if (!args.splitParticipants || args.splitParticipants < 2) {
+        throw new Error("Split expenses need at least 2 participants");
+      }
+    }
+    if (args.splitParentId) {
+      const parent = await ctx.db.get(args.splitParentId);
+      if (!parent || !parent.isSplit) {
+        throw new Error("Invalid split parent transaction");
+      }
+      if (args.amount <= 0) {
+        throw new Error("Reimbursements must be positive amounts");
+      }
+    }
 
     const transactionId = await ctx.db.insert("transactions", {
       accountId: args.accountId,
@@ -173,6 +233,9 @@ export const create = mutation({
       notes: args.notes,
       isRecurring: args.isRecurring ?? false,
       isTransfer: args.isTransfer ?? false,
+      isSplit: args.isSplit,
+      splitParticipants: args.splitParticipants,
+      splitParentId: args.splitParentId,
       createdAt: Date.now(),
     });
 
@@ -204,6 +267,8 @@ export const update = mutation({
     categoryId: v.optional(v.id("categories")),
     accountId: v.optional(v.id("accounts")),
     notes: v.optional(v.string()),
+    isSplit: v.optional(v.boolean()),
+    splitParticipants: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
@@ -220,6 +285,23 @@ export const update = mutation({
       await requireAccountAccess(ctx, user._id, args.accountId);
     }
 
+    // Validate split fields
+    if (args.isSplit !== undefined) {
+      if (args.isSplit && transaction.isTransfer) {
+        throw new Error("A transaction cannot be both a split and a transfer");
+      }
+      if (args.isSplit) {
+        const amount = args.amount ?? transaction.amount;
+        if (amount >= 0) {
+          throw new Error("Split expenses must be negative amounts");
+        }
+        const participants = args.splitParticipants ?? transaction.splitParticipants;
+        if (!participants || participants < 2) {
+          throw new Error("Split expenses need at least 2 participants");
+        }
+      }
+    }
+
     const oldAmount = transaction.amount;
     const newAmount = args.amount ?? oldAmount;
     const oldAccountId = transaction.accountId;
@@ -233,6 +315,8 @@ export const update = mutation({
     if (args.categoryId !== undefined) updates.categoryId = args.categoryId;
     if (args.accountId !== undefined) updates.accountId = args.accountId;
     if (args.notes !== undefined) updates.notes = args.notes;
+    if (args.isSplit !== undefined) updates.isSplit = args.isSplit;
+    if (args.splitParticipants !== undefined) updates.splitParticipants = args.splitParticipants;
 
     await ctx.db.patch(args.id, updates);
 
@@ -293,6 +377,19 @@ export const remove = mutation({
     }
 
     await requireAccountAccess(ctx, user._id, transaction.accountId);
+
+    // If deleting a split parent, orphan children
+    if (transaction.isSplit) {
+      const children = await ctx.db
+        .query("transactions")
+        .withIndex("by_split_parent", (q) => q.eq("splitParentId", args.id))
+        .collect();
+      await Promise.all(
+        children.map((child) =>
+          ctx.db.patch(child._id, { splitParentId: undefined }),
+        ),
+      );
+    }
 
     // Update account balance (only if transaction was counted)
     const account = await ctx.db.get(transaction.accountId);
@@ -410,21 +507,46 @@ export const getStats = query({
     // Exclude transfers from income/expense stats
     transactions = transactions.filter((t) => !t.isTransfer);
 
-    // Calculate stats
-    const income = transactions
-      .filter((t) => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0);
-    const expenses = transactions
-      .filter((t) => t.amount < 0)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    // Build reimbursement totals map for split-aware calculation
+    const reimbursementTotals = new Map<string, number>();
+    for (const t of transactions) {
+      if (t.splitParentId) {
+        const key = t.splitParentId as string;
+        reimbursementTotals.set(key, (reimbursementTotals.get(key) ?? 0) + t.amount);
+      }
+    }
+
+    // Calculate stats (skip children, use net amounts for split parents)
+    let income = 0;
+    let expenses = 0;
+    for (const t of transactions) {
+      if (t.splitParentId) continue; // skip reimbursement children
+      if (t.isSplit) {
+        // Net amount = gross expense + reimbursements received
+        const reimbursed = reimbursementTotals.get(t._id as string) ?? 0;
+        const netAmount = t.amount + reimbursed; // e.g. -120 + 100 = -20
+        if (netAmount < 0) expenses += Math.abs(netAmount);
+        else income += netAmount;
+      } else if (t.amount > 0) {
+        income += t.amount;
+      } else {
+        expenses += Math.abs(t.amount);
+      }
+    }
     const net = income - expenses;
 
-    // Group by category
+    // Group by category (split-aware)
     const byCategory: Record<string, number> = {};
     for (const t of transactions) {
+      if (t.splitParentId) continue; // skip children
       if (t.categoryId) {
         const key = t.categoryId;
-        byCategory[key] = (byCategory[key] ?? 0) + t.amount;
+        if (t.isSplit) {
+          const reimbursed = reimbursementTotals.get(t._id as string) ?? 0;
+          byCategory[key] = (byCategory[key] ?? 0) + (t.amount + reimbursed);
+        } else {
+          byCategory[key] = (byCategory[key] ?? 0) + t.amount;
+        }
       }
     }
 

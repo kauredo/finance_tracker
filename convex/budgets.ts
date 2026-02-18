@@ -198,12 +198,30 @@ export const getProgress = query({
       (t) => t.date >= args.dateFrom && t.date <= args.dateTo,
     );
 
-    // Calculate spent per category
+    // Build reimbursement totals map for split-aware calculation
+    const reimbursementTotals = new Map<string, number>();
+    for (const t of filteredTransactions) {
+      if (t.splitParentId) {
+        const key = t.splitParentId as string;
+        reimbursementTotals.set(key, (reimbursementTotals.get(key) ?? 0) + t.amount);
+      }
+    }
+
+    // Calculate spent per category (split-aware)
     const spentByCategory: Record<string, number> = {};
     for (const t of filteredTransactions) {
+      if (t.splitParentId) continue; // skip reimbursement children
       if (t.categoryId && t.amount < 0) {
         const key = t.categoryId;
-        spentByCategory[key] = (spentByCategory[key] ?? 0) + Math.abs(t.amount);
+        if (t.isSplit) {
+          const reimbursed = reimbursementTotals.get(t._id as string) ?? 0;
+          const netAmount = t.amount + reimbursed; // e.g. -120 + 100 = -20
+          if (netAmount < 0) {
+            spentByCategory[key] = (spentByCategory[key] ?? 0) + Math.abs(netAmount);
+          }
+        } else {
+          spentByCategory[key] = (spentByCategory[key] ?? 0) + Math.abs(t.amount);
+        }
       }
     }
 

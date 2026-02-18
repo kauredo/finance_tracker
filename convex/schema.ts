@@ -84,13 +84,17 @@ export default defineSchema({
     notes: v.optional(v.string()),
     isRecurring: v.optional(v.boolean()),
     isTransfer: v.optional(v.boolean()),
+    isSplit: v.optional(v.boolean()),
+    splitParticipants: v.optional(v.number()),
+    splitParentId: v.optional(v.id("transactions")),
     createdAt: v.number(),
   })
     .index("by_account", ["accountId"])
     .index("by_category", ["categoryId"])
     .index("by_user", ["userId"])
     .index("by_date", ["date"])
-    .index("by_account_and_date", ["accountId", "date"]),
+    .index("by_account_and_date", ["accountId", "date"])
+    .index("by_split_parent", ["splitParentId"]),
 
   // Budgets - per category per household
   budgets: defineTable({
